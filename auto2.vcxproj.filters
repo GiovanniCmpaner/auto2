@@ -23,5 +23,8 @@
     <CopyFileToFolders Include="lib\SDL2-2.0.12\lib\x64\SDL2.dll">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\SDL2_gfx-1.0.1\lib\x64\SDL2_gfx.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>
