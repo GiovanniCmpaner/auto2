@@ -26,5 +26,32 @@
     <CopyFileToFolders Include="lib\SDL2_gfx-1.0.1\lib\x64\SDL2_gfx.dll">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\SDL2_image.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\SDL2_ttf-2.0.15\lib\x64\SDL2_ttf.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\SDL2_ttf-2.0.15\lib\x64\libfreetype-6.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\libjpeg-9.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\libpng16-16.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\libtiff-5.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\libwebp-7.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\SDL2_ttf-2.0.15\lib\x64\zlib1.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\zlib1.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>
