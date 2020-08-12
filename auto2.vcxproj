@@ -145,6 +145,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="simulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\SDL2-2.0.12\lib\x64\SDL2.dll">
@@ -194,6 +195,9 @@
     <CopyFileToFolders Include="lib\SDL2_ttf-2.0.15\lib\x64\zlib1.dll">
       <FileType>Document</FileType>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="simulation.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
