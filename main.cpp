@@ -1,22 +1,18 @@
-/*This source code copyrighted by Lazy Foo' Productions (2004-2020)
-and may not be redistributed without written permission.*/
-
-//Using SDL and standard IO
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
-#include <SDL2_gfxPrimitives.h>
-#include <cstdlib>
+﻿
+#include <stack>
+#include <vector>
+#include <random>
+#include <utility>
+#include <array>
 #include <iostream>
-#include <string>
 
-//Screen dimension constants
-static constexpr auto screenWidth{ 640 };
-static constexpr auto screenHeight{ 480 };
+#include <cstdint>
+#include <cstdlib>
 
-SDL_Window* window{ nullptr };
-SDL_Renderer* renderer{ nullptr };
-TTF_Font* font{ nullptr };
+
+
+#include "simulation.hpp"
+
 /*
 std::unique_ptr<SDL_Window, void(*)(SDL_Window*)> window2{ nullptr, SDL_DestroyWindow };
 
@@ -31,274 +27,161 @@ auto createWindow(const std::string& name, int width, int height) -> std::unique
 }
 */
 
-enum KeyPressSurfaces
-{
-    KEY_PRESS_DEFAULT,
-    KEY_PRESS_UP,
-    KEY_PRESS_DOWN,
-    KEY_PRESS_LEFT,
-    KEY_PRESS_RIGHT,
-    KEY_PRESS_TOTAL
+enum Direction {
+    UP = 0,
+    DOWN = 1,
+    LEFT = 2,
+    RIGHT = 3
 };
-bool keyPressStates[KEY_PRESS_TOTAL]{ };
 
-int main(int argc, char* args[])
+auto make_maze(size_t height, size_t width)
 {
-    //Initialize SDL
-    if (not init())
+    srand(1000);
+
+    auto stack{ std::stack<std::tuple<int,int>>{} };
+    auto matrix{ std::vector(height,std::vector(width,std::tuple{true,true,true,true})) };
+
+    auto rd{ std::random_device{} };
+    auto mt{ std::mt19937{rd()} };
+
+    auto y{ 0 }, x{ 0 };
+
+    stack.emplace(y, x);
+    while (1)
     {
-        std::cout << "Failed to initialize!" << std::endl;
-    }
-    else
-    {
-        auto px{ 50.0 };
-        auto py{ 50.0 };
-        auto ax{ 0.0 };
-        auto ay{ 0.0 };
-        auto vx{ 0.0 };
-        auto vy{ 0.0 };
+        auto directions{ std::vector<std::tuple<int,int>>{} };
 
-
-
-        // Texto
-        const auto texto{ "teste de texto" };
-
-
-        //SDL_DestroyTexture(texture);
-        //SDL_FreeSurface(surface);
-        //TTF_CloseFont(font);
-
-        //Main loop flag
-        auto quit{ false };
-        auto previousTicks{ uint32_t{0} };
-        while (not quit)
+        if (y > 0 and matrix[y - 1][x] == std::tuple{ true, true, true, true })
         {
-            //Event handler
-            auto e{ SDL_Event{} };
-            while (SDL_PollEvent(&e) != 0)
+            directions.emplace_back(-1, 0);
+        }
+        if (y < height - 1 and matrix[y + 1][x] == std::tuple{ true, true, true, true })
+        {
+            directions.emplace_back(+1, 0);
+        }
+        if (x > 0 and matrix[y][x - 1] == std::tuple{ true, true, true, true })
+        {
+            directions.emplace_back(0, -1);
+        }
+        if (x < width - 1 and matrix[y][x + 1] == std::tuple{ true, true, true, true })
+        {
+            directions.emplace_back(0, +1);
+        }
+
+        if (directions.size() > 0)
+        {
+            //auto dist{ std::uniform_int_distribution<int>{ 0, static_cast<int>(directions.size()) - 1} };
+            //const auto choosen{ dist(mt) };
+            const auto choosen{ rand() % directions.size() };
+            const auto [j, i] { directions[choosen] };
+
+            if (j == +1) {
+                std::get<DOWN>(matrix[y][x]) = false;
+                std::get<UP>(matrix[y + 1][x]) = false;
+            }
+            else if (j == -1) {
+                std::get<UP>(matrix[y][x]) = false;
+                std::get<DOWN>(matrix[y - 1][x]) = false;
+            }
+            else if (i == +1) {
+                std::get<RIGHT>(matrix[y][x]) = false;
+                std::get<LEFT>(matrix[y][x + 1]) = false;
+            }
+            else if (i == -1) {
+                std::get<LEFT>(matrix[y][x]) = false;
+                std::get<RIGHT>(matrix[y][x - 1]) = false;
+            }
+
+            y += j;
+            x += i;
+
+            stack.emplace(y, x);
+        }
+        else if (not stack.empty())
+        {
+            stack.pop();
+            if (stack.empty())
             {
-                //User requests quit
-                if (e.type == SDL_QUIT)
-                {
-                    quit = true;
-                }
-                else if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP)
-                {
-                    if (e.key.keysym.sym == SDLK_UP)
-                    {
-                        keyPressStates[KEY_PRESS_UP] = (e.type == SDL_KEYDOWN);
-                    }
-                    else if (e.key.keysym.sym == SDLK_DOWN)
-                    {
-                        keyPressStates[KEY_PRESS_DOWN] = (e.type == SDL_KEYDOWN);
-                    }
-                    if (e.key.keysym.sym == SDLK_LEFT)
-                    {
-                        keyPressStates[KEY_PRESS_LEFT] = (e.type == SDL_KEYDOWN);
-                    }
-                    if (e.key.keysym.sym == SDLK_RIGHT)
-                    {
-                        keyPressStates[KEY_PRESS_RIGHT] = (e.type == SDL_KEYDOWN);
-                    }
-                }
+                break;
             }
-
-            //Calculate time step
-            const auto currentTicks{ SDL_GetTicks() };
-            if (currentTicks - previousTicks > 0) {
-                const auto timeStep{ (currentTicks - previousTicks) / 1000.0 };
-                previousTicks = currentTicks;
-
-
-                //---------------------------------------------------------------------------------------------------
-                {
-                    const auto maxAcceleration{ 0.5 * timeStep };
-                    const auto maxDeacceleration{ 0.5 * timeStep };
-
-                    if (keyPressStates[KEY_PRESS_UP] || keyPressStates[KEY_PRESS_DOWN])
-                    {
-                        if (keyPressStates[KEY_PRESS_UP])
-                        {
-                            ay = -maxAcceleration;
-                        }
-                        if (keyPressStates[KEY_PRESS_DOWN])
-                        {
-                            ay = +maxAcceleration;
-                        }
-                    }
-                    else
-                    {
-                        if (vy < 0.0)
-                        {
-                            ay = +maxDeacceleration;
-                        }
-                        else if (vy > 0.0)
-                        {
-                            ay = -maxDeacceleration;
-                        }
-                        else
-                        {
-                            ay = 0.0;
-                        }
-                    }
-
-                    if (keyPressStates[KEY_PRESS_LEFT] || keyPressStates[KEY_PRESS_RIGHT])
-                    {
-                        if (keyPressStates[KEY_PRESS_LEFT])
-                        {
-                            ax = -maxAcceleration;
-                        }
-                        if (keyPressStates[KEY_PRESS_RIGHT])
-                        {
-                            ax = +maxAcceleration;
-                        }
-                    }
-                    else
-                    {
-                        if (vx < 0.0)
-                        {
-                            ax = +maxDeacceleration;
-                        }
-                        else if (vx > 0.0)
-                        {
-                            ax = -maxDeacceleration;
-                        }
-                        else
-                        {
-                            ax = 0.0;
-                        }
-                    }
-                }
-                //---------------------------------------------------------------------------------------------------
-                {
-                    const auto maxVelocity{ 200.0 * timeStep };
-
-                    if (keyPressStates[KEY_PRESS_UP] || keyPressStates[KEY_PRESS_DOWN])
-                    {
-                        vy += ay;
-                    }
-                    else if (vy < 0.0)
-                    {
-                        if (vy < -ay)
-                        {
-                            vy += ay;
-                        }
-                        else
-                        {
-                            vy = 0.0;
-                        }
-                    }
-                    else if (vy > 0.0)
-                    {
-                        if (vy > -ay)
-                        {
-                            vy += ay;
-                        }
-                        else
-                        {
-                            vy = 0.0;
-                        }
-                    }
-
-                    if (keyPressStates[KEY_PRESS_LEFT] || keyPressStates[KEY_PRESS_RIGHT])
-                    {
-                        vx += ax;
-                    }
-                    else if (vx < 0.0)
-                    {
-                        if (vx < -ax)
-                        {
-                            vx += ax;
-                        }
-                        else
-                        {
-                            vx = 0.0;
-                        }
-                    }
-                    else if (vx > 0.0)
-                    {
-                        if (vx > -ax)
-                        {
-                            vx += ax;
-                        }
-                        else
-                        {
-                            vx = 0.0;
-                        }
-                    }
-
-                    if (vy > maxVelocity)
-                    {
-                        vy = maxVelocity;
-                    }
-                    else if (vy < -maxVelocity)
-                    {
-                        vy = -maxVelocity;
-                    }
-
-                    if (vx > maxVelocity)
-                    {
-                        vx = maxVelocity;
-                    }
-                    else if (vx < -maxVelocity)
-                    {
-                        vx = -maxVelocity;
-                    }
-                }
-                //---------------------------------------------------------------------------------------------------
-                {
-                    py += vy;
-                    px += vx;
-
-                    if (py > screenHeight)
-                    {
-                        py = screenHeight;
-                        vy = 0.0;
-                        ay = 0.0;
-                    }
-                    else if (py < 0.0)
-                    {
-                        py = 0.0;
-                        vy = 0.0;
-                        ay = 0.0;
-                    }
-
-                    if (px > screenWidth)
-                    {
-                        px = screenWidth;
-                        vx = 0.0;
-                        ax = 0.0;
-                    }
-                    else if (px < 0.0)
-                    {
-                        px = 0.0;
-                        vx = 0.0;
-                        ax = 0.0;
-                    }
-                }
-                //---------------------------------------------------------------------------------------------------
-
-                //Clear screen
-                SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-                SDL_RenderClear(renderer);
-
-                lineRGBA(renderer, screenWidth / 2, screenHeight / 2 - 20, screenWidth / 2, screenHeight / 2 + 20, 0xFF, 0x00, 0x00, 0xFF);
-                lineRGBA(renderer, screenWidth / 2 - 20, screenHeight / 2, screenWidth / 2 + 20, screenHeight / 2, 0xFF, 0x00, 0x00, 0xFF);
-                circleRGBA(renderer, px, py, 10, 0xFF, 0x00, 0x00, 0xFF);
-
-                lineRGBA(renderer, px, py, screenWidth / 2, screenHeight / 2, 0x00, 0x00, 0xFF, 0xFF);
-                
-                const auto distance{ sqrt(pow(px - screenWidth / 2, 2) + pow(py - screenHeight / 2, 2)) };
-
-                text(0, 0, std::to_string(distance));
-
-                //Update screen
-                SDL_RenderPresent(renderer);
-            }
+            std::tie(y, x) = stack.top();
+        }
+        else
+        {
+            break;
         }
     }
 
-    close();
-
-    return EXIT_SUCCESS;
+    return matrix;
 }
+
+auto print_maze(const std::vector<std::vector<std::tuple<bool, bool, bool, bool>>>& matrix)
+{
+    std::cout << std::string(matrix.front().size() * 3 - matrix.front().size() + 1, '\xDB') << std::endl;
+
+    for (auto y{ 0 }; y < matrix.size(); y++)
+    {
+        std::cout << '\xDB';
+
+        for (auto x{ 0 }; x < matrix[y].size(); x++)
+        {
+            if (std::get<DOWN>(matrix[y][x]) && std::get<RIGHT>(matrix[y][x]))
+            {
+                std::cout << " \xDB";
+            }
+            else if (std::get<DOWN>(matrix[y][x]))
+            {
+                std::cout << "  ";
+            }
+            else if (std::get<RIGHT>(matrix[y][x]))
+            {
+                std::cout << " \xDB";
+            }
+            else {
+                std::cout << "  ";
+            }
+        }
+
+        std::cout << std::endl;
+
+        std::cout << '\xDB';
+
+        for (auto x{ 0 }; x < matrix[y].size(); x++)
+        {
+            if (std::get<DOWN>(matrix[y][x]) && std::get<RIGHT>(matrix[y][x]))
+            {
+                std::cout << "\xDB\xDB";
+            }
+            else if (std::get<DOWN>(matrix[y][x]))
+            {
+                std::cout << "\xDB\xDB";
+            }
+            else if (std::get<RIGHT>(matrix[y][x]))
+            {
+                std::cout << " \xDB";
+            }
+            else {
+                std::cout << " \xDB";
+            }
+        }
+
+        std::cout << std::endl;
+    }
+}
+
+
+int main(int argc, char* args[])
+{
+    const auto maze{ make_maze(20,20) };
+    print_maze(maze);
+
+    //Simulation::init();
+
+    //while (1)
+    //{
+    //
+    //}
+
+    //Simulation::end();
+}
+

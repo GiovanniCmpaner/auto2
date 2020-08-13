@@ -25,23 +25,37 @@ namespace Simulation
     static std::future<void> task{};
     static std::atomic<bool> quit{ false };
 
-    auto init() -> void
-    {
-        Video::init();
-    }
-
-    auto end() -> void
-    {
-        Video::end();
-    }
-
-    auto distance_front() -> double
-    {
-
-    }
-
     namespace Video
     {
+        static auto process() -> void
+        {
+            auto event{ SDL_Event{} };
+            while (not quit)
+            {
+                //Event handler
+                while (SDL_PollEvent(&event) != 0)
+                {
+                    //User requests quit
+                    if (event.type == SDL_QUIT)
+                    {
+                        quit = true;
+                    }
+                }
+
+                const auto framerate{ SDL_getFramerate(&manager) };
+
+                //Clear screen
+                SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+                SDL_RenderClear(renderer);
+
+                // Draw
+
+                // Update screen
+                SDL_RenderPresent(renderer);
+                SDL_framerateDelay(&manager);
+            }
+        }
+
         static auto init() -> bool
         {
             // Initialize SDL for video
@@ -115,35 +129,6 @@ namespace Simulation
             TTF_Quit();
         }
 
-        static auto process() -> void
-        {
-            auto event{ SDL_Event{} };
-            while (not quit) 
-            {
-                //Event handler
-                while (SDL_PollEvent(&event) != 0)
-                {
-                    //User requests quit
-                    if (event.type == SDL_QUIT)
-                    {
-                        quit = true;
-                    }
-                }
-
-                const auto framerate{ SDL_getFramerate(&manager) };
-
-                //Clear screen
-                SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-                SDL_RenderClear(renderer);
-
-                // Draw
-
-                // Update screen
-                SDL_RenderPresent(renderer);
-                SDL_framerateDelay(&manager);
-            }
-        }
-
         static auto text(int x, int y, const std::string& texto) -> void
         {
             auto rect{ SDL_Rect{x,y,0,0} };
@@ -162,5 +147,20 @@ namespace Simulation
                 SDL_RenderCopy(renderer, texture, nullptr, &rect);
             }
         }
+    }
+
+    auto init() -> void
+    {
+        Video::init();
+    }
+
+    auto end() -> void
+    {
+        Video::end();
+    }
+
+    auto distance_front() -> double
+    {
+        return 0.0;
     }
 }
