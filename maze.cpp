@@ -151,13 +151,16 @@ namespace Maze
     {
         auto lines{ std::vector<Line>{} };
 
-        lines.emplace_back(Line{ 0, 0, height, 0 });
-        lines.emplace_back(Line{ 0, 0, 0, width });
-        lines.emplace_back(Line{ 0, width, height, width });
-        lines.emplace_back(Line{ height, 0, height, width });
-
         const auto tileHeight{ static_cast<int>(height / matrix.size()) };
         const auto tileWidth{ static_cast<int>(width / matrix.front().size()) };
+
+        const auto mazeHeight{ static_cast<int>(tileHeight * matrix.size()) };
+        const auto mazeWidth{ static_cast<int>(tileWidth * matrix.front().size()) };
+
+        lines.emplace_back(Line{ 0, 0, mazeHeight, 0 });
+        lines.emplace_back(Line{ 0, 0, 0, mazeWidth });
+        lines.emplace_back(Line{ 0, mazeWidth, mazeHeight, mazeWidth });
+        lines.emplace_back(Line{ mazeHeight, 0, mazeHeight, mazeWidth });
 
         for (auto y{ 1 }; y < matrix.size(); y++)
         {
@@ -186,7 +189,6 @@ namespace Maze
                 lines.emplace_back(Line{ start, currentHeight, end, currentHeight });
             }
         }
-
 
         for (auto x{ 1 }; x < matrix.front().size(); x++)
         {
@@ -217,5 +219,18 @@ namespace Maze
         }
 
         return lines;
+    }
+
+    auto rectangles(const std::vector<std::vector<Tile>>& matrix, int x, int y, int height, int width, int thickness) -> std::vector<Rect>
+    {
+        const auto lines{ Maze::lines(matrix,height,width) };
+        auto rectangles{ std::vector<Rect>{lines.size()} };
+
+        for (const auto& line : lines)
+        {
+            rectangles.emplace_back(Rect{ x + line.x0, y + line.y0, line.x1 - line.x0 + thickness, line.y1 - line.y0 + thickness });
+        }
+
+        return rectangles;
     }
 }

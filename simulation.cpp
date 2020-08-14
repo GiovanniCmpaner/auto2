@@ -25,12 +25,35 @@ namespace Simulation
     static std::future<void> task{};
     static std::atomic<bool> quit{ false };
 
-    static std::vector<Maze::Line> lines{};
+    static std::vector<Maze::Rect> rectangles{};
 
     namespace Video
     {
+        static auto text(int x, int y, const std::string& texto) -> void
+        {
+            auto rect{ SDL_Rect{x,y,0,0} };
+            TTF_SizeText(font, texto.c_str(), &rect.w, &rect.h);
+
+            if (const auto surface{ TTF_RenderText_Solid(font, texto.c_str(), { 0, 0, 0 }) }; surface == nullptr)
+            {
+                std::cerr << "Failed to render text! Error: " << TTF_GetError() << std::endl;
+            }
+            else if (const auto texture{ SDL_CreateTextureFromSurface(renderer, surface) }; texture == nullptr)
+            {
+                std::cerr << "Failed to create texture! Error: " << SDL_GetError() << std::endl;
+            }
+            else
+            {
+                SDL_RenderCopy(renderer, texture, nullptr, &rect);
+            }
+        }
+
         static auto process() -> void
         {
+            static auto ang{ 90 };
+            static auto px{ 100 };
+            static auto py{ 100 };
+
             auto event{ SDL_Event{} };
             while (not quit)
             {
@@ -52,12 +75,32 @@ namespace Simulation
                 
                 // Draw
                 SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-                for (const auto& line : lines)
+                for (const auto& rect : rectangles)
                 {
-                    //thickLineRGBA(renderer, line.x0, line.y0, line.x1, line.y1, 3, 0xFF, 0x00, 0x00, 0xFF);
-                    const auto rect{ SDL_Rect{line.x0, line.y0, line.x1 - line.x0 + 6, line.y1 - line.y0 + 6} };
-                    SDL_RenderFillRect(renderer, &rect);
+                    SDL_RenderFillRect(renderer, reinterpret_cast<const SDL_Rect*>(&rect));
+                };
+
+                //-------------------------------------------------------------------------------------------------------------------------------
+                // Colision 
+                SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
+                int x1{ px }, y1{ py }, x2{ static_cast<int>(999.0 * cos(ang * M_PI / 180.0)) }, y2{ static_cast<int>(999.0 * sin(ang * M_PI / 180.0)) };
+                for (const auto& rect : rectangles)
+                {
+                    if (SDL_IntersectRectAndLine(reinterpret_cast<const SDL_Rect*>(&rect), &x1, &y1, &x2, &y2))
+                    {
+                        x2 = x1;
+                        y2 = y1;
+                        x1 = px;
+                        y1 = py;
+                    }
                 }
+                SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+
+                ang = (ang + 5) % 360;
+                const auto distance{ std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1,2)) };
+                text(0, 0, "d = " + std::to_string(distance));
+                text(200, 0, "fps = " + std::to_string(SDL_getFramerate(&manager)));
+                //-------------------------------------------------------------------------------------------------------------------------------
 
                 // Update screen
                 SDL_RenderPresent(renderer);
@@ -163,33 +206,13 @@ namespace Simulation
             TTF_Quit();
         }
 
-        static auto text(int x, int y, const std::string& texto) -> void
-        {
-            auto rect{ SDL_Rect{x,y,0,0} };
-            TTF_SizeText(font, texto.c_str(), &rect.w, &rect.h);
-
-            if (const auto surface{ TTF_RenderText_Solid(font, texto.c_str(), { 0, 0, 0 }) }; surface == nullptr)
-            {
-                std::cerr << "Failed to render text! Error: " << TTF_GetError() << std::endl;
-            }
-            else if (const auto texture{ SDL_CreateTextureFromSurface(renderer, surface) }; texture == nullptr)
-            {
-                std::cerr << "Failed to create texture! Error: " << SDL_GetError() << std::endl;
-            }
-            else
-            {
-                SDL_RenderCopy(renderer, texture, nullptr, &rect);
-            }
-        }
-    
-
     }
 
     auto init() -> void
     {
-        const auto maze{ Maze::make(5,5) };
+        const auto maze{ Maze::make(30,30) };
         Maze::print(maze);
-        lines = Maze::lines(maze, 200, 200);
+        rectangles = Maze::rectangles(maze, 10, 50, 400, 400, 3);
 
         Video::init();
     }
