@@ -10,6 +10,7 @@
 #include <future>
 
 #include "simulation.hpp"
+#include "maze.hpp"
 
 namespace Simulation
 {
@@ -21,9 +22,10 @@ namespace Simulation
     static FPSmanager manager{};
     static TTF_Font* font{ nullptr };
 
-
     static std::future<void> task{};
     static std::atomic<bool> quit{ false };
+
+    static std::vector<Maze::Line> lines{};
 
     namespace Video
     {
@@ -47,8 +49,15 @@ namespace Simulation
                 //Clear screen
                 SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
                 SDL_RenderClear(renderer);
-
+                
                 // Draw
+                SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
+                for (const auto& line : lines)
+                {
+                    //thickLineRGBA(renderer, line.x0, line.y0, line.x1, line.y1, 3, 0xFF, 0x00, 0x00, 0xFF);
+                    const auto rect{ SDL_Rect{line.x0, line.y0, line.x1 - line.x0 + 6, line.y1 - line.y0 + 6} };
+                    SDL_RenderFillRect(renderer, &rect);
+                }
 
                 // Update screen
                 SDL_RenderPresent(renderer);
@@ -73,19 +82,25 @@ namespace Simulation
             }
 
             // Create window
-            window = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
             if (window == nullptr)
             {
-                std::cerr << "Window could not be created! Error: " << SDL_GetError() << std::endl;
-                return false;
+                window = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
+                if (window == nullptr)
+                {
+                    std::cerr << "Window could not be created! Error: " << SDL_GetError() << std::endl;
+                    return false;
+                }
             }
 
             // Create renderer for window
-            renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
             if (renderer == nullptr)
             {
-                std::cerr << "Renderer could not be created! Error: " << SDL_GetError() << std::endl;
-                return false;
+                renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+                if (renderer == nullptr)
+                {
+                    std::cerr << "Renderer could not be created! Error: " << SDL_GetError() << std::endl;
+                    return false;
+                }
             }
 
             SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
@@ -100,30 +115,49 @@ namespace Simulation
             }
 
             // Open font
-            font = TTF_OpenFont("C:\\Windows\\Fonts\\Arial.ttf", 16);
             if (font == nullptr)
             {
-                std::cerr << "Failed to open font! Error: " << TTF_GetError() << std::endl;
-                return false;
+                font = TTF_OpenFont("C:\\Windows\\Fonts\\Arial.ttf", 16);
+                if (font == nullptr)
+                {
+                    std::cerr << "Failed to open font! Error: " << TTF_GetError() << std::endl;
+                    return false;
+                }
             }
 
-            quit = false;
-            task = std::async(std::launch::async, process);
+            if(not task.valid())
+            {
+                quit = false;
+                task = std::async(std::launch::async, process);
+            }
         }
 
         static auto end() -> void
         {
-            quit = true;
-            task.wait();
+            if (task.valid())
+            {
+                quit = true;
+                task.wait();
+                task = {};
+            }
 
-            SDL_DestroyRenderer(renderer);
-            renderer = nullptr;
+            if (renderer != nullptr)
+            {
+                SDL_DestroyRenderer(renderer);
+                renderer = nullptr;
+            }
 
-            SDL_DestroyWindow(window);
-            window = nullptr;
+            if (window != nullptr)
+            {
+                SDL_DestroyWindow(window);
+                window = nullptr;
+            }
 
-            TTF_CloseFont(font);
-            font = nullptr;
+            if (font != nullptr)
+            {
+                TTF_CloseFont(font);
+                font = nullptr;
+            }
 
             SDL_Quit();
             TTF_Quit();
@@ -147,10 +181,16 @@ namespace Simulation
                 SDL_RenderCopy(renderer, texture, nullptr, &rect);
             }
         }
+    
+
     }
 
     auto init() -> void
     {
+        const auto maze{ Maze::make(5,5) };
+        Maze::print(maze);
+        lines = Maze::lines(maze, 200, 200);
+
         Video::init();
     }
 

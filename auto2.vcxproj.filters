@@ -21,6 +21,9 @@
     <ClCompile Include="simulation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="maze.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\SDL2-2.0.12\lib\x64\SDL2.dll">
@@ -59,6 +62,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="simulation.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="maze.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
