@@ -144,6 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="car.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="maze.cpp" />
     <ClCompile Include="simulation.cpp" />
@@ -198,6 +199,7 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="car.hpp" />
     <ClInclude Include="maze.hpp" />
     <ClInclude Include="simulation.hpp" />
   </ItemGroup>

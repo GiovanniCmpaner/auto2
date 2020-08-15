@@ -11,9 +11,18 @@
 
 #include "simulation.hpp"
 #include "maze.hpp"
+#include "car.hpp"
 
 namespace Simulation
 {
+    struct Car {
+        int px, py;
+        int vx, vy;
+        int ax, ay;
+        int height, width;
+        SDL_Texture* texture;
+    };
+
     static constexpr auto screenWidth{ 640 };
     static constexpr auto screenHeight{ 480 };
 
@@ -29,6 +38,10 @@ namespace Simulation
 
     namespace Video
     {
+        static auto ang{ 90 };
+        static auto px{ 100 };
+        static auto py{ 100 };
+
         static auto text(int x, int y, const std::string& texto) -> void
         {
             auto rect{ SDL_Rect{x,y,0,0} };
@@ -48,63 +61,84 @@ namespace Simulation
             }
         }
 
+        static auto move() -> void
+        {
+
+        }
+
+        static auto collisions() -> void
+        {
+            int x1{ px }, y1{ py }, x2{ static_cast<int>(999.0 * cos(ang * M_PI / 180.0)) }, y2{ static_cast<int>(999.0 * sin(ang * M_PI / 180.0)) };
+            for (const auto& rect : rectangles)
+            {
+                if (SDL_IntersectRectAndLine(reinterpret_cast<const SDL_Rect*>(&rect), &x1, &y1, &x2, &y2))
+                {
+                    x2 = x1;
+                    y2 = y1;
+                    x1 = px;
+                    y1 = py;
+                }
+            }
+        }
+
+        static auto draw() -> void
+        {
+            const auto framerate{ SDL_getFramerate(&manager) };
+
+            SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
+            for (const auto& rect : rectangles)
+            {
+                SDL_RenderFillRect(renderer, reinterpret_cast<const SDL_Rect*>(&rect));
+            };
+
+            //ang = (ang + 5) % 360;
+            //const auto distance{ std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1,2)) };
+            //text(0, 0, "d = " + std::to_string(distance));
+            //text(200, 0, "fps = " + std::to_string(framerate));
+            //
+            //SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
+            //SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+        }
+
+        static auto events() -> void
+        {
+            auto event{ SDL_Event{} };
+            while (SDL_PollEvent(&event) != 0)
+            {
+                if (event.type == SDL_QUIT)
+                {
+                    quit = true;
+                }
+            }
+        }
+
+        static auto clear() -> void
+        {
+            SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+            SDL_RenderClear(renderer);
+        }
+
+        static auto update() -> void
+        {
+            SDL_RenderPresent(renderer);
+            SDL_framerateDelay(&manager);
+        }
+
         static auto process() -> void
         {
-            static auto ang{ 90 };
-            static auto px{ 100 };
-            static auto py{ 100 };
-
-            auto event{ SDL_Event{} };
             while (not quit)
             {
-                //Event handler
-                while (SDL_PollEvent(&event) != 0)
-                {
-                    //User requests quit
-                    if (event.type == SDL_QUIT)
-                    {
-                        quit = true;
-                    }
-                }
+                events();
 
-                const auto framerate{ SDL_getFramerate(&manager) };
-
-                //Clear screen
-                SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-                SDL_RenderClear(renderer);
+                clear();
                 
-                // Draw
-                SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-                for (const auto& rect : rectangles)
-                {
-                    SDL_RenderFillRect(renderer, reinterpret_cast<const SDL_Rect*>(&rect));
-                };
+                move();
 
-                //-------------------------------------------------------------------------------------------------------------------------------
-                // Colision 
-                SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
-                int x1{ px }, y1{ py }, x2{ static_cast<int>(999.0 * cos(ang * M_PI / 180.0)) }, y2{ static_cast<int>(999.0 * sin(ang * M_PI / 180.0)) };
-                for (const auto& rect : rectangles)
-                {
-                    if (SDL_IntersectRectAndLine(reinterpret_cast<const SDL_Rect*>(&rect), &x1, &y1, &x2, &y2))
-                    {
-                        x2 = x1;
-                        y2 = y1;
-                        x1 = px;
-                        y1 = py;
-                    }
-                }
-                SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+                collisions();
 
-                ang = (ang + 5) % 360;
-                const auto distance{ std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1,2)) };
-                text(0, 0, "d = " + std::to_string(distance));
-                text(200, 0, "fps = " + std::to_string(SDL_getFramerate(&manager)));
-                //-------------------------------------------------------------------------------------------------------------------------------
+                draw();
 
-                // Update screen
-                SDL_RenderPresent(renderer);
-                SDL_framerateDelay(&manager);
+                update();
             }
         }
 
@@ -205,12 +239,11 @@ namespace Simulation
             SDL_Quit();
             TTF_Quit();
         }
-
     }
 
     auto init() -> void
     {
-        const auto maze{ Maze::make(30,30) };
+        const auto maze{ Maze::make(6,6) };
         Maze::print(maze);
         rectangles = Maze::rectangles(maze, 10, 50, 400, 400, 3);
 

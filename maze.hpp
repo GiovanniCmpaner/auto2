@@ -6,24 +6,18 @@
 namespace Maze
 {
     struct Tile {
-        bool up;
-        bool down;
-        bool left;
-        bool right;
+        bool up, down;
+        bool left, right;
     };
 
     struct Line {
-        int x0;
-        int y0;
-        int x1;
-        int y1;
+        int x0, y0;
+        int x1, y1;
     };
 
     struct Rect {
-        int x;
-        int y;
-        int width;
-        int height;
+        int x, y;
+        int width, height;
     };
 
     auto make(size_t rows, size_t columns)->std::vector<std::vector<Tile>>;

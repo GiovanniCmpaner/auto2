@@ -90,33 +90,60 @@ namespace Maze
             }
         }
 
+        matrix.front().front().up = false;
+        matrix.back().back().down = false;
+
         return matrix;
     }
 
     auto print(const std::vector<std::vector<Tile>>& matrix) -> void
     {
-        std::cout << std::string(matrix.front().size() * 3 - matrix.front().size() + 1, '\xDB') << std::endl;
+        std::cout << '\xDB';
+
+        for (const auto& tile : matrix.front())
+        {
+            if (tile.up)
+            {
+                std::cout << '\xDB';
+            }
+            else
+            {
+                std::cout << ' ';
+            }
+
+            std::cout << '\xDB';
+        }
+
+        std::cout << std::endl;
 
         for (const auto& row : matrix)
         {
-            std::cout << '\xDB';
+            if (row.front().left)
+            {
+                std::cout << '\xDB';
+            }
+            else {
+                std::cout << ' ';
+            }
 
             for (const auto& tile : row)
             {
+                std::cout << ' ';
+
                 if (tile.down and tile.right)
                 {
-                    std::cout << " \xDB";
+                    std::cout << '\xDB';
                 }
                 else if (tile.down)
                 {
-                    std::cout << "  ";
+                    std::cout << ' ';
                 }
                 else if (tile.right)
                 {
-                    std::cout << " \xDB";
+                    std::cout << '\xDB';
                 }
                 else {
-                    std::cout << "  ";
+                    std::cout << ' ';
                 }
             }
 
@@ -128,19 +155,21 @@ namespace Maze
             {
                 if (tile.down && tile.right)
                 {
-                    std::cout << "\xDB\xDB";
+                    std::cout << '\xDB';
                 }
                 else if (tile.down)
                 {
-                    std::cout << "\xDB\xDB";
+                    std::cout << '\xDB';
                 }
                 else if (tile.right)
                 {
-                    std::cout << " \xDB";
+                    std::cout << ' ';
                 }
                 else {
-                    std::cout << " \xDB";
+                    std::cout << ' ';
                 }
+
+                std::cout << '\xDB';
             }
 
             std::cout << std::endl;
@@ -154,67 +183,73 @@ namespace Maze
         const auto tileHeight{ static_cast<int>(height / matrix.size()) };
         const auto tileWidth{ static_cast<int>(width / matrix.front().size()) };
 
-        const auto mazeHeight{ static_cast<int>(tileHeight * matrix.size()) };
-        const auto mazeWidth{ static_cast<int>(tileWidth * matrix.front().size()) };
-
-        lines.emplace_back(Line{ 0, 0, mazeHeight, 0 });
-        lines.emplace_back(Line{ 0, 0, 0, mazeWidth });
-        lines.emplace_back(Line{ 0, mazeWidth, mazeHeight, mazeWidth });
-        lines.emplace_back(Line{ mazeHeight, 0, mazeHeight, mazeWidth });
-
-        for (auto y{ 1 }; y < matrix.size(); y++)
         {
-            const auto currentHeight{ y * tileHeight };
-
-            auto start{ 0 };
-            auto end{ 0 };
-            for (auto x{ 0 }; x < matrix.front().size(); x++)
+            auto make{ [&](int y, int currentHeight, bool Tile::* direction) 
             {
-                if (matrix[y][x].up)
+                auto start{ 0 };
+                auto end{ 0 };
+                for (auto x{ 0 }; x < matrix.front().size(); x++)
                 {
-                    end += tileWidth;
-                }
-                else
-                {
-                    if (start != end)
+                    if (matrix[y][x].*direction)
                     {
-                        lines.emplace_back(Line{ start, currentHeight, end,  currentHeight });
+                        end += tileWidth;
                     }
-                    start = end + tileWidth;
-                    end = start;
+                    else
+                    {
+                        if (start != end)
+                        {
+                            lines.emplace_back(Line{ start, currentHeight, end,  currentHeight });
+                        }
+                        start = end + tileWidth;
+                        end = start;
+                    }
                 }
-            }
-            if (start != end)
+                if (start != end)
+                {
+                    lines.emplace_back(Line{ start, currentHeight, end, currentHeight });
+                }
+            }};
+
+            make(0, 0, &Tile::up);
+
+            for (auto y{ 0 }; y < matrix.size(); y++)
             {
-                lines.emplace_back(Line{ start, currentHeight, end, currentHeight });
+                make(y, ( y + 1 ) * tileHeight, &Tile::down);
             }
         }
 
-        for (auto x{ 1 }; x < matrix.front().size(); x++)
         {
-            const auto currentWidth{ x * tileWidth };
-
-            auto start{ 0 };
-            auto end{ 0 };
-            for (auto y{ 0 }; y < matrix.size(); y++)
+            auto make{ [&](int x, int currentWidth, bool Tile::* direction)
             {
-                if (matrix[y][x].left)
+                auto start{ 0 };
+                auto end{ 0 };
+                for (auto y{ 0 }; y < matrix.size(); y++)
                 {
-                    end += tileHeight;
-                }
-                else
-                {
-                    if (start != end)
+                    if (matrix[y][x].*direction)
                     {
-                        lines.emplace_back(Line{ currentWidth, start, currentWidth, end });
+                        end += tileHeight;
                     }
-                    start = end + tileHeight;
-                    end = start;
+                    else
+                    {
+                        if (start != end)
+                        {
+                            lines.emplace_back(Line{ currentWidth, start, currentWidth, end });
+                        }
+                        start = end + tileHeight;
+                        end = start;
+                    }
                 }
-            }
-            if (start != end)
+                if (start != end)
+                {
+                    lines.emplace_back(Line{ currentWidth, start, currentWidth, end });
+                }
+            }};
+
+            make(0, 0, &Tile::left);
+
+            for (auto x{ 0 }; x < matrix.front().size(); x++)
             {
-                lines.emplace_back(Line{ currentWidth, start, currentWidth, end });
+                make(x, ( x + 1 ) * tileWidth, &Tile::right);
             }
         }
 
