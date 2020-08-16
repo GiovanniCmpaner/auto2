@@ -259,7 +259,8 @@ namespace Maze
     auto rectangles(const std::vector<std::vector<Tile>>& matrix, int x, int y, int height, int width, int thickness) -> std::vector<Rect>
     {
         const auto lines{ Maze::lines(matrix,height,width) };
-        auto rectangles{ std::vector<Rect>{lines.size()} };
+        auto rectangles{ std::vector<Rect>{} };
+        rectangles.reserve(lines.size());
 
         for (const auto& line : lines)
         {
