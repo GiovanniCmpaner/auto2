@@ -7,6 +7,7 @@
 
 #include "maze.hpp"
 #include "simulation.hpp"
+#include "simulation2.hpp"
 
 /*
 std::unique_ptr<SDL_Window, void(*)(SDL_Window*)> window2{ nullptr, SDL_DestroyWindow };
@@ -22,17 +23,31 @@ auto createWindow(const std::string& name, int width, int height) -> std::unique
 }
 */
 
+//auto simulation{ Simulation{} };
 
 
 int main(int argc, char* args[])
 {
-    Simulation::init();
-
-    while (1)
+    //simulation.init();
+    //
+    //while (1)
+    //{
+    //    std::this_thread::sleep_for(std::chrono::seconds(1));
+    //}
+    //
+    //simulation.end();
+    if (Simulation2::init())
     {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        while (1)
+        {
+            if (not Simulation2::process())
+            {
+                break;
+            }
+        }
+        Simulation2::end();
     }
 
-    Simulation::end();
+    return EXIT_SUCCESS;
 }
 

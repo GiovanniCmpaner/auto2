@@ -1,13 +1,29 @@
 #pragma once
 
+#include <SDL.h>
+#include <SDL2_framerate.h>
+#include <SDL_ttf.h>
+#include <future>
+#include <atomic>
+#include <cstdint>
+
 class Simulation
 {
 public:
-    auto init() -> void;
+    auto init() -> bool;
     auto end() -> void;
 private:
-    const int screenWidth{ 500 };
-    const int screenHeight{ 500 };
+    auto text(int x, int y, const std::string& texto) -> void;
+    auto move() -> void;
+    auto collisions() -> void;
+    auto draw() -> void;
+    auto input() -> void;
+    auto clear() -> void;
+    auto update() -> void;
+    auto process() -> void;
+
+    int screenWidth{ 500 };
+    int screenHeight{ 500 };
 
     SDL_Window* window{ nullptr };
     SDL_Renderer* renderer{ nullptr };

@@ -15,11 +15,11 @@ public:
     auto distance() const->Distance;
     auto end() -> void;
 private:
-    int px{ 0 }, py{ 0 };
+    SDL_Rect rect{ 100, 100, 20, 20 };
+    SDL_Texture* texture{ nullptr };
+
     int vx{ 0 }, vy{ 0 };
     int ax{ 0 }, ay{ 0 };
     int angle{ 0 };
-    int height{ 0 }, width{ 0 };
-    SDL_Texture* texture{ nullptr };
     double front{ 0.0 }, left{ 0.0 }, right{ 0.0 };
 };

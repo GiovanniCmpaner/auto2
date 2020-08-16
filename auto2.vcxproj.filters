@@ -27,6 +27,9 @@
     <ClCompile Include="car.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="simulation2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\SDL2-2.0.12\lib\x64\SDL2.dll">
@@ -39,9 +42,6 @@
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="lib\SDL2_ttf-2.0.15\lib\x64\SDL2_ttf.dll">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="lib\SDL2_ttf-2.0.15\lib\x64\libfreetype-6.dll">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\libjpeg-9.dll">
@@ -64,14 +64,25 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="simulation.hpp">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="simulation2.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="maze.hpp">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="simulation.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="car.hpp">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="maze.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="lib\SDL2_ttf-2.0.15\lib\x64\libfreetype-6.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="lib\glew-2.2.0\bin\Release\x64\glew32.dll">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
