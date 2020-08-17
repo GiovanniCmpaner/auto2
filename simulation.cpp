@@ -15,7 +15,7 @@
 #include "car.hpp"
 
 static std::vector<Maze::Rect> rectangles{};
-static std::vector<Car> cars(100);
+static std::vector<Car> cars(1000);
 
 auto Simulation::text(int x, int y, const std::string& texto) -> void
 {
@@ -38,18 +38,17 @@ auto Simulation::text(int x, int y, const std::string& texto) -> void
 
 auto Simulation::move() -> void
 {
-    for (auto& car : cars) {
+    for (auto& car : cars)
+    {
         car.move(0, 0, 0);
     }
 }
 
 auto Simulation::collisions() -> void
 {
-    for(const auto& rect : rectangles)
+    for (auto& car : cars)
     {
-        for (auto& car : cars) {
-            car.measure(reinterpret_cast<const SDL_Rect*>(&rect));
-        }
+        car.measure(reinterpret_cast<const SDL_Rect*>(rectangles.data()), rectangles.size());
     }
 }
 
@@ -64,16 +63,17 @@ auto Simulation::draw() -> void
         SDL_RenderFillRect(renderer, reinterpret_cast<const SDL_Rect*>(&rect));
     };
 
-    for (auto& car : cars) {
+    for (auto& car : cars)
+    {
         car.render(renderer);
     }
-    const auto [front,left,right] = cars.front().distance();
+    const auto [front, left, right] = cars.front().distance();
     text(0, 0, "d=" + std::to_string(static_cast<int>(front)) + "," + std::to_string(static_cast<int>(left)) + "," + std::to_string(static_cast<int>(right)));
 
     //ang = (ang + 5) % 360;
     //
     //text(0, 0, "d = " + std::to_string(distance));
-            
+
     //
     //SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
     //SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
@@ -110,7 +110,7 @@ auto Simulation::process() -> void
         input();
 
         clear();
-                
+
         move();
 
         collisions();
@@ -188,7 +188,7 @@ auto Simulation::init() -> bool
     if (not task.valid())
     {
         quit = false;
-        task = std::async(std::launch::async, std::bind(&Simulation::process,this));
+        task = std::async(std::launch::async, std::bind(&Simulation::process, this));
     }
 }
 

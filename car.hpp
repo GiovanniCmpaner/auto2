@@ -10,7 +10,7 @@ class Car {
 public:
     auto init() -> void;
     auto move(int horizontal, int vertical, int angle) -> void;
-    auto measure(const SDL_Rect* rect) -> void;
+    auto measure(const SDL_Rect* rects, size_t count) -> void;
     auto render(SDL_Renderer* renderer) const -> void;
     auto distance() const->Distance;
     auto end() -> void;

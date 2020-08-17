@@ -23,30 +23,29 @@ auto createWindow(const std::string& name, int width, int height) -> std::unique
 }
 */
 
-//auto simulation{ Simulation{} };
-
+auto simulation{ Simulation{} };
 
 int main(int argc, char* args[])
 {
-    //simulation.init();
-    //
-    //while (1)
-    //{
-    //    std::this_thread::sleep_for(std::chrono::seconds(1));
-    //}
-    //
-    //simulation.end();
-    if (Simulation2::init())
+    simulation.init();
+    
+    while (1)
     {
-        while (1)
-        {
-            if (not Simulation2::process())
-            {
-                break;
-            }
-        }
-        Simulation2::end();
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+    
+    simulation.end();
+    //if (Simulation2::init())
+    //{
+    //    while (1)
+    //    {
+    //        if (not Simulation2::process())
+    //        {
+    //            break;
+    //        }
+    //    }
+    //    Simulation2::end();
+    //}
 
     return EXIT_SUCCESS;
 }

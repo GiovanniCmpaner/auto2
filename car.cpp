@@ -212,46 +212,70 @@ auto Car::move(int horizontal, int vertical, int angle) -> void
     this->angle = (this->angle + 1 % 360);
 }
 
-auto Car::measure(const SDL_Rect* other) -> void
+auto Car::measure(const SDL_Rect* rects, size_t count) -> void
 {
     {
-        auto rx1{ static_cast<int>(rect.x + (rect.w / 2) * std::cos(radians(angle + 0))) };
-        auto rx2{ static_cast<int>(rx1 + front * std::cos(radians(angle + 0))) };
+        const auto radians{ (angle + 0) * M_PI / 180.0 };
 
-        auto ry1{ static_cast<int>(rect.y + (rect.w / 2) * std::sin(radians(angle + 0))) };
-        auto ry2{ static_cast<int>(ry1 + front * std::sin(radians(angle + 0))) };
+        auto rx1{ static_cast<int>(rect.x + (rect.w / 2) * std::cos(radians)) };
+        auto rx2{ static_cast<int>(rx1 + front * std::cos(radians)) };
 
-        auto x1{ rx1 }, y1{ ry1 }, x2{ rx2 }, y2{ ry2 };
-        if (SDL_IntersectRectAndLine(other, &x1, &y1, &x2, &y2))
+        auto ry1{ static_cast<int>(rect.y + (rect.w / 2) * std::sin(radians)) };
+        auto ry2{ static_cast<int>(ry1 + front * std::sin(radians)) };
+
+        for (auto n{ 0 }; n < count; n++)
         {
-            front = std::sqrt(std::pow(x1 - rx1, 2) + std::pow(y1 - ry1, 2));
+            auto x1{ rx1 }, y1{ ry1 }, x2{ rx2 }, y2{ ry2 };
+            if (SDL_IntersectRectAndLine(rects + n, &x1, &y1, &x2, &y2))
+            {
+                rx2 = x1;
+                ry2 = y1;
+            }
         }
+
+        front = std::sqrt(std::pow(rx2 - rx1, 2) + std::pow(ry2 - ry1, 2));
     }
     {
-        auto rx1{ static_cast<int>(rect.x + (rect.w / 2) * std::cos(radians(angle + 90))) };
-        auto rx2{ static_cast<int>(rx1 + left * std::cos(radians(angle + 90))) };
+        const auto radians{ (angle + 90) * M_PI / 180.0 };
 
-        auto ry1{ static_cast<int>(rect.y + (rect.w / 2) * std::sin(radians(angle + 90))) };
-        auto ry2{ static_cast<int>(ry1 + left * std::sin(radians(angle + 90))) };
+        auto rx1{ static_cast<int>(rect.x + (rect.w / 2) * std::cos(radians)) };
+        auto rx2{ static_cast<int>(rx1 + left * std::cos(radians)) };
 
-        auto x1{ rx1 }, y1{ ry1 }, x2{ rx2 }, y2{ ry2 };
-        if (SDL_IntersectRectAndLine(other, &x1, &y1, &x2, &y2))
+        auto ry1{ static_cast<int>(rect.y + (rect.w / 2) * std::sin(radians)) };
+        auto ry2{ static_cast<int>(ry1 + left * std::sin(radians)) };
+
+        for (auto n{ 0 }; n < count; n++)
         {
-            left = std::sqrt(std::pow(x1 - rx1, 2) + std::pow(y1 - ry1, 2));
+            auto x1{ rx1 }, y1{ ry1 }, x2{ rx2 }, y2{ ry2 };
+            if (SDL_IntersectRectAndLine(rects + n, &x1, &y1, &x2, &y2))
+            {
+                rx2 = x1;
+                ry2 = y1;
+            }
         }
+
+        left = std::sqrt(std::pow(rx2 - rx1, 2) + std::pow(ry2 - ry1, 2));
     }
     {
-        auto rx1{ static_cast<int>(rect.x + (rect.w / 2) * std::cos(radians(angle - 90))) };
-        auto rx2{ static_cast<int>(rx1 + right * std::cos(radians(angle - 90))) };
+        const auto radians{ (angle - 90) * M_PI / 180.0 };
 
-        auto ry1{ static_cast<int>(rect.y + (rect.w / 2) * std::sin(radians(angle - 90))) };
-        auto ry2{ static_cast<int>(ry1 + right * std::sin(radians(angle - 90))) };
+        auto rx1{ static_cast<int>(rect.x + (rect.w / 2) * std::cos(radians)) };
+        auto rx2{ static_cast<int>(rx1 + right * std::cos(radians)) };
 
-        auto x1{ rx1 }, y1{ ry1 }, x2{ rx2 }, y2{ ry2 };
-        if (SDL_IntersectRectAndLine(other, &x1, &y1, &x2, &y2))
+        auto ry1{ static_cast<int>(rect.y + (rect.w / 2) * std::sin(radians)) };
+        auto ry2{ static_cast<int>(ry1 + right * std::sin(radians)) };
+
+        for (auto n{ 0 }; n < count; n++)
         {
-            right = std::sqrt(std::pow(x1 - rx1, 2) + std::pow(y1 - ry1, 2));
+            auto x1{ rx1 }, y1{ ry1 }, x2{ rx2 }, y2{ ry2 };
+            if (SDL_IntersectRectAndLine(rects + n, &x1, &y1, &x2, &y2))
+            {
+                rx2 = x1;
+                ry2 = y1;
+            }
         }
+
+        right = std::sqrt(std::pow(rx2 - rx1, 2) + std::pow(ry2 - ry1, 2));
     }
 }
 
@@ -260,15 +284,17 @@ auto Car::render(SDL_Renderer* renderer) const -> void
     SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xFF, 0xFF);
 
     {
-        const auto rx1{ rect.x + (rect.w / 2) * std::cos(radians(angle)) - (rect.h / 2) * std::sin(radians(angle)) };
-        const auto rx2{ rect.x - (rect.w / 2) * std::cos(radians(angle)) - (rect.h / 2) * std::sin(radians(angle)) };
-        const auto rx3{ rect.x + (rect.w / 2) * std::cos(radians(angle)) + (rect.h / 2) * std::sin(radians(angle)) };
-        const auto rx4{ rect.x - (rect.w / 2) * std::cos(radians(angle)) + (rect.h / 2) * std::sin(radians(angle)) };
+        const auto radians{ (angle + 0) * M_PI / 180.0 };
 
-        const auto ry1{ rect.y + (rect.h / 2) * std::cos(radians(angle)) + (rect.w / 2) * std::sin(radians(angle)) };
-        const auto ry2{ rect.y + (rect.h / 2) * std::cos(radians(angle)) - (rect.w / 2) * std::sin(radians(angle)) };
-        const auto ry3{ rect.y - (rect.h / 2) * std::cos(radians(angle)) + (rect.w / 2) * std::sin(radians(angle)) };
-        const auto ry4{ rect.y - (rect.h / 2) * std::cos(radians(angle)) - (rect.w / 2) * std::sin(radians(angle)) };
+        const auto rx1{ rect.x + (rect.w / 2) * std::cos(radians) - (rect.h / 2) * std::sin(radians) };
+        const auto rx2{ rect.x - (rect.w / 2) * std::cos(radians) - (rect.h / 2) * std::sin(radians) };
+        const auto rx3{ rect.x + (rect.w / 2) * std::cos(radians) + (rect.h / 2) * std::sin(radians) };
+        const auto rx4{ rect.x - (rect.w / 2) * std::cos(radians) + (rect.h / 2) * std::sin(radians) };
+
+        const auto ry1{ rect.y + (rect.h / 2) * std::cos(radians) + (rect.w / 2) * std::sin(radians) };
+        const auto ry2{ rect.y + (rect.h / 2) * std::cos(radians) - (rect.w / 2) * std::sin(radians) };
+        const auto ry3{ rect.y - (rect.h / 2) * std::cos(radians) + (rect.w / 2) * std::sin(radians) };
+        const auto ry4{ rect.y - (rect.h / 2) * std::cos(radians) - (rect.w / 2) * std::sin(radians) };
 
         SDL_RenderDrawLine(renderer, rx1, ry1, rx2, ry2);
         SDL_RenderDrawLine(renderer, rx1, ry1, rx3, ry3);
@@ -285,20 +311,24 @@ auto Car::render(SDL_Renderer* renderer) const -> void
         SDL_RenderDrawLine(renderer, rx1, ry1, rx2, ry2);
     }
     {
-        const auto rx1{ rect.x + (rect.w / 2) * std::cos(radians(angle + 90)) };
-        const auto rx2{ rx1 + left * std::cos(radians(angle + 90)) };
+        const auto radians{ (angle + 90) * M_PI / 180.0 };
 
-        const auto ry1{ rect.y + (rect.w / 2) * std::sin(radians(angle + 90)) };
-        const auto ry2{ ry1 + left * std::sin(radians(angle + 90)) };
+        const auto rx1{ rect.x + (rect.w / 2) * std::cos(radians) };
+        const auto rx2{ rx1 + left * std::cos(radians) };
+
+        const auto ry1{ rect.y + (rect.w / 2) * std::sin(radians) };
+        const auto ry2{ ry1 + left * std::sin(radians) };
 
         SDL_RenderDrawLine(renderer, rx1, ry1, rx2, ry2);
     }
     {
-        const auto rx1{ rect.x + (rect.w / 2) * std::cos(radians(angle - 90)) };
-        const auto rx2{ rx1 + right * std::cos(radians(angle - 90)) };
+        const auto radians{ (angle - 90) * M_PI / 180.0 };
 
-        const auto ry1{ rect.y + (rect.w / 2) * std::sin(radians(angle - 90)) };
-        const auto ry2{ ry1 + right * std::sin(radians(angle - 90)) };
+        const auto rx1{ rect.x + (rect.w / 2) * std::cos(radians) };
+        const auto rx2{ rx1 + right * std::cos(radians) };
+
+        const auto ry1{ rect.y + (rect.w / 2) * std::sin(radians) };
+        const auto ry2{ ry1 + right * std::sin(radians) };
 
         SDL_RenderDrawLine(renderer, rx1, ry1, rx2, ry2);
     }
