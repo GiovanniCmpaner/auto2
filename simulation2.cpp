@@ -3,17 +3,19 @@ and may not be redistributed without written permission.*/
 
 //Using SDL, SDL OpenGL, GLEW, standard IO, and strings
 #include <SDL.h>
-#include <gl\glew.h>
 #include <SDL_opengl.h>
-#include <gl\glu.h>
+#include <SDL2_framerate.h>
+#include <gl/glu.h>
+#include <gl/glew.h>
+#include <box2d/box2d.h>
 #include <stdio.h>
 #include <string>
 
 namespace Simulation2
 {
     //Screen dimension constants
-    const int SCREEN_WIDTH = 640;
-    const int SCREEN_HEIGHT = 480;
+    static constexpr int SCREEN_WIDTH{ 640 };
+    static constexpr int SCREEN_HEIGHT{ 480 };
 
     //Starts up SDL, creates window, and initializes OpenGL
     bool init();
@@ -33,28 +35,23 @@ namespace Simulation2
     //Frees media and shuts down SDL
     void end();
 
-    //Shader loading utility programs
-    void printProgramLog(GLuint program);
-    void printShaderLog(GLuint shader);
-
     //The window we'll be rendering to
-    SDL_Window* gWindow = NULL;
-
-    SDL_Renderer* gRenderer = NULL;
+    SDL_Window* gWindow{ nullptr };
 
     //OpenGL context
-    SDL_GLContext gContext;
+    SDL_GLContext gContext{ 0 };
 
-    //Render flag
-    bool gRenderQuad = true;
+    FPSmanager manager{};
+
+    b2World world{ b2Vec2{ 0.0, 0.0 } };
 
     //Main loop flag
-    bool quit = false;
+    bool quit{ false };
 
     bool init()
     {
         //Initialize SDL
-        if (SDL_Init(SDL_INIT_VIDEO) < 0)
+        if (SDL_Init(SDL_INIT_VIDEO) != 0)
         {
             printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
             return false;
@@ -66,21 +63,16 @@ namespace Simulation2
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
         //Create window
-        SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT,  SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN, &gWindow,&gRenderer);
-        if (gWindow == NULL)
+        gWindow = SDL_CreateWindow("Simulation", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT,  SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+        if (gWindow == nullptr)
         {
             printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
-            return false;
-        }
-        if (gRenderer == NULL)
-        {
-            printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
             return false;
         }
 
         //Create context
         gContext = SDL_GL_CreateContext(gWindow);
-        if (gContext == NULL)
+        if (gContext == nullptr)
         {
             printf("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
             return false;
@@ -88,7 +80,7 @@ namespace Simulation2
 
         //Initialize GLEW
         glewExperimental = GL_TRUE;
-        GLenum glewError = glewInit();
+        const auto glewError{ glewInit() };
         if (glewError != GLEW_OK)
         {
             printf("Error initializing GLEW! %s\n", glewGetErrorString(glewError));
@@ -96,14 +88,11 @@ namespace Simulation2
         }
 
         //Use Vsync
-        if (SDL_GL_SetSwapInterval(1) < 0)
+        if (SDL_GL_SetSwapInterval(1) != 0)
         {
             printf("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
             return false;
         }
-
-        SDL_RenderClear(gRenderer);
-        SDL_RenderPresent(gRenderer);
 
         //Main loop flag
         quit = false;
@@ -111,55 +100,16 @@ namespace Simulation2
         //Enable text input
         SDL_StartTextInput();
 
-        glClearColor(0, 0, 0, 0);
-        glViewport(0, 0, 640, 480);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, 640, 480, 0, 1, -1);
-        glMatrixMode(GL_MODELVIEW);
-        glEnable(GL_TEXTURE_2D);
-        glLoadIdentity();
+        // FPS
+        SDL_initFramerate(&manager);
+        SDL_setFramerate(&manager, 60);
 
         return true;
     }
 
     void handleKeys(unsigned char key, int x, int y)
     {
-        //Toggle quad
-        if (key == 'q')
-        {
-            gRenderQuad = !gRenderQuad;
-        }
-    }
 
-    void render()
-    {
-        glClearColor(0.0, 0.0, 0.0, 0.0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glPushMatrix();
-        {
-            const auto x{ 100.0 };
-            const auto y{ 100.0 };
-            const auto w{ 50.0 };
-            const auto h{ 50.0 };
-
-            glTranslatef(x, y, 0);
-            glRotatef(45, 0, 0, 1);
-            glTranslatef(-w / 2, -h / 2, 0);
-            glBegin(GL_QUADS);
-            {
-                glColor3f(0.0, 1.0, 0.0);
-                glVertex2i(w, 0);
-                glVertex2i(w, h);
-                glVertex2i(0, h);
-                glVertex2i(0, 0);
-            }
-            glEnd();
-        }
-        glPopMatrix();
-
-        glFlush();
     }
 
     void end()
@@ -169,7 +119,7 @@ namespace Simulation2
 
         //Destroy window	
         SDL_DestroyWindow(gWindow);
-        gWindow = NULL;
+        gWindow = nullptr;
 
         //Quit SDL subsystems
         SDL_Quit();
@@ -199,11 +149,24 @@ namespace Simulation2
                 }
             }
 
-            //Render quad
-            render();
+            {
+                static constexpr auto timeStep{ 1.0 / 60.0 };
+                static constexpr auto velocityIterations{ 4 };
+                static constexpr auto positionIterations{ 4 };
+
+                // World step
+                world.Step(timeStep, velocityIterations, positionIterations);
+
+                // Internal draw
+                draw.DrawPolygon();
+
+                // Flush draw
+                draw.Flush();
+            }
 
             //Update screen
             SDL_GL_SwapWindow(gWindow);
+            SDL_framerateDelay(&manager);
         }
         return not quit;
     }

@@ -62,6 +62,12 @@
     <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\zlib1.dll">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\glew-2.2.0\bin\Release\x64\glew32.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\SDL2_ttf-2.0.15\lib\x64\libfreetype-6.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="simulation2.hpp">
@@ -76,13 +82,5 @@
     <ClInclude Include="maze.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="lib\SDL2_ttf-2.0.15\lib\x64\libfreetype-6.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="lib\glew-2.2.0\bin\Release\x64\glew32.dll">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
 </Project>

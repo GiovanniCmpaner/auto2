@@ -3,6 +3,7 @@
 #include <SDL_ttf.h>
 #include <SDL2_gfxPrimitives.h>
 #include <SDL2_framerate.h>
+#include <box2d/box2d.h>
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -19,21 +20,22 @@ static std::vector<Car> cars(1000);
 
 auto Simulation::text(int x, int y, const std::string& texto) -> void
 {
-    auto rect{ SDL_Rect{x,y,0,0} };
-    TTF_SizeText(font, texto.c_str(), &rect.w, &rect.h);
-
-    if (const auto surface{ TTF_RenderText_Solid(font, texto.c_str(), { 0, 0, 0 }) }; surface == nullptr)
-    {
-        std::cerr << "Failed to render text! Error: " << TTF_GetError() << std::endl;
-    }
-    else if (const auto texture{ SDL_CreateTextureFromSurface(renderer, surface) }; texture == nullptr)
-    {
-        std::cerr << "Failed to create texture! Error: " << SDL_GetError() << std::endl;
-    }
-    else
-    {
-        SDL_RenderCopy(renderer, texture, nullptr, &rect);
-    }
+    //auto rect{ SDL_Rect{x,y,0,0} };
+    //TTF_SizeText(font, texto.c_str(), &rect.w, &rect.h);
+    //
+    //if (const auto surface{ TTF_RenderText_Solid(font, texto.c_str(), { 0, 0, 0 }) }; surface == nullptr)
+    //{
+    //    std::cerr << "Failed to render text! Error: " << TTF_GetError() << std::endl;
+    //}
+    //else if (const auto texture{ SDL_CreateTextureFromSurface(renderer, surface) }; texture == nullptr)
+    //{
+    //    auto t{ SDL_CreateTextureFromSurface(nullptr,nullptr) };
+    //    std::cerr << "Failed to create texture! Error: " << SDL_GetError() << std::endl;
+    //}
+    //else
+    //{
+    //    SDL_RenderCopy(renderer, texture, nullptr, &rect);
+    //}
 }
 
 auto Simulation::move() -> void
@@ -121,12 +123,8 @@ auto Simulation::process() -> void
     }
 }
 
-auto Simulation::init() -> bool
+auto Simulation::initVideo() -> bool
 {
-    const auto maze{ Maze::make(6,6) };
-    Maze::print(maze);
-    rectangles = Maze::rectangles(maze, 10, 50, 400, 400, 3);
-
     // Initialize SDL for video
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
@@ -167,6 +165,11 @@ auto Simulation::init() -> bool
     SDL_initFramerate(&manager);
     SDL_setFramerate(&manager, 60);
 
+    return true;
+}
+
+auto Simulation::initFont() -> bool
+{
     // Initialize TTF for fonts
     if (TTF_Init() != 0)
     {
@@ -185,11 +188,49 @@ auto Simulation::init() -> bool
         }
     }
 
+    return true;
+}
+
+auto Simulation::initWorld() -> bool
+{
+    const auto gravity{ b2Vec2{0.0, 0.0} };
+    world = new b2World{ gravity };
+
+    auto bodyDef{ b2BodyDef{} };
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.position.Set(0.0, 4.0);
+
+    auto dynamicBox{ b2PolygonShape{} };
+    dynamicBox.SetAsBox(1.0, 1.0);
+
+    auto fixtureDef{ b2FixtureDef{} };
+    fixtureDef.shape = &dynamicBox;
+    fixtureDef.density = 1.0;
+    fixtureDef.friction = 0.3;
+
+    auto body{ world->CreateBody(&bodyDef) };
+    body->CreateFixture(&fixtureDef);
+
+    return true;
+}
+
+auto Simulation::init() -> bool
+{
+    const auto maze{ Maze::make(6,6) };
+    Maze::print(maze);
+    rectangles = Maze::rectangles(maze, 10, 50, 400, 400, 3);
+
+    initVideo();
+    initFont();
+    initWorld();
+
     if (not task.valid())
     {
         quit = false;
         task = std::async(std::launch::async, std::bind(&Simulation::process, this));
     }
+
+    return true;
 }
 
 auto Simulation::end() -> void

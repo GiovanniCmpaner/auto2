@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <SDL2_framerate.h>
 #include <SDL_ttf.h>
+#include <box2d/box2d.h>
 #include <future>
 #include <atomic>
 #include <cstdint>
@@ -13,6 +14,11 @@ public:
     auto init() -> bool;
     auto end() -> void;
 private:
+    auto initVideo() -> bool;
+    auto initFont() -> bool;
+    auto initWorld() -> bool;
+
+
     auto text(int x, int y, const std::string& texto) -> void;
     auto move() -> void;
     auto collisions() -> void;
@@ -27,8 +33,9 @@ private:
 
     SDL_Window* window{ nullptr };
     SDL_Renderer* renderer{ nullptr };
-    FPSmanager manager{};
     TTF_Font* font{ nullptr };
+    b2World* world{ nullptr };
+    FPSmanager manager{};
 
     std::future<void> task{};
     std::atomic<bool> quit{ false };
