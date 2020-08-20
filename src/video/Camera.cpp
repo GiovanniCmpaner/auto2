@@ -1,74 +1,65 @@
-b2Vec2 Camera::ConvertScreenToWorld(const b2Vec2& ps)
+#include "Camera.hpp"
+
+auto Camera::convertScreenToWorld(const b2Vec2& ps) -> b2Vec2
 {
-    float w = float(m_width);
-    float h = float(m_height);
-	float u = ps.x / w;
-	float v = (h - ps.y) / h;
+    const auto ratio{ static_cast<float>(width) / static_cast<float>(height) };
+    const auto extents{ zoom * b2Vec2{ ratio * 25.0f, 25.0f } };
 
-	float ratio = w / h;
-	b2Vec2 extents(ratio * 25.0f, 25.0f);
-	extents *= m_zoom;
+    const auto lower{ b2Vec2{center - extents} };
+    const auto upper{ b2Vec2{center + extents} };
 
-	b2Vec2 lower = m_center - extents;
-	b2Vec2 upper = m_center + extents;
+    const auto u{ ps.x / width };
+    const auto v{ (height - ps.y) / height };
 
-	b2Vec2 pw;
-	pw.x = (1.0f - u) * lower.x + u * upper.x;
-	pw.y = (1.0f - v) * lower.y + v * upper.y;
-	return pw;
+    return b2Vec2{
+        (1.0f - u) * lower.x + u * upper.x,
+        (1.0f - v) * lower.y + v * upper.y
+    };
 }
 
-//
-b2Vec2 Camera::ConvertWorldToScreen(const b2Vec2& pw)
+auto Camera::convertWorldToScreen(const b2Vec2& pw) -> b2Vec2
 {
-	float w = float(m_width);
-	float h = float(m_height);
-	float ratio = w / h;
-	b2Vec2 extents(ratio * 25.0f, 25.0f);
-	extents *= m_zoom;
+    const auto ratio{ static_cast<float>(width) / static_cast<float>(height) };
+    const auto extents{ zoom * b2Vec2{ ratio * 25.0f, 25.0f } };
 
-	b2Vec2 lower = m_center - extents;
-	b2Vec2 upper = m_center + extents;
+    const auto lower{ b2Vec2{center - extents} };
+    const auto upper{ b2Vec2{center + extents} };
 
-	float u = (pw.x - lower.x) / (upper.x - lower.x);
-	float v = (pw.y - lower.y) / (upper.y - lower.y);
+    const auto u{ (pw.x - lower.x) / (upper.x - lower.x) };
+    const auto v{ (pw.y - lower.y) / (upper.y - lower.y) };
 
-	b2Vec2 ps;
-	ps.x = u * w;
-	ps.y = (1.0f - v) * h;
-	return ps;
+    return b2Vec2{
+        u * width,
+        (1.0f - v) * height
+    };
 }
 
-// Convert from world coordinates to normalized device coordinates.
-// http://www.songho.ca/opengl/gl_projectionmatrix.html
-void Camera::BuildProjectionMatrix(float* m, float zBias)
+auto Camera::buildProjectionMatrix(float* matrix, float zBias) -> void
 {
-	float w = float(m_width);
-	float h = float(m_height);
-	float ratio = w / h;
-	b2Vec2 extents(ratio * 25.0f, 25.0f);
-	extents *= m_zoom;
+    const auto ratio{ static_cast<float>(width) / static_cast<float>(height) };
+    const auto extents{ zoom * b2Vec2{ ratio * 25.0f, 25.0f } };
 
-	b2Vec2 lower = m_center - extents;
-	b2Vec2 upper = m_center + extents;
+    const auto lower{ b2Vec2{center - extents} };
+    const auto upper{ b2Vec2{center + extents} };
 
-	m[0] = 2.0f / (upper.x - lower.x);
-	m[1] = 0.0f;
-	m[2] = 0.0f;
-	m[3] = 0.0f;
+    matrix[0] = 2.0f / (upper.x - lower.x);
+    matrix[1] = 0.0f;
+    matrix[2] = 0.0f;
+    matrix[3] = 0.0f;
 
-	m[4] = 0.0f;
-	m[5] = 2.0f / (upper.y - lower.y);
-	m[6] = 0.0f;
-	m[7] = 0.0f;
+    matrix[4] = 0.0f;
+    matrix[5] = 2.0f / (upper.y - lower.y);
+    matrix[6] = 0.0f;
+    matrix[7] = 0.0f;
 
-	m[8] = 0.0f;
-	m[9] = 0.0f;
-	m[10] = 1.0f;
-	m[11] = 0.0f;
+    matrix[8] = 0.0f;
+    matrix[9] = 0.0f;
+    matrix[10] = 1.0f;
+    matrix[11] = 0.0f;
 
-	m[12] = -(upper.x + lower.x) / (upper.x - lower.x);
-	m[13] = -(upper.y + lower.y) / (upper.y - lower.y);
-	m[14] = zBias;
-	m[15] = 1.0f;
+    matrix[12] = -(upper.x + lower.x) / (upper.x - lower.x);
+    matrix[13] = -(upper.y + lower.y) / (upper.y - lower.y);
+    matrix[14] = zBias;
+    matrix[15] = 1.0f;
 }
+

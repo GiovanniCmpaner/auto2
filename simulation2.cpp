@@ -2,20 +2,23 @@
 and may not be redistributed without written permission.*/
 
 //Using SDL, SDL OpenGL, GLEW, standard IO, and strings
+#include <gl/glew.h>
+#include <gl/glu.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL2_framerate.h>
-#include <gl/glu.h>
-#include <gl/glew.h>
 #include <box2d/box2d.h>
 #include <stdio.h>
 #include <string>
 
+#include "video/Camera.hpp"
+#include "video/Draw.hpp"
+
 namespace Simulation2
 {
     //Screen dimension constants
-    static constexpr int SCREEN_WIDTH{ 640 };
-    static constexpr int SCREEN_HEIGHT{ 480 };
+    static constexpr int SCREEN_WIDTH{ 1280 };
+    static constexpr int SCREEN_HEIGHT{ 800 };
 
     //Starts up SDL, creates window, and initializes OpenGL
     bool init();
@@ -44,6 +47,7 @@ namespace Simulation2
     FPSmanager manager{};
 
     b2World world{ b2Vec2{ 0.0, 0.0 } };
+    Camera camera{};
 
     //Main loop flag
     bool quit{ false };

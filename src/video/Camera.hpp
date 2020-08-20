@@ -1,19 +1,15 @@
-struct Camera
+#pragma once
+
+#include <box2d/box2d.h>
+
+class Camera
 {
-	Camera()
-	{
-		m_center.Set(0.0f, 20.0f);
-		m_zoom = 1.0f;
-		m_width = 1280;
-		m_height = 800;
-	}
-
-	b2Vec2 ConvertScreenToWorld(const b2Vec2& screenPoint);
-	b2Vec2 ConvertWorldToScreen(const b2Vec2& worldPoint);
-	void BuildProjectionMatrix(float* m, float zBias);
-
-	b2Vec2 m_center;
-	float m_zoom;
-	int32 m_width;
-	int32 m_height;
+    b2Vec2 center{ 0.0, 20.0 };
+    float zoom{ 1.0 };
+    int32 width{ 1280 };
+    int32 height{ 800 };
+public:
+    auto convertScreenToWorld(const b2Vec2& screenPoint)->b2Vec2;
+    auto convertWorldToScreen(const b2Vec2& worldPoint)->b2Vec2;
+    auto buildProjectionMatrix(float* matrix, float zBias) -> void;
 };

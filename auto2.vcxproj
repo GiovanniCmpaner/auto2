@@ -94,6 +94,12 @@
     <ClCompile Include="maze.cpp" />
     <ClCompile Include="simulation.cpp" />
     <ClCompile Include="simulation2.cpp" />
+    <ClCompile Include="src\video\Camera.cpp" />
+    <ClCompile Include="src\video\Draw.cpp" />
+    <ClCompile Include="src\video\GLRenderLines.cpp" />
+    <ClCompile Include="src\video\GLRenderPoints.cpp" />
+    <ClCompile Include="src\video\GLRenderTriangles.cpp" />
+    <ClCompile Include="src\video\Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\SDL2-2.0.12\lib\x64\SDL2.dll">
@@ -149,6 +155,12 @@
     <ClInclude Include="maze.hpp" />
     <ClInclude Include="simulation.hpp" />
     <ClInclude Include="simulation2.hpp" />
+    <ClInclude Include="src\video\Camera.hpp" />
+    <ClInclude Include="src\video\Draw.hpp" />
+    <ClInclude Include="src\video\GLRenderLines.hpp" />
+    <ClInclude Include="src\video\GLRenderPoints.hpp" />
+    <ClInclude Include="src\video\GLRenderTriangles.hpp" />
+    <ClInclude Include="src\video\Utilities.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\glew-2.2.0\bin\Release\x64\glew32.dll">

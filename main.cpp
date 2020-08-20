@@ -14,7 +14,6 @@
 #include "maze.hpp"
 #include "simulation.hpp"
 #include "simulation2.hpp"
-#include "RenderLines.hpp"
 
 /*
 std::unique_ptr<SDL_Window, void(*)(SDL_Window*)> window2{ nullptr, SDL_DestroyWindow };

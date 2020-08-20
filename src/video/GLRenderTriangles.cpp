@@ -1,129 +1,134 @@
-struct GLRenderTriangles
+#include <gl/glew.h>
+#include <box2d/box2d.h>
+
+#include <iostream>
+#include <cstdio>
+#include <cstdint>
+
+#include "Camera.hpp"
+#include "Utilities.hpp"
+#include "GLRenderTriangles.hpp"
+
+static constexpr auto vs{ R"(
+    #version 330
+    uniform mat4 projectionMatrix;
+    layout(location = 0) in vec2 v_position;
+    layout(location = 1) in vec4 v_color;
+    out vec4 f_color;
+    void main(void)
+    {
+        f_color = v_color;
+        gl_Position = projectionMatrix * vec4(v_position, 0.0f, 1.0f);
+    };
+)" };
+
+static constexpr auto fs{ R"(
+    #version 330
+    in vec4 f_color;
+    out vec4 color;
+    void main(void)
+    {
+    	color = f_color;
+    };
+)" };
+
+auto GLRenderTriangles::create(Camera* camera) -> void
 {
-	void Create()
-	{
-		const char* vs = \
-			"#version 330\n"
-			"uniform mat4 projectionMatrix;\n"
-			"layout(location = 0) in vec2 v_position;\n"
-			"layout(location = 1) in vec4 v_color;\n"
-			"out vec4 f_color;\n"
-			"void main(void)\n"
-			"{\n"
-			"	f_color = v_color;\n"
-			"	gl_Position = projectionMatrix * vec4(v_position, 0.0f, 1.0f);\n"
-			"}\n";
+    this->camera = camera;
 
-		const char* fs = \
-			"#version 330\n"
-			"in vec4 f_color;\n"
-            "out vec4 color;\n"
-			"void main(void)\n"
-			"{\n"
-			"	color = f_color;\n"
-			"}\n";
+    programId = Utilities::createShaderProgram(vs, fs);
+    projectionUniform = glGetUniformLocation(programId, "projectionMatrix");
+    vertexAttribute = 0;
+    colorAttribute = 1;
 
-		m_programId = sCreateShaderProgram(vs, fs);
-		m_projectionUniform = glGetUniformLocation(m_programId, "projectionMatrix");
-		m_vertexAttribute = 0;
-		m_colorAttribute = 1;
+    // Generate
+    glGenVertexArrays(1, &vaoId);
+    glGenBuffers(2, vboIds);
 
-		// Generate
-		glGenVertexArrays(1, &m_vaoId);
-		glGenBuffers(2, m_vboIds);
+    glBindVertexArray(vaoId);
+    glEnableVertexAttribArray(vertexAttribute);
+    glEnableVertexAttribArray(colorAttribute);
 
-		glBindVertexArray(m_vaoId);
-		glEnableVertexAttribArray(m_vertexAttribute);
-		glEnableVertexAttribArray(m_colorAttribute);
+    // Vertex buffer
+    glBindBuffer(GL_ARRAY_BUFFER, vboIds[0]);
+    glVertexAttribPointer(vertexAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
-		// Vertex buffer
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
-		glVertexAttribPointer(m_vertexAttribute, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-		glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertices), m_vertices, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, vboIds[1]);
+    glVertexAttribPointer(colorAttribute, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_DYNAMIC_DRAW);
 
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
-		glVertexAttribPointer(m_colorAttribute, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-		glBufferData(GL_ARRAY_BUFFER, sizeof(m_colors), m_colors, GL_DYNAMIC_DRAW);
+    // Cleanup
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
-		sCheckGLError();
+    count = 0;
+}
 
-		// Cleanup
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
+auto GLRenderTriangles::destroy() -> void
+{
+    if (vaoId)
+    {
+        glDeleteVertexArrays(1, &vaoId);
+        glDeleteBuffers(2, vboIds);
+        vaoId = 0;
+    }
 
-		m_count = 0;
-	}
+    if (programId)
+    {
+        glDeleteProgram(programId);
+        programId = 0;
+    }
+}
 
-	void Destroy()
-	{
-		if (m_vaoId)
-		{
-			glDeleteVertexArrays(1, &m_vaoId);
-			glDeleteBuffers(2, m_vboIds);
-			m_vaoId = 0;
-		}
+auto GLRenderTriangles::triangle(const b2Vec2& v1, const b2Vec2& v2, const b2Vec2& v3, const b2Color& c) -> void
+{
+    auto vertex{ [this](const b2Vec2& v, const b2Color& c)
+    {
+        if (count == e_maxVertices)
+        {
+            flush();
+        }
 
-		if (m_programId)
-		{
-			glDeleteProgram(m_programId);
-			m_programId = 0;
-		}
-	}
+        vertices[count] = v;
+        colors[count] = c;
 
-	void Vertex(const b2Vec2& v, const b2Color& c)
-	{
-		if (m_count == e_maxVertices)
-			Flush();
+        ++count;
+    } };
 
-		m_vertices[m_count] = v;
-		m_colors[m_count] = c;
-		++m_count;
-	}
+    vertex(v1, c);
+    vertex(v2, c);
+    vertex(v3, c);
+}
 
-    void Flush()
-	{
-        if (m_count == 0)
-            return;
-        
-		glUseProgram(m_programId);
-        
-		float proj[16] = { 0.0f };
-		g_camera.BuildProjectionMatrix(proj, 0.2f);
-        
-		glUniformMatrix4fv(m_projectionUniform, 1, GL_FALSE, proj);
-        
-		glBindVertexArray(m_vaoId);
-        
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[0]);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Vec2), m_vertices);
-        
-		glBindBuffer(GL_ARRAY_BUFFER, m_vboIds[1]);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, m_count * sizeof(b2Color), m_colors);
-        
-        glEnable(GL_BLEND);
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDrawArrays(GL_TRIANGLES, 0, m_count);
-        glDisable(GL_BLEND);
-        
-		sCheckGLError();
-        
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-		glUseProgram(0);
-        
-		m_count = 0;
-	}
-    
-	enum { e_maxVertices = 3 * 512 };
-	b2Vec2 m_vertices[e_maxVertices];
-	b2Color m_colors[e_maxVertices];
+auto GLRenderTriangles::flush() -> void
+{
+    if (count == 0)
+        return;
 
-	int32 m_count;
+    glUseProgram(programId);
 
-	GLuint m_vaoId;
-	GLuint m_vboIds[2];
-	GLuint m_programId;
-	GLint m_projectionUniform;
-	GLint m_vertexAttribute;
-	GLint m_colorAttribute;
-};
+    float proj[16] = { 0.0f };
+    camera->buildProjectionMatrix(proj, 0.2f);
+
+    glUniformMatrix4fv(projectionUniform, 1, GL_FALSE, proj);
+
+    glBindVertexArray(vaoId);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vboIds[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(b2Vec2), vertices);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vboIds[1]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(b2Color), colors);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDrawArrays(GL_TRIANGLES, 0, count);
+    glDisable(GL_BLEND);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glUseProgram(0);
+
+    count = 0;
+}
