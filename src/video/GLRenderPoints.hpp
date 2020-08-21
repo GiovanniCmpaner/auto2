@@ -9,9 +9,9 @@ class GLRenderPoints
 {
 public:
 
-	auto create(Camera* camera) -> void;
+	GLRenderPoints(std::shared_ptr<Camera> camera);
 
-	auto destroy() -> void;
+	~GLRenderPoints();
 
 	auto point(const b2Vec2& vector, const b2Color& color, float size) -> void;
 
@@ -19,7 +19,7 @@ public:
 
 private:
 
-	Camera* camera{ nullptr };
+	std::shared_ptr<Camera> camera{ nullptr };
 
 	enum { e_maxVertices = 512 };
 	b2Vec2 vertices[e_maxVertices];

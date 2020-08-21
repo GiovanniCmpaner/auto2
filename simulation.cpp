@@ -216,9 +216,9 @@ auto Simulation::initWorld() -> bool
 
 auto Simulation::init() -> bool
 {
-    const auto maze{ Maze::make(6,6) };
+    const auto maze{ Maze::make(2,2) };
     Maze::print(maze);
-    rectangles = Maze::rectangles(maze, 10, 50, 400, 400, 3);
+    rectangles = Maze::rectangles(maze, 1, 1, 10, 10, 1);
 
     initVideo();
     initFont();

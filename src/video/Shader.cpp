@@ -2,14 +2,14 @@
 #include <string>
 #include <iostream>
 
-#include "Utilities.hpp"
+#include "Shader.hpp"
 
-namespace Utilities
+namespace Shader
 {
-    auto createShaderProgram(const std::string& vs, const std::string& fs) -> GLuint
+    auto createProgram(const std::string& vs, const std::string& fs) -> GLuint
     {
-        const auto vsId{ createShaderFromString(vs, GL_VERTEX_SHADER) };
-        const auto fsId{ createShaderFromString(fs, GL_FRAGMENT_SHADER) };
+        const auto vsId{ createFromString(vs, GL_VERTEX_SHADER) };
+        const auto fsId{ createFromString(fs, GL_FRAGMENT_SHADER) };
         if (vsId == 0 || fsId == 0)
         {
             std::cerr << "Error creating program" << std::endl;
@@ -38,7 +38,7 @@ namespace Utilities
         return programId;
     }
 
-    auto createShaderFromString(const std::string& source, GLenum type) -> GLuint
+    auto createFromString(const std::string& source, GLenum type) -> GLuint
     {
         const auto shaderId{ glCreateShader(type) };
 

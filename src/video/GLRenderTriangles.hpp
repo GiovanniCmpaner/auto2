@@ -9,9 +9,9 @@ struct GLRenderTriangles
 {
 public:
 
-	auto create(Camera* camera) -> void;
+	GLRenderTriangles(std::shared_ptr<Camera> camera);
 
-	auto destroy() -> void;
+	~GLRenderTriangles();
 
 	auto triangle(const b2Vec2& v1, const b2Vec2& v2, const b2Vec2& v3, const b2Color& c) -> void;
 
@@ -19,7 +19,7 @@ public:
 
 private:
 
-	Camera* camera{ nullptr };
+	std::shared_ptr<Camera> camera{ nullptr };
 
 	enum { e_maxVertices = 3 * 512 };
 	b2Vec2 vertices[e_maxVertices];

@@ -1,9 +1,27 @@
+#include <algorithm>
+
 #include "Camera.hpp"
+
+auto Camera::zoomIn() -> void
+{
+    zoom = std::max(0.9f * zoom, 0.02f);
+}
+
+auto Camera::zoomOut() -> void 
+{
+    zoom = std::min(1.1f * zoom, 20.0f);
+}
+
+auto Camera::home() -> void 
+{
+    zoom = 1.0f;
+    center = b2Vec2{ 0.0f, 20.0f };
+}
 
 auto Camera::convertScreenToWorld(const b2Vec2& ps) -> b2Vec2
 {
     const auto ratio{ static_cast<float>(width) / static_cast<float>(height) };
-    const auto extents{ zoom * b2Vec2{ ratio * 25.0f, 25.0f } };
+    const auto extents{ zoom * b2Vec2{ ratio * 5.0f, 5.0f } };
 
     const auto lower{ b2Vec2{center - extents} };
     const auto upper{ b2Vec2{center + extents} };
@@ -20,7 +38,7 @@ auto Camera::convertScreenToWorld(const b2Vec2& ps) -> b2Vec2
 auto Camera::convertWorldToScreen(const b2Vec2& pw) -> b2Vec2
 {
     const auto ratio{ static_cast<float>(width) / static_cast<float>(height) };
-    const auto extents{ zoom * b2Vec2{ ratio * 25.0f, 25.0f } };
+    const auto extents{ zoom * b2Vec2{ ratio * 5.0f, 5.0f } };
 
     const auto lower{ b2Vec2{center - extents} };
     const auto upper{ b2Vec2{center + extents} };
@@ -37,7 +55,7 @@ auto Camera::convertWorldToScreen(const b2Vec2& pw) -> b2Vec2
 auto Camera::buildProjectionMatrix(float* matrix, float zBias) -> void
 {
     const auto ratio{ static_cast<float>(width) / static_cast<float>(height) };
-    const auto extents{ zoom * b2Vec2{ ratio * 25.0f, 25.0f } };
+    const auto extents{ zoom * b2Vec2{ ratio * 5.0f, 5.0f } };
 
     const auto lower{ b2Vec2{center - extents} };
     const auto upper{ b2Vec2{center + extents} };

@@ -54,19 +54,19 @@ int main(int argc, char* args[])
     //{
     //    std::this_thread::sleep_for(std::chrono::seconds(1));
     //}
-    //
+    
     //simulation.end();
     if (Simulation2::init())
     {
-
-        //while (1)
-        //{
-        //    if (not Simulation2::process())
-        //    {
-        //        break;
-        //    }
-        //}
-        //Simulation2::end();
+    
+        while (1)
+        {
+            if (not Simulation2::process())
+            {
+                break;
+            }
+        }
+        Simulation2::end();
     }
 
     return EXIT_SUCCESS;

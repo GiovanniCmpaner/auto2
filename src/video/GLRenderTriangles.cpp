@@ -6,7 +6,7 @@
 #include <cstdint>
 
 #include "Camera.hpp"
-#include "Utilities.hpp"
+#include "Shader.hpp"
 #include "GLRenderTriangles.hpp"
 
 static constexpr auto vs{ R"(
@@ -32,11 +32,11 @@ static constexpr auto fs{ R"(
     };
 )" };
 
-auto GLRenderTriangles::create(Camera* camera) -> void
+GLRenderTriangles::GLRenderTriangles(std::shared_ptr<Camera> camera)
 {
     this->camera = camera;
 
-    programId = Utilities::createShaderProgram(vs, fs);
+    programId = Shader::createProgram(vs, fs);
     projectionUniform = glGetUniformLocation(programId, "projectionMatrix");
     vertexAttribute = 0;
     colorAttribute = 1;
@@ -65,7 +65,7 @@ auto GLRenderTriangles::create(Camera* camera) -> void
     count = 0;
 }
 
-auto GLRenderTriangles::destroy() -> void
+GLRenderTriangles::~GLRenderTriangles()
 {
     if (vaoId)
     {

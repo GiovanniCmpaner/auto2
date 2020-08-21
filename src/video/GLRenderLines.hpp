@@ -9,9 +9,9 @@ class GLRenderLines
 {
 public:
 
-    auto create(Camera* camera) -> void;
+    GLRenderLines(std::shared_ptr<Camera> camera);
 
-    auto destroy() -> void;
+    ~GLRenderLines();
 
     auto line(const b2Vec2& v1, const b2Vec2& v2, const b2Color& c) -> void;
 
@@ -19,7 +19,7 @@ public:
 
 private:
 
-    Camera* camera{ nullptr };
+    std::shared_ptr<Camera> camera{ nullptr };
 
     GLint programId{ 0 };
     GLint projectionUniform{ 0 };

@@ -2,6 +2,7 @@
 
 #include <box2d/box2d.h>
 #include <cstdint>
+#include <memory>
 
 #include "Camera.hpp"
 #include "GLRenderPoints.hpp"
@@ -10,16 +11,16 @@
 
 class Draw
 {
-	Camera* camera{ nullptr };
-	GLRenderPoints* points{ nullptr };
-	GLRenderLines* lines{ nullptr };
-	GLRenderTriangles* triangles{ nullptr };
+	std::shared_ptr<Camera> camera{ nullptr };
+	std::unique_ptr<GLRenderPoints> points{ nullptr };
+	std::unique_ptr<GLRenderLines> lines{ nullptr };
+	std::unique_ptr<GLRenderTriangles> triangles{ nullptr };
+
+	static auto debugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) -> void;
 
 public:
 
-	auto create(Camera* camera) -> void;
-
-	auto destroy() -> void;
+	Draw(std::shared_ptr<Camera> camera);
 
 	auto drawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) -> void;
 
@@ -38,5 +39,4 @@ public:
 	auto drawString(const b2Vec2& pw, const char* string, ...) -> void;
 
 	auto flush() -> void;
-
 };

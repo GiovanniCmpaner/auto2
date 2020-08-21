@@ -6,7 +6,7 @@
 #include <cstdint>
 
 #include "Camera.hpp"
-#include "Utilities.hpp"
+#include "Shader.hpp"
 #include "GLRenderLines.hpp"
 
 static constexpr auto vertexShader{ R"(
@@ -34,12 +34,12 @@ static constexpr auto fragmentShader{ R"(
     }
 )" };
 
-auto GLRenderLines::create(Camera* camera) -> void
+GLRenderLines::GLRenderLines(std::shared_ptr<Camera> camera)
 {
     this->camera = camera;
 
     // Load shader
-    programId = Utilities::createShaderProgram(vertexShader, fragmentShader);
+    programId = Shader::createProgram(vertexShader, fragmentShader);
     projectionUniform = glGetUniformLocation(programId, "projectionMatrix");
     vertexAttribute = 0;
     colorAttribute = 1;
@@ -68,7 +68,7 @@ auto GLRenderLines::create(Camera* camera) -> void
     glBindVertexArray(0);
 }
 
-auto GLRenderLines::destroy() -> void
+GLRenderLines::~GLRenderLines()
 {
     if (vaoId != 0)
     {

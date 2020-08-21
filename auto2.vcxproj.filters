@@ -45,7 +45,10 @@
     <ClCompile Include="src\video\GLRenderTriangles.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\video\Utilities.cpp">
+    <ClCompile Include="src\video\Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -115,7 +118,10 @@
     <ClInclude Include="src\video\GLRenderTriangles.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\video\Utilities.hpp">
+    <ClInclude Include="src\video\Shader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

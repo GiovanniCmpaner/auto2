@@ -10,31 +10,17 @@
 #include "GLRenderTriangles.hpp"
 #include "Draw.hpp"
 
-auto Draw::create(Camera* camera) -> void
+Draw::Draw(std::shared_ptr<Camera> camera)
 {
     this->camera = camera;
+    this->points = std::make_unique<GLRenderPoints>(camera);
+    this->lines = std::make_unique<GLRenderLines>(camera);
+    this->triangles = std::make_unique<GLRenderTriangles>(camera);
 
-    points = new GLRenderPoints;
-    points->create(camera);
-    lines = new GLRenderLines;
-    lines->create(camera);
-    triangles = new GLRenderTriangles;
-    triangles->create(camera);
-}
-
-auto Draw::destroy() -> void
-{
-    points->destroy();
-    delete points;
-    points = nullptr;
-
-    lines->destroy();
-    delete lines;
-    lines = nullptr;
-
-    triangles->destroy();
-    delete triangles;
-    triangles = nullptr;
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_FALSE);
+    glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_ERROR, GL_DONT_CARE, 0, nullptr, GL_TRUE );
+    glDebugMessageCallback(Draw::debugOutput, this);
 }
 
 auto Draw::drawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color) -> void
@@ -171,4 +157,61 @@ auto Draw::flush() -> void
     triangles->flush();
     lines->flush();
     points->flush();
+}
+
+auto Draw::debugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) -> void
+{
+    std::cerr << "-------------------------------------------------------------------------------" << std::endl;
+    std::cerr << "ID: " << id << std::endl;
+    {
+        auto text = [](GLenum source) -> const char*
+        {
+            switch (source)
+            {
+                case GL_DEBUG_SOURCE_API:             return "API";
+                case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   return "Window System";
+                case GL_DEBUG_SOURCE_SHADER_COMPILER: return "Shader Compiler";
+                case GL_DEBUG_SOURCE_THIRD_PARTY:     return "Third Party";
+                case GL_DEBUG_SOURCE_APPLICATION:     return "Application";
+                case GL_DEBUG_SOURCE_OTHER:           return "Other";
+                default:                              return "Unknown";
+            }
+        };
+        std::cerr << "Source: " << text(source) << std::endl;
+    }
+    {
+        auto text = [](GLenum type) -> const char*
+        {
+            switch (type)
+            {
+                case GL_DEBUG_TYPE_ERROR:               return "Error";
+                case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "Deprecated Behaviour";
+                case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  return "Undefined Behaviour";
+                case GL_DEBUG_TYPE_PORTABILITY:         return "Portability";
+                case GL_DEBUG_TYPE_PERFORMANCE:         return "Performance";
+                case GL_DEBUG_TYPE_MARKER:              return "Marker";
+                case GL_DEBUG_TYPE_PUSH_GROUP:          return "Push Group";
+                case GL_DEBUG_TYPE_POP_GROUP:           return "Pop Group";
+                case GL_DEBUG_TYPE_OTHER:               return "Other";
+                default:                                return "Unknown";
+            }
+        };
+        std::cerr << "Type: " << text(type) << std::endl;
+    }
+    {
+        auto text = [](GLenum severity) -> const char*
+        {
+            switch (severity)
+            {
+                case GL_DEBUG_SEVERITY_HIGH:         return "High";
+                case GL_DEBUG_SEVERITY_MEDIUM:       return "Medium";
+                case GL_DEBUG_SEVERITY_LOW:          return "Low";
+                case GL_DEBUG_SEVERITY_NOTIFICATION: return "Notification";
+                default:                             return "Unknown";
+            }
+        };
+        std::cerr << "Severity: " << text(severity) << std::endl;
+    }
+    std::cerr << "Message: " << message << std::endl;
+    std::cerr << std::endl;
 }

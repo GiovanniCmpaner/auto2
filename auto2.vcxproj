@@ -45,7 +45,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\lib\SDL2_gfx-1.0.1\include;$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_image-2.0.5\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\glew-2.2.0\include;$(SolutionDir)\lib\glm-0.9.9.8;$(SolutionDir)\lib\box2d-2.4.0\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)\lib\SDL2_gfx-1.0.1\include;$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_image-2.0.5\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\glew-2.2.0\include;$(SolutionDir)\lib\glm-0.9.9.8;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\src\video;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\lib\SDL2_gfx-1.0.1\lib\x64;$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\SDL2_image-2.0.5\lib\x64;$(SolutionDir)\lib\glew-2.2.0\lib\Release\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -99,7 +99,8 @@
     <ClCompile Include="src\video\GLRenderLines.cpp" />
     <ClCompile Include="src\video\GLRenderPoints.cpp" />
     <ClCompile Include="src\video\GLRenderTriangles.cpp" />
-    <ClCompile Include="src\video\Utilities.cpp" />
+    <ClCompile Include="src\video\Shader.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\SDL2-2.0.12\lib\x64\SDL2.dll">
@@ -160,7 +161,8 @@
     <ClInclude Include="src\video\GLRenderLines.hpp" />
     <ClInclude Include="src\video\GLRenderPoints.hpp" />
     <ClInclude Include="src\video\GLRenderTriangles.hpp" />
-    <ClInclude Include="src\video\Utilities.hpp" />
+    <ClInclude Include="src\video\Shader.hpp" />
+    <ClInclude Include="Window.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\glew-2.2.0\bin\Release\x64\glew32.dll">

@@ -6,7 +6,7 @@
 #include <cstdint>
 
 #include "Camera.hpp"
-#include "Utilities.hpp"
+#include "Shader.hpp"
 #include "GLRenderPoints.hpp"
 
 static constexpr auto vs{ R"(
@@ -34,12 +34,12 @@ static constexpr auto fs{ R"(
     }
 )" };
 
-auto GLRenderPoints::create(Camera* camera) -> void
+GLRenderPoints::GLRenderPoints(std::shared_ptr<Camera> camera)
 {
     this->camera = camera;
 
     // Load shader
-    programId = Utilities::createShaderProgram(vs, fs);
+    programId = Shader::createProgram(vs, fs);
     projectionUniform = glGetUniformLocation(programId, "projectionMatrix");
     vertexAttribute = 0;
     colorAttribute = 1;
@@ -77,7 +77,7 @@ auto GLRenderPoints::create(Camera* camera) -> void
     count = 0;
 }
 
-auto GLRenderPoints::destroy() -> void
+GLRenderPoints::~GLRenderPoints()
 {
     if (vaoId != 0)
     {

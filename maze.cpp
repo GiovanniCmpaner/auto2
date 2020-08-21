@@ -176,18 +176,18 @@ namespace Maze
         }
     }
 
-    auto lines(const std::vector<std::vector<Tile>>& matrix, int height, int width) -> std::vector<Line>
+    auto lines(const std::vector<std::vector<Tile>>& matrix, float height, float width) -> std::vector<Line>
     {
         auto lines{ std::vector<Line>{} };
 
-        const auto tileHeight{ static_cast<int>(height / matrix.size()) };
-        const auto tileWidth{ static_cast<int>(width / matrix.front().size()) };
+        const auto tileHeight{ static_cast<float>(height / matrix.size()) };
+        const auto tileWidth{ static_cast<float>(width / matrix.front().size()) };
 
         {
-            auto make{ [&](int y, int currentHeight, bool Tile::* direction) 
+            auto make{ [&](float y, float currentHeight, bool Tile::* direction)
             {
-                auto start{ 0 };
-                auto end{ 0 };
+                auto start{ 0.0f };
+                auto end{ 0.0f };
                 for (auto x{ 0 }; x < matrix.front().size(); x++)
                 {
                     if (matrix[y][x].*direction)
@@ -196,7 +196,7 @@ namespace Maze
                     }
                     else
                     {
-                        if (start != end)
+                        if (end - start > 0.001f)
                         {
                             lines.emplace_back(Line{ start, currentHeight, end,  currentHeight });
                         }
@@ -204,25 +204,25 @@ namespace Maze
                         end = start;
                     }
                 }
-                if (start != end)
+                if (end - start > 0.001f)
                 {
                     lines.emplace_back(Line{ start, currentHeight, end, currentHeight });
                 }
             }};
 
-            make(0, 0, &Tile::up);
+            make(0.0f, 0.0f, &Tile::up);
 
             for (auto y{ 0 }; y < matrix.size(); y++)
             {
-                make(y, ( y + 1 ) * tileHeight, &Tile::down);
+                make(y, ( y + 1.0f) * tileHeight, &Tile::down);
             }
         }
 
         {
-            auto make{ [&](int x, int currentWidth, bool Tile::* direction)
+            auto make{ [&](float x, float currentWidth, bool Tile::* direction)
             {
-                auto start{ 0 };
-                auto end{ 0 };
+                auto start{ 0.0f };
+                auto end{ 0.0f };
                 for (auto y{ 0 }; y < matrix.size(); y++)
                 {
                     if (matrix[y][x].*direction)
@@ -231,7 +231,7 @@ namespace Maze
                     }
                     else
                     {
-                        if (start != end)
+                        if (end - start > 0.001f)
                         {
                             lines.emplace_back(Line{ currentWidth, start, currentWidth, end });
                         }
@@ -239,24 +239,24 @@ namespace Maze
                         end = start;
                     }
                 }
-                if (start != end)
+                if (end - start > 0.001f)
                 {
                     lines.emplace_back(Line{ currentWidth, start, currentWidth, end });
                 }
             }};
 
-            make(0, 0, &Tile::left);
+            make(0.0f, 0.0f, &Tile::left);
 
             for (auto x{ 0 }; x < matrix.front().size(); x++)
             {
-                make(x, ( x + 1 ) * tileWidth, &Tile::right);
+                make(x, ( x + 1.0f) * tileWidth, &Tile::right);
             }
         }
 
         return lines;
     }
 
-    auto rectangles(const std::vector<std::vector<Tile>>& matrix, int x, int y, int height, int width, int thickness) -> std::vector<Rect>
+    auto rectangles(const std::vector<std::vector<Tile>>& matrix, float x, float y, float height, float width, float thickness) -> std::vector<Rect>
     {
         const auto lines{ Maze::lines(matrix,height,width) };
         auto rectangles{ std::vector<Rect>{} };
