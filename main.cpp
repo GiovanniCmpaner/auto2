@@ -1,73 +1,58 @@
-﻿
-#include <iostream>
+﻿#include <iostream>
 #include <cstdint>
 #include <cstdlib>
 #include <thread>
 #include <chrono>
 
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-
+#include <box2d/box2d.h>
+#include <SDL_gpu.h>
 
 #include "maze.hpp"
-#include "simulation.hpp"
-#include "simulation2.hpp"
 
-/*
-std::unique_ptr<SDL_Window, void(*)(SDL_Window*)> window2{ nullptr, SDL_DestroyWindow };
-
-auto createWindow(const std::string& name, int width, int height) -> std::unique_ptr<SDL_Window, void(*)(SDL_Window*)>
+static int resizingEventWatcher(void* data, SDL_Event* event)
 {
-    const auto window{ SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN) };
-    if (window == nullptr)
-    {
-        std::cerr << "Window could not be created! SDL Error: " << SDL_GetError() << std::endl;
-    }
-    return { window, SDL_DestroyWindow };
+    return 0;
 }
-*/
-
-//auto simulation{ Simulation{} };
 
 int main(int argc, char* args[])
 {
-    //glm::vec3 original(2.0, 2.0, 0.0);
-    //
-    //glm::mat4 model = glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0));
-    //glm::mat4 projection = glm::ortho(0.0, 640.0, 0.0, 480.0);
-    //glm::vec4 viewport(0.0, 0.0, 640.0, 480.0);
-    //
-    //glm::vec3 projected = glm::project(original, model, projection, viewport);
-    //glm::vec3 unprojected = glm::unProject(projected, model, projection, viewport);
-    //
-    //std::cout << original.x << " " << original.y << " " << original.z << std::endl;
-    //std::cout << projected.x << " " << projected.y << " " << projected.z << std::endl;
-    //std::cout << unprojected.x << " " << unprojected.y << " " << unprojected.z << std::endl;
-    //
-    //return EXIT_SUCCESS;
+    GPU_SetRequiredFeatures(GPU_FEATURE_BASIC_SHADERS);
+    const auto target{ GPU_InitRenderer(GPU_RENDERER_OPENGL_3, 500, 500, GPU_DEFAULT_INIT_FLAGS) };
+    //SDL_AddEventWatch(resizingEventWatcher, nullptr);
 
-    //simulation.init();
-    //
-    //while (1)
-    //{
-    //    std::this_thread::sleep_for(std::chrono::seconds(1));
-    //}
-    
-    //simulation.end();
-    if (Simulation2::init())
+    //auto framerate{ FPSmanager{} };
+    //SDL_initFramerate(&framerate);
+    //SDL_setFramerate(&framerate, 60);
+
+    const auto tiles{ Maze::make(5,5) };
+    Maze::print(tiles);
+    const auto rectangles{ Maze::rectangles(tiles, -10, -10, 20, 20, 0.5) };
+
+    while (1)
     {
-    
-        while (1)
+        // Update logic here
+
+        GPU_Clear(target);
+
+        // Draw stuff here
+
+        GPU_MatrixMode(target, GPU_PROJECTION);
+        GPU_LoadIdentity();
+        GPU_Ortho(-20, +20, -20, +20, 0, 1); // Escala do mundo
+        GPU_Translate(-10, 0, 0); // Translação da câmera
+
+        for (const auto& rect : rectangles)
         {
-            if (not Simulation2::process())
-            {
-                break;
-            }
+            GPU_RectangleFilled(target, rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, { 255, 0, 255, 255 });
         }
-        Simulation2::end();
+
+        GPU_Flip(target);
+
+        SDL_Delay(16);
+        //SDL_framerateDelay(&framerate);
     }
+
+    GPU_Quit();
 
     return EXIT_SUCCESS;
 }
