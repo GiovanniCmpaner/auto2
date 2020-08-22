@@ -49,7 +49,7 @@
     <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\SDL2_image-2.0.5\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>flase</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_image-2.0.5\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\src\video;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\SDL2_image-2.0.5\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
