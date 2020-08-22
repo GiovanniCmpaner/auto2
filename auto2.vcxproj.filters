@@ -30,6 +30,9 @@
     <ClCompile Include="Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Downloads\SDL_FontCache-master\SDL_FontCache-master\SDL_FontCache.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\SDL2-2.0.12\lib\x64\SDL2.dll">
@@ -80,6 +83,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Window.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Downloads\SDL_FontCache-master\SDL_FontCache-master\SDL_FontCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

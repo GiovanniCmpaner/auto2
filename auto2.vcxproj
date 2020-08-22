@@ -45,13 +45,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_image-2.0.5\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\src\video;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\SDL2_image-2.0.5\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_image-2.0.5\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\SDL2_image-2.0.5\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_image-2.0.5\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\src\video;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\SDL2_image-2.0.5\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_image-2.0.5\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\SDL2_image-2.0.5\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -67,7 +67,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;opengl32.lib;box2d.lib;SDL2_gpu.lib;SDL2_gpu_s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;opengl32.lib;box2d.lib;SDL2_gpu.lib;SDL2_gpu_s.lib;SDL_FontCache.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -85,10 +85,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;opengl32.lib;box2d.lib;SDL2_gpu.lib;SDL2_gpu_s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;opengl32.lib;box2d.lib;SDL2_gpu.lib;SDL2_gpu_s.lib;SDL_FontCache;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Downloads\SDL_FontCache-master\SDL_FontCache-master\SDL_FontCache.c" />
     <ClCompile Include="car.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="maze.cpp" />
@@ -131,6 +132,7 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Downloads\SDL_FontCache-master\SDL_FontCache-master\SDL_FontCache.h" />
     <ClInclude Include="car.hpp" />
     <ClInclude Include="maze.hpp" />
     <ClInclude Include="src\video\Camera.hpp" />

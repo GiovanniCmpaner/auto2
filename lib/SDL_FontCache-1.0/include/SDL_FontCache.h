@@ -36,10 +36,11 @@ THE SOFTWARE.
 #include "SDL.h"
 #include "SDL_ttf.h"
 
+#define FC_USE_SDL_GPU
+
 #ifdef FC_USE_SDL_GPU
     #include "SDL_gpu.h"
 #endif
-
 
 #include <stdarg.h>
 
