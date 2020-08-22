@@ -1,6 +1,5 @@
 #include <cmath>
 #include <algorithm>
-#include <SDL2_gfxPrimitives.h>
 
 #include "car.hpp"
 

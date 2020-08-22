@@ -11,20 +11,27 @@
 
 #include "maze.hpp"
 
-static const auto borderColor{ SDL_Color{ 255, 0, 255, 255 } };
-static const auto fillColor{ SDL_Color{ 255, 0, 255, 64 } };
-
+static int screenWidth{ 800 };
+static int screenHeight{ 800 };
 static GPU_Target* target{ nullptr };
-static const auto gravity{ b2Vec2{ 0.0, 0.0 } };
-static auto world{ b2World{ gravity } };
 
-static auto quit{ false };
-static auto front{ 0.0f };
-static auto left{ 0.0f };
-static auto right{ 0.0f };
+static float realWidth{ 4.0f };
+static float realHeight{ 4.0f };
+static const b2Vec2 gravity{ 0.0, 0.0 };
+static b2World world{ gravity };
 
-static auto move{ 0 };
-static auto rotate{ 0 };
+static bool quit{ false };
+static float front{ 0.0f };
+static float left{ 0.0f };
+static float right{ 0.0f };
+static int move{ 0 };
+static int rotate{ 0 };
+
+static constexpr SDL_Color backgroundColor{ 0, 0, 0, 255 };
+static constexpr SDL_Color fontColor{ 0, 255, 0, 255 };
+static constexpr SDL_Color sensorColor{ 0,0,255,255 };
+static constexpr SDL_Color solidBorderColor{ 255, 0, 255, 255 };
+static constexpr SDL_Color solidFillColor{ 255, 0, 255, 64 };
 
 class RayCastCallback : public b2RayCastCallback
 {
@@ -65,48 +72,51 @@ auto drawSensor(GPU_Target* target, b2World* world, b2Body* body)
     {
         return;
     }
-    
+
     b2Filter filter{};
     filter.categoryBits = 0x0002;
     filter.maskBits = 0x0001;
-    
+
     { // Front
         auto start{ body->GetWorldPoint(b2Vec2{ 0.0f, 0.2f }) };
         auto end{ body->GetWorldPoint(b2Vec2{ 0.0f, 2.2f }) };
-    
+
         auto callback{ RayCastCallback{&filter} };
         world->RayCast(&callback, start, end);
         if (callback.valid)
         {
             end = callback.point;
+            GPU_Line(target, end.x - 0.075f, end.y, end.x + 0.075f, end.y, sensorColor);
+            GPU_Line(target, end.x, end.y - 0.075f, end.x, end.y + 0.075f, sensorColor);
         }
-        GPU_Line(target, start.x, start.y, end.x, end.y, { 0,0,255,255 });
         front = b2Distance(start, end);
     }
     { // Left
         auto start{ body->GetWorldPoint(b2Vec2{ -0.2f, 0.0f }) };
         auto end{ body->GetWorldPoint(b2Vec2{ -2.2f, 0.0f }) };
-    
+
         auto callback{ RayCastCallback{&filter} };
         world->RayCast(&callback, start, end);
         if (callback.valid)
         {
             end = callback.point;
+            GPU_Line(target, end.x - 0.075f, end.y, end.x + 0.075f, end.y, sensorColor);
+            GPU_Line(target, end.x, end.y - 0.075f, end.x, end.y + 0.075f, sensorColor);
         }
-        GPU_Line(target, start.x, start.y, end.x, end.y, { 0,0,255,255 });
-        left = b2Distance(start, end);
+        right = b2Distance(start, end);
     }
     { // Right
         auto start{ body->GetWorldPoint(b2Vec2{ +0.2f, 0.0f }) };
         auto end{ body->GetWorldPoint(b2Vec2{ +2.2f, 0.0f }) };
-    
+
         auto callback{ RayCastCallback{&filter} };
         world->RayCast(&callback, start, end);
         if (callback.valid)
         {
             end = callback.point;
+            GPU_Line(target, end.x - 0.075f, end.y, end.x + 0.075f, end.y, sensorColor);
+            GPU_Line(target, end.x, end.y - 0.075f, end.x, end.y + 0.075f, sensorColor);
         }
-        GPU_Line(target, start.x, start.y, end.x, end.y, { 0,0,255,255 });
         right = b2Distance(start, end);
     }
 }
@@ -120,10 +130,6 @@ auto drawWorld(GPU_Target* target, b2World* world) -> void
         const auto transform{ body->GetTransform() };
         for (auto fixture{ body->GetFixtureList() }; fixture != nullptr; fixture = fixture->GetNext())
         {
-            if (fixture->IsSensor())
-            {
-                continue;
-            }
             switch (fixture->GetType())
             {
                 case b2Shape::e_circle:
@@ -134,9 +140,9 @@ auto drawWorld(GPU_Target* target, b2World* world) -> void
                     const auto axis{ b2Mul(transform.q, b2Vec2{ 1.0f, 0.0 }) };
                     const auto line{ center + circle->m_radius * axis };
 
-                    GPU_Circle(target, center.x, center.y, circle->m_radius, borderColor);
-                    GPU_CircleFilled(target, center.x, center.y, circle->m_radius, fillColor);
-                    GPU_Line(target, center.x, center.y, line.x, line.y, borderColor);
+                    GPU_Circle(target, center.x, center.y, circle->m_radius, solidBorderColor);
+                    GPU_CircleFilled(target, center.x, center.y, circle->m_radius, solidFillColor);
+                    GPU_Line(target, center.x, center.y, line.x, line.y, solidBorderColor);
 
                     break;
                 }
@@ -147,7 +153,7 @@ auto drawWorld(GPU_Target* target, b2World* world) -> void
                     const auto v1{ b2Mul(transform, edge->m_vertex1) };
                     const auto v2{ b2Mul(transform, edge->m_vertex2) };
 
-                    GPU_Line(target, v1.x, v1.y, v2.x, v2.y, borderColor);
+                    GPU_Line(target, v1.x, v1.y, v2.x, v2.y, solidBorderColor);
 
                     break;
                 }
@@ -160,7 +166,7 @@ auto drawWorld(GPU_Target* target, b2World* world) -> void
                     for (auto i{ 1 }; i < chain->m_count; ++i)
                     {
                         const auto v2{ b2Mul(transform, chain->m_vertices[i]) };
-                        GPU_Line(target, v1.x, v1.y, v2.x, v2.y, borderColor);
+                        GPU_Line(target, v1.x, v1.y, v2.x, v2.y, solidBorderColor);
                         v1 = v2;
                     }
 
@@ -178,8 +184,8 @@ auto drawWorld(GPU_Target* target, b2World* world) -> void
                         vertices[i * 2 + 1] = vertice.y;
                     }
 
-                    GPU_Polygon(target, polygon->m_count, vertices, borderColor);
-                    GPU_PolygonFilled(target, polygon->m_count, vertices, fillColor);
+                    GPU_Polygon(target, polygon->m_count, vertices, solidBorderColor);
+                    GPU_PolygonFilled(target, polygon->m_count, vertices, solidFillColor);
 
                     break;
                 }
@@ -190,8 +196,8 @@ auto drawWorld(GPU_Target* target, b2World* world) -> void
 
 auto createMaze(b2World* world) -> b2Body*
 {
-    const auto tiles{ Maze::make(5,5) };
-    const auto rectangles{ Maze::rectangles(tiles, -2.5f, -2.5f, 5.0f, 5.0f, 0.02f) };
+    const auto tiles{ Maze::make(7,7) };
+    const auto rectangles{ Maze::rectangles(tiles, -realWidth / 2.0f, -realHeight / 2.0f, realWidth, realHeight, 0.05f) };
 
     b2BodyDef bd{};
     bd.type = b2_staticBody;
@@ -203,7 +209,7 @@ auto createMaze(b2World* world) -> b2Body*
     for (const auto& rect : rectangles)
     {
         b2PolygonShape shape{};
-        
+
         b2FixtureDef fd{};
         fd.shape = &shape;
         fd.density = 0.0f;
@@ -238,19 +244,19 @@ auto createGround(b2World* world) -> b2Body*
     fd.userData = const_cast<char*>("wall");
 
     // Left vertical
-    shape.SetTwoSided(b2Vec2(-5.0f, -5.0f), b2Vec2(-5.0f, 5.0f));
+    shape.SetTwoSided(b2Vec2{ -realWidth, -realHeight }, b2Vec2{ -realWidth, realHeight });
     ground->CreateFixture(&fd);
 
     // Right vertical
-    shape.SetTwoSided(b2Vec2(5.0f, -5.0f), b2Vec2(5.0f, 5.0f));
+    shape.SetTwoSided(b2Vec2{ realWidth, -realHeight }, b2Vec2{ realWidth, realHeight });
     ground->CreateFixture(&fd);
 
     // Top horizontal
-    shape.SetTwoSided(b2Vec2(-5.0f, 5.0f), b2Vec2(5.0f, 5.0f));
+    shape.SetTwoSided(b2Vec2{ -realWidth, realHeight }, b2Vec2{ realWidth, realHeight });
     ground->CreateFixture(&fd);
 
     // Bottom horizontal
-    shape.SetTwoSided(b2Vec2(-5.0f, -5.0f), b2Vec2(5.0f, -5.0f));
+    shape.SetTwoSided(b2Vec2{ -realWidth, -realHeight }, b2Vec2{ realWidth, -realHeight });
     ground->CreateFixture(&fd);
 
     return ground;
@@ -261,17 +267,18 @@ auto createCar(b2World* world, b2Body* ground) -> b2Body*
     b2BodyDef bd{};
     bd.type = b2_dynamicBody;
     bd.position = b2Vec2{ 0, 0 };
-    bd.angularDamping = 5.0f;
+    bd.angularDamping = 6.0f;
     bd.userData = const_cast<char*>("car");
 
     auto car{ world->CreateBody(&bd) };
-    
+
     { // Chassis
-        b2PolygonShape chassis{};
-        chassis.SetAsBox(0.2, 0.2);
+
+        b2PolygonShape border{};
+        border.SetAsBox(0.1, 0.1);
 
         b2FixtureDef fd{};
-        fd.shape = &chassis;
+        fd.shape = &border;
         fd.density = 2.0f;
         fd.friction = 0.5f;
         fd.filter.categoryBits = 0x0002;
@@ -279,29 +286,25 @@ auto createCar(b2World* world, b2Body* ground) -> b2Body*
         fd.userData = const_cast<char*>("chassis");
 
         car->CreateFixture(&fd);
-    }
 
-    { // Sensors
-        b2EdgeShape sensor{};
+        { // Triangle
+            b2PolygonShape triangle{};
+            const b2Vec2 vertices[3]{
+                b2Vec2{ -0.05f, -0.05f },
+                b2Vec2{ +0.05f, -0.05f },
+                b2Vec2{ 0.0f, +0.05f },
+            };
+            triangle.Set(vertices, 3);
 
-        b2FixtureDef fd{};
-        fd.shape = &sensor;
-        fd.isSensor = true;
-        fd.filter.categoryBits = 0x0002;
-        fd.filter.maskBits = 0x0001;
-        fd.userData = const_cast<char*>("laser");
+            b2FixtureDef fd{};
+            fd.shape = &triangle;
+            fd.isSensor = true;
+            fd.filter.categoryBits = 0x0002;
+            fd.filter.maskBits = 0x0001;
+            fd.userData = const_cast<char*>("direction");
 
-        // Front
-        sensor.SetTwoSided(b2Vec2{ 0.0f, 0.2f }, b2Vec2{ 0.0f, 2.2f });
-        car->CreateFixture(&fd);
-
-        // Left
-        sensor.SetTwoSided(b2Vec2{ -0.2f, 0.0f }, b2Vec2{ -2.2f, 0.0f });
-        car->CreateFixture(&fd);
-
-        // Right
-        sensor.SetTwoSided(b2Vec2{ +0.2f, 0.0f }, b2Vec2{ +2.2f, 0.0f });
-        car->CreateFixture(&fd);
+            car->CreateFixture(&fd);
+        }
     }
 
     { // Top-down friction
@@ -316,8 +319,8 @@ auto createCar(b2World* world, b2Body* ground) -> b2Body*
         jd.localAnchorA = b2Vec2{ 0.0f, 0.0f };
         jd.localAnchorB = car->GetLocalCenter();
         jd.collideConnected = true;
-        jd.maxForce = 0.6f * mass * gravity;
-        jd.maxTorque = 3.5f * mass * radius * gravity;
+        jd.maxForce = 1.2f * mass * gravity;
+        jd.maxTorque = 9.7f * mass * radius * gravity;
 
         world->CreateJoint(&jd);
     }
@@ -327,14 +330,18 @@ auto createCar(b2World* world, b2Body* ground) -> b2Body*
 
 int main(int argc, char* args[])
 {
+    // TODO:
+    // Separar Simulation, Car, Rede Neural, Fuzzy
+    // Objetivo Circulo Vermelho
+
     GPU_SetDebugLevel(GPU_DEBUG_LEVEL_MAX);
     GPU_SetRequiredFeatures(GPU_FEATURE_BASIC_SHADERS);
-    target = GPU_InitRenderer(GPU_RENDERER_OPENGL_3, 500, 500, GPU_DEFAULT_INIT_FLAGS);
+    target = GPU_InitRenderer(GPU_RENDERER_OPENGL_3, 800, 800, GPU_DEFAULT_INIT_FLAGS);
     //SDL_AddEventWatch(resizingEventWatcher, nullptr);
     GPU_SetLineThickness(0.02f);
 
     auto font{ FC_CreateFont() };
-    FC_LoadFont(font, "C:/Windows/Fonts/Arial.ttf", 20, { 255,0,0,255 }, TTF_STYLE_NORMAL);
+    FC_LoadFont(font, "C:/Windows/Fonts/Arial.ttf", screenHeight / 40, fontColor, TTF_STYLE_NORMAL);
 
     createMaze(&world);
     auto ground{ createGround(&world) };
@@ -360,26 +367,26 @@ int main(int argc, char* args[])
         rotate = 0;
         if (state[SDL_SCANCODE_A])
         {
-            car->ApplyTorque(+3.0f, true);
+            car->ApplyTorque(+1.0f, true);
             rotate += 1;
         }
         if (state[SDL_SCANCODE_D])
         {
-            car->ApplyTorque(-3.0f, true);
+            car->ApplyTorque(-1.0f, true);
             rotate -= 1;
         }
 
         move = 0;
         if (state[SDL_SCANCODE_W])
         {
-            const auto force{ car->GetWorldVector(b2Vec2{ 0.0f, +2.0f }) };
+            const auto force{ car->GetWorldVector(b2Vec2{ 0.0f, +1.0f }) };
             const auto point{ car->GetWorldPoint(b2Vec2{ 0.0f, 0.2f }) };
             car->ApplyForce(force, point, true);
             move += 1;
         }
         if (state[SDL_SCANCODE_S])
         {
-            const auto force{ car->GetWorldVector(b2Vec2{ 0.0f, -2.0f }) };
+            const auto force{ car->GetWorldVector(b2Vec2{ 0.0f, -1.0f }) };
             const auto point{ car->GetWorldPoint(b2Vec2{ 0.0f, 0.2f }) };
             car->ApplyForce(force, point, true);
             move -= 1;
@@ -389,31 +396,43 @@ int main(int argc, char* args[])
 
         // Update logic here
 
-        GPU_ClearColor(target, { 52, 52, 52, 255 });
-        GPU_Clear(target);
+        GPU_ClearColor(target, backgroundColor);
 
         // Draw stuff here
+        {
+            GPU_MatrixMode(target, GPU_PROJECTION);
+            GPU_LoadIdentity();
+            GPU_Ortho(-realHeight, +realHeight, -realWidth, +realWidth, 0, 1);
 
-        GPU_MatrixMode(target, GPU_PROJECTION);
-        GPU_LoadIdentity();
-        GPU_Ortho(-5, +5, -5, +5, 0, 1); // Escala do mundo
-        GPU_Translate(0, 0, 0); // Translação da câmera
+            GPU_MatrixMode(target, GPU_MODEL);
+            GPU_LoadIdentity();
+            drawWorld(target, &world);
+        }
 
+        {
+            GPU_MatrixMode(target, GPU_PROJECTION);
+            GPU_LoadIdentity();
+            GPU_Ortho(0, screenHeight, screenWidth, 0, 0, 1);
 
-        GPU_MatrixMode(target, GPU_MODEL);
-
-        GPU_PushMatrix();
-        drawWorld(target, &world);
-        GPU_PopMatrix();
-
-        GPU_PushMatrix();
-        GPU_Scale(0.02, -0.02, 0.02);
-        FC_Draw(font, target, -250, -250, "front = %.2f m", front);
-        FC_Draw(font, target, -250, -230, "left = %.2f m", left);
-        FC_Draw(font, target, -250, -210, "right = %.2f m", right);
-        FC_Draw(font, target, -250, -190, "move = %s%d", move > 0 ? "+" : move < 0 ? "-" : "", abs(move));
-        FC_Draw(font, target, -250, -170, "rotate = %s%d", rotate > 0 ? "+" : rotate < 0 ? "-" : "", abs(rotate));
-        GPU_PopMatrix();
+            GPU_MatrixMode(target, GPU_MODEL);
+            GPU_LoadIdentity();
+            FC_Draw(font, target, 5, 5,
+                "front = %.2f m \n"
+                "left = %.2f m \n"
+                "right = %.2f m \n"
+                "move = %s \n"
+                "rotate = %s \n",
+                front,
+                left,
+                right,
+                ( move > 0 ? "+" : move < 0 ? "-" : "o" ),
+                ( rotate > 0 ? "+" : rotate < 0 ? "-" : "o" )
+            );
+        }
+        //FC_Draw(font, target, -screenWidth / 2, -230, "left = %.2f m", left);
+        //FC_Draw(font, target, -screenWidth / 2, -210, "right = %.2f m", right);
+        //FC_Draw(font, target, -screenWidth / 2, -190, "move = %s%d", move > 0 ? "+" : move < 0 ? "-" : "", abs(move));
+        //FC_Draw(font, target, -screenWidth / 2, -170, "rotate = %s%d", rotate > 0 ? "+" : rotate < 0 ? "-" : "", abs(rotate));
 
         GPU_Flip(target);
 
