@@ -7,9 +7,10 @@
 
 #include <box2d/box2d.h>
 #include <SDL_gpu.h>
-#include "SDL_FontCache.h"
+#include <SDL_FontCache.h>
 
 #include "maze.hpp"
+#include "car.hpp"
 
 static int screenWidth{ 800 };
 static int screenHeight{ 800 };
@@ -21,9 +22,6 @@ static const b2Vec2 gravity{ 0.0, 0.0 };
 static b2World world{ gravity };
 
 static bool quit{ false };
-static float front{ 0.0f };
-static float left{ 0.0f };
-static float right{ 0.0f };
 static int move{ 0 };
 static int rotate{ 0 };
 
@@ -33,100 +31,17 @@ static constexpr SDL_Color sensorColor{ 0,0,255,255 };
 static constexpr SDL_Color solidBorderColor{ 255, 0, 255, 255 };
 static constexpr SDL_Color solidFillColor{ 255, 0, 255, 64 };
 
-class RayCastCallback : public b2RayCastCallback
-{
-public:
-    RayCastCallback(b2Filter* filter)
-    {
-        this->filter = filter;
-    }
-
-    float ReportFixture(b2Fixture* fixture, const b2Vec2& point, const b2Vec2& normal, float fraction) override
-    {
-        const auto filter{ fixture->GetFilterData() };
-        if ((this->filter->maskBits & filter.categoryBits) != 0 and (filter.maskBits & this->filter->categoryBits) != 0)
-        {
-            this->valid = true;
-            this->point = point;
-            return fraction;
-        }
-
-        return -1;
-    }
-
-    b2Filter* filter{ nullptr };
-    bool valid{ false };
-    b2Vec2 point{ 0.0, 0.0 };
-};
-
-
 static int resizingEventWatcher(void* data, SDL_Event* event)
 {
     return 0;
 }
 
-auto drawSensor(GPU_Target* target, b2World* world, b2Body* body)
-{
-    const auto text{ reinterpret_cast<const char*>(body->GetUserData()) };
-    if (text == nullptr or std::strcmp(text, "car") != 0)
-    {
-        return;
-    }
-
-    b2Filter filter{};
-    filter.categoryBits = 0x0002;
-    filter.maskBits = 0x0001;
-
-    { // Front
-        auto start{ body->GetWorldPoint(b2Vec2{ 0.0f, 0.2f }) };
-        auto end{ body->GetWorldPoint(b2Vec2{ 0.0f, 2.2f }) };
-
-        auto callback{ RayCastCallback{&filter} };
-        world->RayCast(&callback, start, end);
-        if (callback.valid)
-        {
-            end = callback.point;
-            GPU_Line(target, end.x - 0.075f, end.y, end.x + 0.075f, end.y, sensorColor);
-            GPU_Line(target, end.x, end.y - 0.075f, end.x, end.y + 0.075f, sensorColor);
-        }
-        front = b2Distance(start, end);
-    }
-    { // Left
-        auto start{ body->GetWorldPoint(b2Vec2{ -0.2f, 0.0f }) };
-        auto end{ body->GetWorldPoint(b2Vec2{ -2.2f, 0.0f }) };
-
-        auto callback{ RayCastCallback{&filter} };
-        world->RayCast(&callback, start, end);
-        if (callback.valid)
-        {
-            end = callback.point;
-            GPU_Line(target, end.x - 0.075f, end.y, end.x + 0.075f, end.y, sensorColor);
-            GPU_Line(target, end.x, end.y - 0.075f, end.x, end.y + 0.075f, sensorColor);
-        }
-        right = b2Distance(start, end);
-    }
-    { // Right
-        auto start{ body->GetWorldPoint(b2Vec2{ +0.2f, 0.0f }) };
-        auto end{ body->GetWorldPoint(b2Vec2{ +2.2f, 0.0f }) };
-
-        auto callback{ RayCastCallback{&filter} };
-        world->RayCast(&callback, start, end);
-        if (callback.valid)
-        {
-            end = callback.point;
-            GPU_Line(target, end.x - 0.075f, end.y, end.x + 0.075f, end.y, sensorColor);
-            GPU_Line(target, end.x, end.y - 0.075f, end.x, end.y + 0.075f, sensorColor);
-        }
-        right = b2Distance(start, end);
-    }
-}
 
 auto drawWorld(GPU_Target* target, b2World* world) -> void
 {
+    return;
     for (auto body{ world->GetBodyList() }; body != nullptr; body = body->GetNext())
     {
-        drawSensor(target, world, body);
-
         const auto transform{ body->GetTransform() };
         for (auto fixture{ body->GetFixtureList() }; fixture != nullptr; fixture = fixture->GetNext())
         {
@@ -262,72 +177,6 @@ auto createGround(b2World* world) -> b2Body*
     return ground;
 }
 
-auto createCar(b2World* world, b2Body* ground) -> b2Body*
-{
-    b2BodyDef bd{};
-    bd.type = b2_dynamicBody;
-    bd.position = b2Vec2{ 0, 0 };
-    bd.angularDamping = 6.0f;
-    bd.userData = const_cast<char*>("car");
-
-    auto car{ world->CreateBody(&bd) };
-
-    { // Chassis
-
-        b2PolygonShape border{};
-        border.SetAsBox(0.1, 0.1);
-
-        b2FixtureDef fd{};
-        fd.shape = &border;
-        fd.density = 2.0f;
-        fd.friction = 0.5f;
-        fd.filter.categoryBits = 0x0002;
-        fd.filter.maskBits = 0x0001;
-        fd.userData = const_cast<char*>("chassis");
-
-        car->CreateFixture(&fd);
-
-        { // Triangle
-            b2PolygonShape triangle{};
-            const b2Vec2 vertices[3]{
-                b2Vec2{ -0.05f, -0.05f },
-                b2Vec2{ +0.05f, -0.05f },
-                b2Vec2{ 0.0f, +0.05f },
-            };
-            triangle.Set(vertices, 3);
-
-            b2FixtureDef fd{};
-            fd.shape = &triangle;
-            fd.isSensor = true;
-            fd.filter.categoryBits = 0x0002;
-            fd.filter.maskBits = 0x0001;
-            fd.userData = const_cast<char*>("direction");
-
-            car->CreateFixture(&fd);
-        }
-    }
-
-    { // Top-down friction
-        const auto gravity{ 10.0f };
-        const auto inertia{ car->GetInertia() };
-        const auto mass{ car->GetMass() };
-        const auto radius{ b2Sqrt(2.0f * inertia / mass) };
-
-        b2FrictionJointDef jd{};
-        jd.bodyA = ground;
-        jd.bodyB = car;
-        jd.localAnchorA = b2Vec2{ 0.0f, 0.0f };
-        jd.localAnchorB = car->GetLocalCenter();
-        jd.collideConnected = true;
-        jd.maxForce = 1.2f * mass * gravity;
-        jd.maxTorque = 9.7f * mass * radius * gravity;
-
-        world->CreateJoint(&jd);
-    }
-
-    return car;
-}
-
 int main(int argc, char* args[])
 {
     // TODO:
@@ -345,8 +194,7 @@ int main(int argc, char* args[])
 
     createMaze(&world);
     auto ground{ createGround(&world) };
-    auto car{ createCar(&world, ground) };
-    createCar(&world, ground);
+    auto car{ Car{ &world, ground } };
 
     static constexpr auto fps{ 60 };
     static constexpr auto timeStep{ 1.0 / fps };
@@ -367,32 +215,29 @@ int main(int argc, char* args[])
         rotate = 0;
         if (state[SDL_SCANCODE_A])
         {
-            car->ApplyTorque(+1.0f, true);
+            car.rotateLeft();
             rotate += 1;
         }
         if (state[SDL_SCANCODE_D])
         {
-            car->ApplyTorque(-1.0f, true);
+            car.rotateRight();
             rotate -= 1;
         }
 
         move = 0;
         if (state[SDL_SCANCODE_W])
         {
-            const auto force{ car->GetWorldVector(b2Vec2{ 0.0f, +1.0f }) };
-            const auto point{ car->GetWorldPoint(b2Vec2{ 0.0f, 0.2f }) };
-            car->ApplyForce(force, point, true);
+            car.moveForward();
             move += 1;
         }
         if (state[SDL_SCANCODE_S])
         {
-            const auto force{ car->GetWorldVector(b2Vec2{ 0.0f, -1.0f }) };
-            const auto point{ car->GetWorldPoint(b2Vec2{ 0.0f, 0.2f }) };
-            car->ApplyForce(force, point, true);
+            car.moveBackward();
             move -= 1;
         }
 
         world.Step(timeStep, 6, 6);
+        car.step();
 
         // Update logic here
 
@@ -407,6 +252,7 @@ int main(int argc, char* args[])
             GPU_MatrixMode(target, GPU_MODEL);
             GPU_LoadIdentity();
             drawWorld(target, &world);
+            car.render(target);
         }
 
         {
@@ -422,17 +268,13 @@ int main(int argc, char* args[])
                 "right = %.2f m \n"
                 "move = %s \n"
                 "rotate = %s \n",
-                front,
-                left,
-                right,
+                car.distanceFront(),
+                car.distanceLeft(),
+                car.distanceRight(),
                 ( move > 0 ? "+" : move < 0 ? "-" : "o" ),
                 ( rotate > 0 ? "+" : rotate < 0 ? "-" : "o" )
             );
         }
-        //FC_Draw(font, target, -screenWidth / 2, -230, "left = %.2f m", left);
-        //FC_Draw(font, target, -screenWidth / 2, -210, "right = %.2f m", right);
-        //FC_Draw(font, target, -screenWidth / 2, -190, "move = %s%d", move > 0 ? "+" : move < 0 ? "-" : "", abs(move));
-        //FC_Draw(font, target, -screenWidth / 2, -170, "rotate = %s%d", rotate > 0 ? "+" : rotate < 0 ? "-" : "", abs(rotate));
 
         GPU_Flip(target);
 

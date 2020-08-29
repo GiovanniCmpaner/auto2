@@ -89,7 +89,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Downloads\SDL_FontCache-master\SDL_FontCache-master\SDL_FontCache.c" />
     <ClCompile Include="car.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="maze.cpp" />
@@ -111,7 +110,6 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Downloads\SDL_FontCache-master\SDL_FontCache-master\SDL_FontCache.h" />
     <ClInclude Include="car.hpp" />
     <ClInclude Include="maze.hpp" />
     <ClInclude Include="src\video\Camera.hpp" />

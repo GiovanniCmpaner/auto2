@@ -30,39 +30,15 @@
     <ClCompile Include="Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Downloads\SDL_FontCache-master\SDL_FontCache-master\SDL_FontCache.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\SDL2-2.0.12\lib\x64\SDL2.dll">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\SDL2_image.dll">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="lib\SDL2_ttf-2.0.15\lib\x64\SDL2_ttf.dll">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\libjpeg-9.dll">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\libpng16-16.dll">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\libtiff-5.dll">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\libwebp-7.dll">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="lib\SDL2_ttf-2.0.15\lib\x64\zlib1.dll">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="lib\SDL2_image-2.0.5\lib\x64\zlib1.dll">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="lib\glew-2.2.0\bin\Release\x64\glew32.dll">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="lib\SDL2_ttf-2.0.15\lib\x64\libfreetype-6.dll">
@@ -83,9 +59,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Window.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Downloads\SDL_FontCache-master\SDL_FontCache-master\SDL_FontCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
