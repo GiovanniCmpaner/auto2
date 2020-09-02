@@ -1,5 +1,6 @@
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 #include <box2d/box2d.h>
 #include <SDL_gpu.h>
@@ -103,6 +104,7 @@ Car::Car(b2World* world, b2Body* ground)
 
 auto Car::step() -> void
 {
+    stepBody();
     stepSensor(&front, 0.0f);
     stepSensor(&left, +b2_pi / 2.0f);
     stepSensor(&right, -b2_pi / 2.0f);
@@ -113,6 +115,7 @@ auto Car::moveForward() -> void
     const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, +1.0f }) };
     const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, 0.2f }) };
     this->body->ApplyForce(force, point, true);
+    moved = true;
 }
 
 auto Car::moveBackward() -> void
@@ -120,16 +123,19 @@ auto Car::moveBackward() -> void
     const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, -1.0f }) };
     const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, -0.2f }) };
     this->body->ApplyForce(force, point, true);
+    moved = true;
 }
 
 auto Car::rotateLeft()->void
 {
     this->body->ApplyTorque(+1.0f, true);
+    rotated = true;
 }
 
 auto Car::rotateRight()->void
 {
     this->body->ApplyTorque(-1.0f, true);
+    rotated = true;
 }
 
 auto Car::distanceFront() const -> float
@@ -147,12 +153,32 @@ auto Car::distanceRight() const-> float
     return right;
 }
 
+auto Car::collided() const -> bool
+{
+    return collision;
+}
+
 auto Car::render(GPU_Target* target) const -> void
 {
     renderBody(target);
     renderSensor(target, front, 0.0f);
     renderSensor(target, left, +b2_pi / 2.0f);
     renderSensor(target, right, -b2_pi / 2.0f);
+}
+
+auto Car::stepBody() -> void
+{
+    if (moved and this->body->GetLinearVelocity().Length() <= b2_linearSlop)
+    {
+        collision = true;
+    }
+    else if (rotated and b2Abs(this->body->GetAngularVelocity()) <= b2_linearSlop)
+    {
+        collision = true;
+    }
+
+    moved = false;
+    rotated = false;
 }
 
 auto Car::stepSensor(float* distance, float angle) -> void
@@ -175,7 +201,7 @@ auto Car::stepSensor(float* distance, float angle) -> void
     {
         *distance = b2Distance(start, end);
     }
-    
+
 }
 
 auto Car::renderBody(GPU_Target* target) const -> void

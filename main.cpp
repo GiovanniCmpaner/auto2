@@ -267,12 +267,14 @@ int main(int argc, char* args[])
                 "left = %.2f m \n"
                 "right = %.2f m \n"
                 "move = %s \n"
-                "rotate = %s \n",
+                "rotate = %s \n"
+                "collided = %d \n",
                 car.distanceFront(),
                 car.distanceLeft(),
                 car.distanceRight(),
                 ( move > 0 ? "+" : move < 0 ? "-" : "o" ),
-                ( rotate > 0 ? "+" : rotate < 0 ? "-" : "o" )
+                ( rotate > 0 ? "+" : rotate < 0 ? "-" : "o" ),
+                car.collided()
             );
         }
 
