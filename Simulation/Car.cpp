@@ -34,26 +34,27 @@ public:
     b2Vec2 point{ 0.0, 0.0 };
 };
 
-Car::Car(b2World* world, b2Body* ground)
+auto Car::init(b2World* world, b2Body* ground) -> void
 {
     this->world = world;
     this->ground = ground;
 
-    b2BodyDef bd{};
-    bd.type = b2_dynamicBody;
-    bd.position = b2Vec2{ 0, 0 };
-    bd.angularDamping = 6.0f;
-    bd.userData = const_cast<char*>("car");
+    { // Body
+        b2BodyDef bd{};
+        bd.type = b2_dynamicBody;
+        bd.position = b2Vec2{ 0, 0 };
+        bd.angularDamping = 6.0f;
+        bd.userData = const_cast<char*>("car");
 
-    this->body = this->world->CreateBody(&bd);
+        this->body = this->world->CreateBody(&bd);
+    }
 
     { // Chassis
-
-        b2PolygonShape border{};
-        border.SetAsBox(0.1, 0.1);
+        b2PolygonShape square{};
+        square.SetAsBox(0.1f, 0.1f);
 
         b2FixtureDef fd{};
-        fd.shape = &border;
+        fd.shape = &square;
         fd.density = 2.0f;
         fd.friction = 0.5f;
         fd.filter.categoryBits = 0x0002;
@@ -63,7 +64,7 @@ Car::Car(b2World* world, b2Body* ground)
         this->body->CreateFixture(&fd);
     }
 
-    { // Triangle
+    { // Direction symbol (triangle)
         b2PolygonShape triangle{};
         const b2Vec2 vertices[3]{
             b2Vec2{ -0.05f, -0.05f },
@@ -94,7 +95,7 @@ Car::Car(b2World* world, b2Body* ground)
         jd.localAnchorA = b2Vec2{ 0.0f, 0.0f };
         jd.localAnchorB = this->body->GetLocalCenter();
         jd.collideConnected = true;
-        jd.maxForce = 1.2f * mass * gravity;
+        jd.maxForce = 1.3f * mass * gravity;
         jd.maxTorque = 9.7f * mass * radius * gravity;
         jd.userData = const_cast<char*>("friction");
 
@@ -112,30 +113,22 @@ auto Car::step() -> void
 
 auto Car::moveForward() -> void
 {
-    const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, +1.0f }) };
-    const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, 0.2f }) };
-    this->body->ApplyForce(force, point, true);
-    moved = true;
+    move = +1;
 }
 
 auto Car::moveBackward() -> void
 {
-    const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, -1.0f }) };
-    const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, -0.2f }) };
-    this->body->ApplyForce(force, point, true);
-    moved = true;
+    move = -1;
 }
 
 auto Car::rotateLeft()->void
 {
-    this->body->ApplyTorque(+1.0f, true);
-    rotated = true;
+    rotate = +1;
 }
 
 auto Car::rotateRight()->void
 {
-    this->body->ApplyTorque(-1.0f, true);
-    rotated = true;
+    rotate = -1;
 }
 
 auto Car::distanceFront() const -> float
@@ -160,6 +153,8 @@ auto Car::collided() const -> bool
 
 auto Car::render(GPU_Target* target) const -> void
 {
+    GPU_SetLineThickness(0.02f);
+
     renderBody(target);
     renderSensor(target, front, 0.0f);
     renderSensor(target, left, +b2_pi / 2.0f);
@@ -168,17 +163,37 @@ auto Car::render(GPU_Target* target) const -> void
 
 auto Car::stepBody() -> void
 {
-    if (moved and this->body->GetLinearVelocity().Length() <= b2_linearSlop)
+    if (not collision)
     {
-        collision = true;
-    }
-    else if (rotated and b2Abs(this->body->GetAngularVelocity()) <= b2_linearSlop)
-    {
-        collision = true;
-    }
+        if (rotated and b2Abs(this->body->GetAngularVelocity()) <= b2_linearSlop)
+        {
+            //collision = true;
+        }
+        else if (moved and this->body->GetLinearVelocity().Length() <= b2_linearSlop)
+        {
+            //collision = true;
+        }
+        rotated = false;
+        moved = false;
 
-    moved = false;
-    rotated = false;
+        if (not collision)
+        {
+            if (rotate != 0)
+            {
+                this->body->ApplyTorque(1.0f * rotate, true);
+                rotated = true;
+            }
+            else if (move != 0)
+            {
+                const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, 1.1f * move }) };
+                const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, 0.0f * move }) };
+                this->body->ApplyForce(force, point, true);
+                moved = true;
+            }
+            rotate = 0;
+            move = 0;
+        }
+    }
 }
 
 auto Car::stepSensor(float* distance, float angle) -> void
@@ -187,9 +202,9 @@ auto Car::stepSensor(float* distance, float angle) -> void
     filter.categoryBits = 0x0002;
     filter.maskBits = 0x0001;
 
-    const auto transform{ b2Transform(b2Vec2{0.0f,0.0f}, b2Rot{ angle }) };
-    const auto start{ this->body->GetWorldPoint(b2Mul(transform, b2Vec2{ 0.0f, 0.2f })) };
-    const auto end{ this->body->GetWorldPoint(b2Mul(transform, b2Vec2{ 0.0f, 2.2f })) };
+    const auto maxDistance{ 2.0f };
+    const auto start{ this->body->GetWorldPoint(b2Mul(b2Rot{ angle }, b2Vec2{ 0.0f, 0.1f })) };
+    const auto end{ this->body->GetWorldPoint(b2Mul(b2Rot{ angle }, b2Vec2{ 0.0f, 0.1f + maxDistance })) };
 
     auto callback{ RayCastCallback{&filter} };
     this->world->RayCast(&callback, start, end);
@@ -225,8 +240,8 @@ auto Car::renderBody(GPU_Target* target) const -> void
 
 auto Car::renderSensor(GPU_Target* target, float distance, float angle) const -> void
 {
-    const auto transform{ b2Transform{ b2Vec2{0.0f,0.0f}, b2Rot{ angle } } };
-    const auto end{ this->body->GetWorldPoint(b2Mul(transform, b2Vec2{ 0.0f, 0.2f + distance })) };
+    const auto start{ this->body->GetWorldPoint(b2Mul(b2Rot{ angle }, b2Vec2{ 0.0f, 0.1f })) };
+    const auto end{ this->body->GetWorldPoint(b2Mul(b2Rot{ angle }, b2Vec2{ 0.0f, 0.1f + distance })) };
 
     // Crosshair
     GPU_Line(target, end.x - 0.075f, end.y, end.x + 0.075f, end.y, sensorColor);

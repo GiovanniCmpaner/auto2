@@ -45,13 +45,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\boost_1_74_0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(SolutionDir)\lib\boost_1_74_0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\boost_1_74_0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(SolutionDir)\lib\boost_1_74_0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -89,11 +89,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="car.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="maze.cpp" />
-    <ClCompile Include="src\video\Camera.cpp" />
-    <ClCompile Include="Window.cpp" />
+    <ClCompile Include="Simulation\Car.cpp" />
+    <ClCompile Include="Simulation\Maze.cpp" />
+    <ClCompile Include="Simulation\Neural.hpp" />
+    <ClCompile Include="Simulation\Simulation.cpp" />
+    <ClCompile Include="Simulation\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\SDL2-2.0.12\lib\x64\SDL2.dll">
@@ -110,10 +111,10 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="car.hpp" />
-    <ClInclude Include="maze.hpp" />
-    <ClInclude Include="src\video\Camera.hpp" />
-    <ClInclude Include="Window.hpp" />
+    <ClInclude Include="Simulation\Car.hpp" />
+    <ClInclude Include="Simulation\Maze.hpp" />
+    <ClInclude Include="Simulation\Simulation.hpp" />
+    <ClInclude Include="Simulation\Window.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\SDL_gpu-0.12.0\lib\x64\SDL2_gpu.dll">

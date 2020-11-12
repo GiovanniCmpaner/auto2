@@ -5,7 +5,7 @@
 
 class Car {
 public:
-    Car(b2World* world, b2Body* ground);
+    auto init(b2World* world, b2Body* ground) -> void;
 
     auto step() -> void;
     auto render(GPU_Target* target) const -> void;
@@ -32,6 +32,9 @@ private:
     b2Body* ground{ nullptr };
     b2Body* body{ nullptr };
 
+    int move{ 0 };
+    int rotate{ 0 };
+
     bool moved{ false };
     bool rotated{ false };
 
@@ -40,6 +43,9 @@ private:
     float right{ 0.0f };
     bool collision{ false };
 
+    static constexpr float width{ 0.2f };
+    static constexpr float height{ 0.2f };
+    static constexpr float maxDistance{ 2.0f };
     static constexpr SDL_Color backgroundColor{ 0, 0, 0, 255 };
     static constexpr SDL_Color fontColor{ 0, 255, 0, 255 };
     static constexpr SDL_Color sensorColor{ 0,0,255,255 };
