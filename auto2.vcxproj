@@ -45,19 +45,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\boost_1_74_0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(SolutionDir)\lib\boost_1_74_0\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\tiny-dnn-1.0.0;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\boost_1_74_0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(SolutionDir)\lib\boost_1_74_0\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\tiny-dnn-1.0.0;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -112,6 +112,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Simulation\Car.hpp" />
+    <ClInclude Include="Simulation\Matrix.hpp" />
     <ClInclude Include="Simulation\Maze.hpp" />
     <ClInclude Include="Simulation\Simulation.hpp" />
     <ClInclude Include="Simulation\Window.hpp" />
