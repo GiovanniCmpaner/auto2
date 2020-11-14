@@ -93,7 +93,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Simulation\Car.cpp" />
     <ClCompile Include="Simulation\Maze.cpp" />
-    <ClCompile Include="Simulation\Neural.hpp" />
     <ClCompile Include="Simulation\Simulation.cpp" />
     <ClCompile Include="Simulation\Window.cpp" />
   </ItemGroup>
@@ -113,7 +112,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Simulation\Car.hpp" />
-    <ClInclude Include="Simulation\Matrix.hpp" />
     <ClInclude Include="Simulation\Maze.hpp" />
     <ClInclude Include="Simulation\Simulation.hpp" />
     <ClInclude Include="Simulation\Window.hpp" />

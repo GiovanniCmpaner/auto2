@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "Window.hpp"
-#include "Neural.hpp"
 #include "Maze.hpp"
 #include "Car.hpp"
 
@@ -19,7 +18,6 @@ private:
     auto createGround(b2World* world)->b2Body*;
 
     Window window{ };
-    Neural neural{ 3, { 3, 2 }, 1 };
 
     const b2Vec2 gravity{ 0.0, 0.0 };
     b2World world{ gravity };

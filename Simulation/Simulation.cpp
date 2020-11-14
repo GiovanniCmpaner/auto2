@@ -1,5 +1,7 @@
 #include <algorithm>
 
+#include <tiny_dnn/tiny_dnn.h>
+
 #include "Simulation.hpp"
 
 auto Simulation::init() -> void
