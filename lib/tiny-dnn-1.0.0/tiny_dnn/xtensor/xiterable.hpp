@@ -737,27 +737,27 @@ inline auto xiterable<D>::rend(const S& shape) noexcept
 template <class D>
 template <layout_type L>
 inline auto xiterable<D>::storage_begin() noexcept -> layout_iterator<L> {
-  return begin<L>();
+  return this->template begin<L>();
 }
 
 template <class D>
 template <layout_type L>
 inline auto xiterable<D>::storage_end() noexcept -> layout_iterator<L> {
-  return end<L>();
+  return this->template end<L>();
 }
 
 template <class D>
 template <layout_type L>
 inline auto xiterable<D>::storage_rbegin() noexcept
   -> reverse_layout_iterator<L> {
-  return rbegin<L>();
+  return this->template rbegin<L>();
 }
 
 template <class D>
 template <layout_type L>
 inline auto xiterable<D>::storage_rend() noexcept
   -> reverse_layout_iterator<L> {
-  return rend<L>();
+  return this->template rend<L>();
 }
 
 template <class D>
