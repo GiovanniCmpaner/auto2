@@ -1,6 +1,7 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
+#include <map>
 
 #include <box2d/box2d.h>
 #include <SDL_gpu.h>
@@ -106,9 +107,11 @@ auto Car::init(b2World* world, b2Body* ground) -> void
 auto Car::step() -> void
 {
     stepBody();
-    stepSensor(&front, 0.0f);
-    stepSensor(&left, +b2_pi / 2.0f);
-    stepSensor(&right, -b2_pi / 2.0f);
+    for (auto&& [angle, distance] : sensors)
+    {
+        const auto radians{ (angle / 180.0f) * b2_pi };
+        stepSensor(&distance, radians);
+    }
 }
 
 auto Car::moveForward() -> void
@@ -131,19 +134,9 @@ auto Car::rotateRight()->void
     rotate = -1;
 }
 
-auto Car::distanceFront() const -> float
+auto Car::distances() const -> std::map<int, float>
 {
-    return front;
-}
-
-auto Car::distanceLeft() const -> float
-{
-    return left;
-}
-
-auto Car::distanceRight() const-> float
-{
-    return right;
+    return sensors;
 }
 
 auto Car::collided() const -> bool
@@ -156,9 +149,11 @@ auto Car::render(GPU_Target* target) const -> void
     GPU_SetLineThickness(0.02f);
 
     renderBody(target);
-    renderSensor(target, front, 0.0f);
-    renderSensor(target, left, +b2_pi / 2.0f);
-    renderSensor(target, right, -b2_pi / 2.0f);
+    for (auto&& [angle, distance] : sensors)
+    {
+        const auto radians{ (angle / 180.0f) * b2_pi };
+        renderSensor(target, distance, radians);
+    }
 }
 
 auto Car::stepBody() -> void

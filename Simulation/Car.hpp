@@ -1,12 +1,12 @@
 #pragma once
 
 #include <SDL.h>
+#include <map>
 
-
-class Car {
+class Car
+{
 public:
     auto init(b2World* world, b2Body* ground) -> void;
-
     auto step() -> void;
     auto render(GPU_Target* target) const -> void;
 
@@ -15,9 +15,7 @@ public:
     auto rotateLeft()->void;
     auto rotateRight()->void;
 
-    auto distanceFront() const -> float;
-    auto distanceLeft() const -> float;
-    auto distanceRight() const -> float;
+    auto distances() const->std::map<int, float>;
 
     //auto colorBelow() const->SDL_Color;
 
@@ -38,9 +36,13 @@ private:
     bool moved{ false };
     bool rotated{ false };
 
-    float front{ 0.0f };
-    float left{ 0.0f };
-    float right{ 0.0f };
+    std::map<int, float> sensors{
+        {0, 0.0f},
+        {90, 0.0f},
+        {-90, 0.0f},
+        {180, 0.0f}
+    };
+
     bool collision{ false };
 
     static constexpr float width{ 0.2f };

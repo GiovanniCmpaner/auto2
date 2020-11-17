@@ -9,13 +9,13 @@
 
 #include "Simulation/Simulation.hpp"
 
-static int resizingEventWatcher(void* data, SDL_Event* event)
-{
-    return 0;
-}
-
-auto drawWorld(GPU_Target* target, b2World* world) -> void
-{
+//static int resizingEventWatcher(void* data, SDL_Event* event)
+//{
+//    return 0;
+//}
+//
+//auto drawWorld(GPU_Target* target, b2World* world) -> void
+//{
     //return;
     //for (auto body{ world->GetBodyList() }; body != nullptr; body = body->GetNext())
     //{
@@ -84,7 +84,7 @@ auto drawWorld(GPU_Target* target, b2World* world) -> void
     //        }
     //    }
     //}
-}
+//}
 
 Simulation simulation{};
 
