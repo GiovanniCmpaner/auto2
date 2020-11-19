@@ -6,7 +6,7 @@
 #include <iostream>
 #include <cstdint>
 #include <cstdlib>
-
+#include <functional>
 
 #include <box2d/box2d.h>
 #include <SDL_gpu.h>
@@ -14,42 +14,43 @@
 
 #include "maze.hpp"
 
-auto Maze::make(size_t rows, size_t columns) -> std::vector<std::vector<Tile>>
+auto Maze::make(size_t rows, size_t columns) -> Matrix
 {
-    auto stack{ std::stack<std::tuple<int,int>>{} };
     auto matrix{ std::vector(rows,std::vector(columns,Tile{true,true,true,true})) };
+
+    auto tracking{ std::deque<std::tuple<int,int>>{} };
 
     auto rd{ std::random_device{} };
     auto mt{ std::mt19937{rd()} };
 
-    auto y{ 0 }, x{ 0 };
+    auto j{ 0 }, i{ 0 };
 
-    stack.emplace(y, x);
+    tracking.emplace_back(j, i);
     while (1)
     {
         auto directions{ std::vector<std::tuple<int,int>>{} };
 
-        const auto unvisited{ [&](int j, int i) -> bool
+        const auto unvisited{ [&](int dj, int di) -> bool
         {
-            return matrix[y + j][x + i].up
-                && matrix[y + j][x + i].down
-                && matrix[y + j][x + i].left
-                && matrix[y + j][x + i].right;
+            return matrix[j + dj][i + di].up
+                && matrix[j + dj][i + di].down
+                && matrix[j + dj][i + di].left
+                && matrix[j + dj][i + di].right;
         } };
 
-        if (y > 0 and unvisited(-1, 0))
+        if (j > 0 and unvisited(-1, 0))
         {
             directions.emplace_back(-1, 0);
         }
-        if (y < rows - 1 and unvisited(+1, 0))
+        if (j < rows - 1 and unvisited(+1, 0))
         {
             directions.emplace_back(+1, 0);
         }
-        if (x > 0 and unvisited(0, -1))
+        if (i > 0 and unvisited(0, -1))
         {
             directions.emplace_back(0, -1);
         }
-        if (x < columns - 1 and unvisited(0, +1))
+        if (i < columns - 1 and unvisited(0, +1))
         {
             directions.emplace_back(0, +1);
         }
@@ -58,38 +59,42 @@ auto Maze::make(size_t rows, size_t columns) -> std::vector<std::vector<Tile>>
         {
             auto dist{ std::uniform_int_distribution<int>{ 0, static_cast<int>(directions.size()) - 1} };
             const auto choosen{ dist(mt) };
-            const auto [j, i] { directions[choosen] };
+            const auto [dj, di] { directions[choosen] };
 
-            if (j == +1) {
-                matrix[y][x].down = false;
-                matrix[y + 1][x].up = false;
+            if (dj == +1)
+            {
+                matrix[j][i].down = false;
+                matrix[j + 1][i].up = false;
             }
-            else if (j == -1) {
-                matrix[y][x].up = false;
-                matrix[y - 1][x].down = false;
+            else if (dj == -1)
+            {
+                matrix[j][i].up = false;
+                matrix[j - 1][i].down = false;
             }
-            else if (i == +1) {
-                matrix[y][x].right = false;
-                matrix[y][x + 1].left = false;
+            else if (di == +1)
+            {
+                matrix[j][i].right = false;
+                matrix[j][i + 1].left = false;
             }
-            else if (i == -1) {
-                matrix[y][x].left = false;
-                matrix[y][x - 1].right = false;
+            else if (di == -1)
+            {
+                matrix[j][i].left = false;
+                matrix[j][i - 1].right = false;
             }
 
-            y += j;
-            x += i;
+            j += dj;
+            i += di;
 
-            stack.emplace(y, x);
+            tracking.emplace_back(j, i);
         }
         else
         {
-            stack.pop();
-            if (stack.empty())
+            tracking.pop_back();
+            if (tracking.empty())
             {
                 break;
             }
-            std::tie(y, x) = stack.top();
+            std::tie(j, i) = tracking.back();
         }
     }
 
@@ -99,92 +104,190 @@ auto Maze::make(size_t rows, size_t columns) -> std::vector<std::vector<Tile>>
     return matrix;
 }
 
-auto Maze::print(const std::vector<std::vector<Tile>>& matrix) -> void
+auto Maze::solve(const Matrix& matrix, int y, int x)->Path
 {
-    std::cout << '\xDB';
+    auto visited{ std::vector(matrix.size(), std::vector(matrix.front().size(), false)) };
+    auto tracking{ std::deque<std::tuple<int,int,int>>{} };
 
-    for (const auto& tile : matrix.front())
+    tracking.emplace_back(0, y, x);
+
+    while (not tracking.empty())
     {
-        if (tile.up)
+        auto& [dir, j, i] { tracking.back() };
+
+        if (j == 0 and i == 0)
         {
-            std::cout << '\xDB';
+            auto solution{ Path{} };
+            while (1)
+            {
+                auto& [dir, j, i] { tracking.back() };
+                solution.emplace(solution.begin(), Coordinate{ i, j });
+                if (j == y and i == x)
+                {
+                    break;
+                }
+                tracking.pop_back();
+            }
+            return solution;
+        }
+
+        if (dir == 0) // UP
+        {
+            if (j - 1 >= 0 and not matrix[j][i].up and not visited[j - 1][i])
+            {
+                visited[j - 1][i] = true;
+                tracking.emplace_back(0, j - 1, i);
+            }
+        }
+        else if (dir == 1) // LEFT
+        {
+            if (i - 1 >= 0 and not matrix[j][i].left and not visited[j][i - 1])
+            {
+                visited[j][i - 1] = true;
+                tracking.emplace_back(0, j, i - 1);
+            }
+        }
+        else if (dir == 2) // DOWN
+        {
+            if (j + 1 < matrix.size() and not matrix[j][i].down and not visited[j + 1][i])
+            {
+                visited[j + 1][i] = true;
+                tracking.emplace_back(0, j + 1, i);
+            }
+        }
+        else if (dir == 3) // RIGHT
+        {
+            if (i + 1 < matrix.front().size() and not matrix[j][i].right and not visited[j][i + 1])
+            {
+                visited[j][i + 1] = true;
+                tracking.emplace_back(0, j, i + 1);
+            }
         }
         else
         {
-            std::cout << ' ';
+            visited[j][i] = false;
+            tracking.pop_back();
         }
 
-        std::cout << '\xDB';
+        dir++;
     }
 
-    std::cout << std::endl;
+    return {};
+}
 
-    for (const auto& row : matrix)
+auto Maze::print(const Matrix& matrix, const Path& path) -> void
+{
+    static constexpr auto square{ '\xDB' };
+    static constexpr auto free{ ' ' };
+    static constexpr auto occupied{ 'X' };
+
+    std::cout << square;
+
     {
-        if (row.front().left)
+        auto y{ 0 };
+
+        for (auto x{ 0 }; x < matrix[y].size(); ++x)
         {
-            std::cout << '\xDB';
-        }
-        else {
-            std::cout << ' ';
+            if (matrix[y][x].up)
+            {
+                std::cout << square;
+            }
+            else
+            {
+                std::cout << free;
+            }
+
+            std::cout << square;
         }
 
-        for (const auto& tile : row)
-        {
-            std::cout << ' ';
+        std::cout << std::endl;
+    }
 
-            if (tile.down and tile.right)
+    for (auto y{ 0 }; y < matrix.size(); ++y)
+    {
+        if (matrix[y].front().left)
+        {
+            std::cout << square;
+        }
+        else
+        {
+            std::cout << free;
+        }
+
+        for (auto x{ 0 }; x < matrix[y].size(); ++x)
+        {
+            auto found{ false };
+            for (auto&& coordinate : path)
             {
-                std::cout << '\xDB';
+                if (coordinate.y == y == coordinate.x == x)
+                {
+                    found = true;
+                    break;
+                }
             }
-            else if (tile.down)
+            if (found)
             {
-                std::cout << ' ';
+                std::cout << occupied;
             }
-            else if (tile.right)
+            else
             {
-                std::cout << '\xDB';
+                std::cout << free;
             }
-            else {
-                std::cout << ' ';
+
+            if (matrix[y][x].down and matrix[y][x].right)
+            {
+                std::cout << square;
+            }
+            else if (matrix[y][x].down)
+            {
+                std::cout << free;
+            }
+            else if (matrix[y][x].right)
+            {
+                std::cout << square;
+            }
+            else
+            {
+                std::cout << free;
             }
         }
 
         std::cout << std::endl;
 
-        std::cout << '\xDB';
+        std::cout << square;
 
-        for (const auto& tile : row)
+        for (auto x{ 0 }; x < matrix[y].size(); ++x)
         {
-            if (tile.down && tile.right)
+            if (matrix[y][x].down && matrix[y][x].right)
             {
-                std::cout << '\xDB';
+                std::cout << square;
             }
-            else if (tile.down)
+            else if (matrix[y][x].down)
             {
-                std::cout << '\xDB';
+                std::cout << square;
             }
-            else if (tile.right)
+            else if (matrix[y][x].right)
             {
-                std::cout << ' ';
+                std::cout << free;
             }
-            else {
-                std::cout << ' ';
+            else
+            {
+                std::cout << free;
             }
 
-            std::cout << '\xDB';
+            std::cout << square;
         }
 
         std::cout << std::endl;
     }
 }
 
-auto Maze::lines(const std::vector<std::vector<Tile>>& matrix, float height, float width) -> std::vector<Line>
+auto Maze::lines(const Matrix& matrix, float height, float width) -> std::vector<Line>
 {
     auto lines{ std::vector<Line>{} };
 
-    const auto tileHeight{ static_cast<float>(height / matrix.size()) };
-    const auto tileWidth{ static_cast<float>(width / matrix.front().size()) };
+    const auto tileHeight{ height / matrix.size() };
+    const auto tileWidth{ width / matrix.front().size() };
 
     {
         auto make{ [&](float y, float currentHeight, bool Tile::* direction)
@@ -211,13 +314,13 @@ auto Maze::lines(const std::vector<std::vector<Tile>>& matrix, float height, flo
             {
                 lines.emplace_back(Line{ start, currentHeight, end, currentHeight });
             }
-        }};
+        } };
 
         make(0.0f, 0.0f, &Tile::up);
 
         for (auto y{ 0 }; y < matrix.size(); y++)
         {
-            make(y, ( y + 1.0f) * tileHeight, &Tile::down);
+            make(y, (y + 1.0f) * tileHeight, &Tile::down);
         }
     }
 
@@ -246,20 +349,20 @@ auto Maze::lines(const std::vector<std::vector<Tile>>& matrix, float height, flo
             {
                 lines.emplace_back(Line{ currentWidth, start, currentWidth, end });
             }
-        }};
+        } };
 
         make(0.0f, 0.0f, &Tile::left);
 
         for (auto x{ 0 }; x < matrix.front().size(); x++)
         {
-            make(x, ( x + 1.0f) * tileWidth, &Tile::right);
+            make(x, (x + 1.0f) * tileWidth, &Tile::right);
         }
     }
 
     return lines;
 }
 
-auto Maze::rectangles(const std::vector<std::vector<Tile>>& matrix, float x, float y, float height, float width, float thickness) -> std::vector<Rect>
+auto Maze::rectangles(const Matrix& matrix, float x, float y, float height, float width, float thickness) -> std::vector<Rect>
 {
     const auto lines{ Maze::lines(matrix,height,width) };
     auto rectangles{ std::vector<Rect>{} };
@@ -273,21 +376,39 @@ auto Maze::rectangles(const std::vector<std::vector<Tile>>& matrix, float x, flo
     return rectangles;
 }
 
-auto Maze::init(b2World* world, b2Body* ground) -> void
+auto Maze::init(b2World* world, b2Body* ground, size_t rows, size_t columns, float x, float y, float height, float width) -> void
 {
     this->world = world;
     this->ground = ground;
+    this->x = x;
+    this->y = y;
+    this->height = height;
+    this->width = width;
+    this->matrix = Maze::make(rows, columns);
+    this->createBody();
+}
 
-    const auto tiles{ Maze::make(7,7) };
-    const auto rectangles{ Maze::rectangles(tiles, -realWidth / 2.0f, -realHeight / 2.0f, realWidth, realHeight, 0.05f) };
+auto Maze::randomize() -> void
+{
+    this->matrix = Maze::make(this->rows(), this->columns());
+    this->createBody();
+}
+
+auto Maze::createBody() -> void
+{
+    if (this->body != nullptr)
+    {
+        this->world->DestroyBody(this->body);
+    }
 
     b2BodyDef bd{};
     bd.type = b2_staticBody;
-    bd.position = b2Vec2{ 0.0f, 0.0f };
+    bd.position = b2Vec2{ this->x, this->y };
     bd.userData = const_cast<char*>("maze");
 
-    this->body = world->CreateBody(&bd);
+    this->body = this->world->CreateBody(&bd);
 
+    const auto rectangles{ Maze::rectangles(this->matrix, this->x - this->width / 2.0f, this->y - this->height / 2.0f, this->width, this->height, 0.05f) };
     for (const auto& rect : rectangles)
     {
         b2PolygonShape shape{};
@@ -300,7 +421,7 @@ auto Maze::init(b2World* world, b2Body* ground) -> void
         fd.filter.maskBits = 0x0003;
         fd.userData = const_cast<char*>("wall");
 
-        shape.SetAsBox(rect.width / 2.0f, rect.height / 2.0f, b2Vec2{ rect.x + rect.width / 2.0f, rect.y + rect.height / 2.0f }, 0.0f);
+        shape.SetAsBox(rect.width / 2.0f, rect.height / 2.0f, { rect.x + rect.width / 2.0f, rect.y + rect.height / 2.0f }, 0.0f);
         this->body->CreateFixture(&fd);
     }
 }
@@ -319,14 +440,108 @@ auto Maze::render(GPU_Target* target) const -> void
         const auto polygon{ reinterpret_cast<const b2PolygonShape*>(fixture->GetShape()) };
 
         float vertices[2 * b2_maxPolygonVertices];
-        for (auto i{ 0 }; i < polygon->m_count; ++i)
+        for (auto n{ 0 }; n < polygon->m_count; ++n)
         {
-            const auto vertice{ this->body->GetWorldPoint(polygon->m_vertices[i]) };
-            vertices[i * 2 + 0] = vertice.x;
-            vertices[i * 2 + 1] = vertice.y;
+            const auto vertice{ this->body->GetWorldPoint(polygon->m_vertices[n]) };
+            vertices[n * 2 + 0] = vertice.x;
+            vertices[n * 2 + 1] = vertice.y;
         }
 
         GPU_Polygon(target, polygon->m_count, vertices, solidBorderColor);
         GPU_PolygonFilled(target, polygon->m_count, vertices, solidFillColor);
     }
+}
+
+auto Maze::solve(const b2Vec2& point) const->std::vector<b2Vec2>
+{
+    auto path{ std::vector<b2Vec2>{} };
+
+    const auto coordinate{ this->toLocalCoordinate(point) };
+    if (coordinate.x < 0 or coordinate.y < 0 or coordinate.y >= matrix.size() or coordinate.x >= matrix.front().size())
+    {
+        return {};
+    }
+
+    const auto solution{ Maze::solve(this->matrix, coordinate.y, coordinate.x) };
+
+    auto n{ 0 };
+    while (n < solution.size())
+    {
+        auto [y1, x1] { solution[n] };
+        {
+            const auto tileHeight{ this->height / this->rows() };
+            const auto tileWidth{ this->width / this->columns() };
+
+            const auto point{ this->toRealPoint({ x1 , y1 }) };
+            path.emplace_back(point.x + tileHeight / 2, point.y + tileWidth / 2);
+        }
+        if (n < solution.size() - 1)
+        {
+            auto [y2, x2] { solution[n + 1] };
+
+            ++n;
+
+            if (y2 == y1)
+            {
+                while (n < solution.size() - 1)
+                {
+                    auto [y3, x3] { solution[n + 1] };
+                    if (y3 != y2)
+                    {
+                        break;
+                    }
+                    ++n;
+                }
+            }
+            else if (x2 == x1)
+            {
+                while (n < solution.size() - 1)
+                {
+                    auto [y3, x3] { solution[n + 1] };
+                    if (x3 != x2)
+                    {
+                        break;
+                    }
+                    ++n;
+                }
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+    return path;
+}
+
+auto Maze::toLocalCoordinate(const b2Vec2& point) const->Coordinate
+{
+    const auto tileHeight{ this->height / this->rows() };
+    const auto tileWidth{ this->width / this->columns() };
+
+    const auto y{ static_cast<int>( (point.y + this->height / 2.0f) / tileHeight ) };
+    const auto x{ static_cast<int>( (point.x + this->width / 2.0f) / tileWidth ) };
+
+    return Coordinate{ x, y };
+}
+
+auto Maze::toRealPoint(const Coordinate& coordinate) const->b2Vec2
+{
+    const auto tileHeight{ this->height / this->rows() };
+    const auto tileWidth{ this->width / this->columns() };
+
+    const auto y{ static_cast<float>( coordinate.x * tileHeight - this->height / 2.0f ) };
+    const auto x{ static_cast<float>( coordinate.y * tileWidth - this->width / 2.0f ) };
+
+    return b2Vec2{ x, y };
+}
+
+auto Maze::rows() const->size_t
+{
+    return this->matrix.size();
+}
+
+auto Maze::columns() const->size_t
+{
+    return ( this->matrix.empty() ? 0 : this->matrix.front().size() );
 }
