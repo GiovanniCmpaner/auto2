@@ -40,7 +40,8 @@ auto Window::process() -> void
 
             GPU_MatrixMode(target, GPU_PROJECTION);
             GPU_LoadIdentity();
-            GPU_Ortho(-this->realHeight, +this->realHeight, +this->realWidth, -this->realWidth, 0, 1);
+            //GPU_Ortho(-this->realHeight, +this->realHeight, +this->realWidth, -this->realWidth, 0, 1); // CENTERED
+            GPU_Ortho(0, 2 * this->realHeight, 2 * this->realWidth, 0, 0, 1); // CORNER
 
             GPU_MatrixMode(target, GPU_MODEL);
             GPU_LoadIdentity();

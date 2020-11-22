@@ -1,6 +1,8 @@
 #pragma once
 
-#include <SDL.h>
+#include <SDL_gpu.h>
+#include <box2d/box2d.h>
+
 #include <map>
 
 enum class Move
@@ -27,12 +29,15 @@ enum class Color
 class Car
 {
 public:
-    Car(b2World* world, b2Body* ground);
+    Car(b2World* world, b2Body* ground, const b2Vec2& position = {});
     Car(const Car& other);
     ~Car();
     auto step() -> void;
     auto render(GPU_Target* target) const -> void;
     auto reset() -> void;
+
+    auto position() const->b2Vec2;
+    auto angle() const->float;
 
     auto doMove(Move move) -> void;
     auto distances() const->std::map<int, float>;
@@ -42,6 +47,7 @@ public:
     auto collided() const -> bool;
 
 private:
+    auto createBody(const b2Vec2& position) -> void;
     auto stepBody() -> void;
     auto stepSensor(float* distance, float angle) -> void;
     auto renderBody(GPU_Target* target) const -> void;

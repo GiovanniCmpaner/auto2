@@ -7,14 +7,16 @@
 #include "Window.hpp"
 #include "Maze.hpp"
 #include "Car.hpp"
+#include "Follower.hpp"
 
 class Simulation
 {
 public:
     auto init() -> void;
 
-    static constexpr float realWidth{ 3.5f };
-    static constexpr float realHeight{ 3.5f };
+    static constexpr float realWidth{ 8 };
+    static constexpr float realHeight{ 8 };
+    static constexpr size_t quantity{ 500 };
 
 private:
     auto constructDNN()->void;
@@ -29,15 +31,15 @@ private:
     b2World world{ gravity };
 
     b2Body* ground{ nullptr };
-    Maze maze{ };
-    std::vector<Car> cars{ };
-    std::vector<std::chrono::system_clock::time_point> timers{};
-    std::vector<tiny_dnn::network<tiny_dnn::sequential>> nets{};
-    std::chrono::system_clock::time_point start{};
 
-    
+    std::vector<Car> cars{ };
+    std::vector<Maze> mazes{ };
+    std::vector<std::vector<b2Vec2>> paths{ };
+    std::vector<Follower> followers{ };
+
     std::vector<tiny_dnn::vec_t> data{};
     std::vector<tiny_dnn::label_t> labels{};
+    tiny_dnn::network<tiny_dnn::sequential> net{};
 
     Move move{ Move::STOP };
 };

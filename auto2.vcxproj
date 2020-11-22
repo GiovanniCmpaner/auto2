@@ -92,6 +92,7 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Simulation\Car.cpp" />
+    <ClCompile Include="Simulation\Follower.cpp" />
     <ClCompile Include="Simulation\Maze.cpp" />
     <ClCompile Include="Simulation\Simulation.cpp" />
     <ClCompile Include="Simulation\Window.cpp" />
@@ -112,6 +113,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Simulation\Car.hpp" />
+    <ClInclude Include="Simulation\Follower.hpp" />
     <ClInclude Include="Simulation\Maze.hpp" />
     <ClInclude Include="Simulation\Simulation.hpp" />
     <ClInclude Include="Simulation\Window.hpp" />

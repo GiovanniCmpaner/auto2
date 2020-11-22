@@ -1,10 +1,14 @@
 #pragma once
 
+#include <box2d/box2d.h>
+#include <SDL_gpu.h>
+
 #include <vector>
 #include <cstdint>
 
 class Maze
 {
+public:
     struct Tile
     {
         bool up, down;
@@ -31,11 +35,14 @@ class Maze
     using Matrix = std::vector<std::vector<Tile>>;
     using Path = std::vector<Coordinate>;
 
-public:
     auto init(b2World* world, b2Body* ground, size_t rows, size_t columns, float x, float y, float height, float width) -> void;
     auto step() -> void;
     auto render(GPU_Target* target) const -> void;
+
+    auto start() const->b2Vec2;
+    auto end() const->b2Vec2;
     auto solve(const b2Vec2& point) const->std::vector<b2Vec2>;
+
     auto randomize() -> void;
 
 private:

@@ -36,15 +36,30 @@ public:
     b2Vec2 point{ 0.0, 0.0 };
 };
 
-Car::Car(b2World* world, b2Body* ground)
+Car::Car(b2World* world, b2Body* ground, const b2Vec2& position)
 {
     this->world = world;
     this->ground = ground;
+    this->createBody(position);
+}
 
+Car::Car(const Car& other) : Car{ other.world, other.ground, other.body->GetPosition() }
+{
+
+}
+
+Car::~Car()
+{
+    this->world->DestroyBody(this->body);
+}
+
+auto Car::createBody(const b2Vec2& position) -> void
+{
     { // Body
         b2BodyDef bd{};
         bd.type = b2_dynamicBody;
-        bd.position = b2Vec2{ 0.0f, 0.0f };
+        bd.position = position;
+        bd.angle = b2_pi;
         bd.angularDamping = 6.0f;
         bd.userData = const_cast<char*>("car");
 
@@ -97,22 +112,12 @@ Car::Car(b2World* world, b2Body* ground)
         jd.localAnchorA = b2Vec2{ 0.0f, 0.0f };
         jd.localAnchorB = this->body->GetLocalCenter();
         jd.collideConnected = true;
-        jd.maxForce = 1.3f * mass * gravity;
-        jd.maxTorque = 9.7f * mass * radius * gravity;
+        jd.maxForce = 1.35f * mass * gravity;
+        jd.maxTorque = 8.975f * mass * radius * gravity;
         jd.userData = const_cast<char*>("friction");
 
-        world->CreateJoint(&jd);
+        this->world->CreateJoint(&jd);
     }
-}
-
-Car::Car(const Car& other) : Car{ other.world, other.ground }
-{
-
-}
-
-Car::~Car()
-{
-    this->world->DestroyBody(this->body);
 }
 
 auto Car::step() -> void
@@ -145,6 +150,16 @@ auto Car::reset() -> void
 
     this->move = Move::STOP;
     this->collision = false;
+}
+
+auto Car::position() const->b2Vec2
+{
+    return this->body->GetPosition();
+}
+
+auto Car::angle() const->float
+{
+    return this->body->GetAngle();
 }
 
 auto Car::doMove(Move move) -> void
@@ -195,11 +210,11 @@ auto Car::stepBody() -> void
 
     if (this->move == Move::ROTATE_LEFT)
     {
-        this->body->ApplyTorque(+1.1f, true);
+        this->body->ApplyTorque(-1.0f, true);
     }
     else if(this->move == Move::ROTATE_RIGHT)
     {
-        this->body->ApplyTorque(-1.1f, true);
+        this->body->ApplyTorque(+1.0f, true);
     }
     else if (this->move == Move::MOVE_FORWARD)
     {

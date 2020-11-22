@@ -2,6 +2,7 @@
 #include <filesystem>
 
 #include "Simulation.hpp"
+#include "Follower.hpp"
 
 
 auto randomize(tiny_dnn::network<tiny_dnn::sequential>& net) -> void
@@ -24,43 +25,63 @@ auto randomize(tiny_dnn::network<tiny_dnn::sequential>& net) -> void
 
 auto Simulation::constructDNN() -> void
 {
+    //using namespace tiny_dnn;
+    //{
+    //    // 6 x sensores distancia
+    //    // (2) x giroscopio (x,y)
+    //    // (2) x acelerometro (x,y)
+    //    // 1 x cor
+    //    auto net{ tiny_dnn::network<tiny_dnn::sequential>{} };
+    //
+    //    if (std::filesystem::exists("net.bin"))
+    //    {
+    //        net.load("net.bin");
+    //    }
+    //    else
+    //    {
+    //        net << layers::fc(7, 15) << activation::tanh()
+    //            << layers::fc(15, 15) << activation::tanh()
+    //            << layers::fc(15, 15) << activation::tanh()
+    //            << layers::fc(15, 5);
+    //
+    //        net.init_weight();
+    //        net.save("net.bin");
+    //    }
+    //}
+
     using namespace tiny_dnn;
+
+    this->net << layers::fc(7, 15) << activation::tanh()
+            << layers::fc(15, 15) << activation::tanh()
+            << layers::fc(15, 15) << activation::tanh()
+            << layers::fc(15, 5);
+
+    if (std::filesystem::exists("net_trained.bin"))
     {
-        // 6 x sensores distancia
-        // (2) x giroscopio (x,y)
-        // (2) x acelerometro (x,y)
-        // 1 x cor
-        auto net{ tiny_dnn::network<tiny_dnn::sequential>{} };
-
-        if (std::filesystem::exists("net.bin"))
-        {
-            net.load("net.bin");
-        }
-        else
-        {
-            net << layers::fc(7, 15) << activation::tanh()
-                << layers::fc(15, 15) << activation::tanh()
-                << layers::fc(15, 15) << activation::tanh()
-                << layers::fc(15, 5);
-
-            net.init_weight();
-            net.save("net.bin");
-        }
+        net.load("net_trained.bin");
     }
+    else
     {
-        this->nets.clear();
-        for (auto n{ 0 }; n < this->cars.size(); ++n)
-        {
-            auto net{ tiny_dnn::network<tiny_dnn::sequential>{} };
-            net.load("net.bin");
-
-            assert(net.in_data_size() == 7);
-            assert(net.out_data_size() == 5);
-
-            randomize(net);
-            this->nets.emplace_back(net);
-        }
+        net.init_weight();
     }
+
+    assert(net.in_data_size() == 7);
+    assert(net.out_data_size() == 5);
+
+    //{
+    //    this->nets.clear();
+    //    for (auto n{ 0 }; n < this->cars.size(); ++n)
+    //    {
+    //        auto net{ tiny_dnn::network<tiny_dnn::sequential>{} };
+    //        net.load("net.bin");
+    //
+    //        assert(net.in_data_size() == 7);
+    //        assert(net.out_data_size() == 5);
+    //
+    //        randomize(net);
+    //        this->nets.emplace_back(net);
+    //    }
+    //}
 
     //std::vector<vec_t> train_data{ { 1,2,3,4,5,6,7,8,9,10,11 }, { 1,2,3,4,5,6,7,8,9,10,11 } };
     //std::vector<label_t> train_labels{ 1, 2 };
@@ -75,12 +96,27 @@ auto Simulation::constructDNN() -> void
 auto Simulation::init() -> void
 {
     this->ground = this->createGround(&world);
-    this->maze.init(&world, ground, 5, 5, 0.0f, 0.0f, 3.0f, 3.0f);
-    //this->enviroment.init(&world, ground);
 
-    this->cars = { 100, {&world, ground} };
-    this->timers = { 100, std::chrono::system_clock::time_point::min() };
-    this->start = std::chrono::system_clock::now();
+    this->mazes.reserve(50);
+    this->cars.reserve(50);
+    this->paths.reserve(50);
+    this->followers.reserve(50);
+
+    for (auto j{ 0 }; j < 5; ++j)
+    {
+        for (auto i{ 0 }; i < 10; ++i)
+        {
+            auto& maze{ this->mazes.emplace_back() };
+            maze.init(&world, ground, 5, 5, i * 3.2f, j * 3.2f, 3.0f, 3.0f);
+
+            auto& car{ this->cars.emplace_back(&world, ground, maze.start()) };
+
+            auto& path{ this->paths.emplace_back(maze.solve(car.position())) };
+
+            auto& follower{ this->followers.emplace_back(&car, path) };
+        }
+    }
+
     this->constructDNN();
 
     this->window.init(Simulation::realWidth, Simulation::realHeight);
@@ -107,105 +143,92 @@ auto Simulation::init() -> void
             //this->cars.front().doMove(this->move);
         });
 
+    auto trained{ true };
+    this->followers.clear();
+
     window.onRender([&](GPU_Target* target)
         {
-            // Estado atual da simulação
-
-
-
-
-            //{
-            //    const auto now{ std::chrono::system_clock::now() };
-            //
-            //    auto collisions{ 0 };
-            //
-            //    for (auto n{ 0 }; n < this->cars.size(); ++n)
-            //    {
-            //        if (this->cars[n].collided())
-            //        {
-            //            if (timers[n] == std::chrono::system_clock::time_point::min())
-            //            {
-            //                timers[n] = now;
-            //            }
-            //            collisions++;
-            //        }
-            //        else
-            //        {
-            //            this->cars[n].step();
-            //
-            //            auto inputs{ this->inputs(this->cars[n]) };
-            //            const auto prediction{ this->nets[n].predict_label({inputs}) };
-            //            this->cars[n].doMove(static_cast<Move>(prediction + 1));
-            //        }
-            //    }
-            //
-            //    if (collisions == this->cars.size() || now - start > std::chrono::seconds(10))
-            //    {
-            //        auto longest{ 0 };
-            //        for (auto n{ 1 }; n < this->cars.size(); ++n)
-            //        {
-            //            if (this->timers[n] > this->timers[longest])
-            //            {
-            //                longest = n;
-            //            }
-            //        }
-            //        this->cars = { 100, {&world, ground} };
-            //        this->timers = { 100, std::chrono::system_clock::time_point::min() };
-            //        this->start = now;
-            //
-            //        this->nets[longest].save("net.bin");
-            //        this->nets.clear();
-            //        for (auto n{ 0 }; n < this->cars.size(); ++n)
-            //        {
-            //            auto net{ tiny_dnn::network<tiny_dnn::sequential>{} };
-            //            net.load("net.bin");
-            //            randomize(net);
-            //            this->nets.emplace_back(net);
-            //        }
-            //    }
-            //}
-
-            cars.front().step();
-            maze.step();
-            world.Step(Window::timeStep, 5, 5);
-
-            if (this->cars.front().collided())
+            if(not trained)
             {
-                //tiny_dnn::gradient_descent optimizer{};
-                //this->nets.front().train<tiny_dnn::absolute>(optimizer, this->data, this->labels, 30, 2);
-                //
-                //this->nets.front().save("net.bin");
+                auto finished{ 0 };
+
+                for (auto n{ 0 }; n < this->followers.size(); ++n )
+                {
+                    this->followers[n].step();
+                    if (this->followers[n].finished())
+                    {
+                        ++finished;
+                    }
+                    else
+                    {
+                        if (not this->cars[n].collided())
+                        {
+                            const auto inputs{ Simulation::inputs(this->cars[n]) };
+                            this->data.emplace_back(inputs);
+                            this->labels.emplace_back(static_cast<tiny_dnn::label_t>(this->followers[n].movement()));
+                        }
+                    }
+                }
+
+                if (finished == this->followers.size() and not trained)
+                {
+                    tiny_dnn::RMSprop optimizer{};
+                    net.train<tiny_dnn::mse>(optimizer, this->data, this->labels, 30, 20);
+                    net.save("net_trained_500.bin");
+
+                    trained = true;
+
+                    // RESET
+                    this->followers.clear();
+                    for (auto n{ 0 }; n < this->cars.size(); ++n)
+                    {
+                        this->cars[n] = { &world, ground, this->mazes[n].start() };
+                    }
+                }
             }
             else
             {
-
-                //auto inputs{ this->inputs(this->cars.front()) };
-                //
-                //const auto prediction{ this->nets.front().predict_label({inputs}) };
-                //this->cars.front().doMove(static_cast<Move>(prediction));
-
-                //this->data.emplace_back(inputs);
-                //this->labels.emplace_back(static_cast<tiny_dnn::label_t>(this->move));
+                for (auto& car : this->cars)
+                {
+                    const auto inputs{ Simulation::inputs(car) };
+                    const auto prediction{ net.predict_label(inputs) };
+                    car.doMove(static_cast<Move>(prediction));
+                }
             }
 
-            static const auto path{ this->maze.solve({ 0.0,0.0 }) };
-            static const auto distance{ Simulation::distance(path) };
-
-            for (auto n{ 1 }; n < path.size(); ++n)
+            for (auto& car : this->cars)
             {
-                const auto [x1, y1] { path[n - 1] };
-                const auto [x2, y2] { path[n] };
-
-                GPU_Line(target, x1, y1, x2, y2, { 0,0,255,255 });
+                car.step();
             }
 
-            cars.front().render(target);
-            maze.render(target);
+            for (auto& maze : this->mazes)
+            {
+                maze.step();
+            }
+
+            world.Step(Window::timeStep, 5, 5);
+
+            for (auto n{ 0 }; n < 0; ++n)
+            {
+                this->followers[n].render(target);
+            }
+
+            for (auto n{ 0 }; n < 50; ++n)
+            {
+                this->cars[n].render(target);
+            }
+
+            for (auto n{ 0 }; n < 50; ++n)
+            {
+                this->mazes[n].render(target);
+            }
+
+
         });
 
     window.onInfos([&](std::ostringstream& oss)
         {
-            const auto distances{ this->cars.front().distances() };
+            //const auto distances{ this->cars.front().distances() };
 
             //oss << "front = " << distances.at(0) << " m \n"
             //    << "left = " << distances.at(+90) << " m \n"
@@ -232,7 +255,7 @@ auto Simulation::createGround(b2World* world) -> b2Body*
     fd.shape = &shape;
     fd.density = 0.0f;
     fd.restitution = 0.4f;
-    fd.filter.categoryBits = 0x0001;
+    fd.filter.categoryBits = 0x0000;
     fd.filter.maskBits = 0x0003;
     fd.userData = const_cast<char*>("wall");
 
@@ -267,32 +290,32 @@ auto Simulation::distance(const std::vector<b2Vec2>& path) -> float
     return distance;
 }
 
-//auto Simulation::inputs(const Car& car) const -> tiny_dnn::vec_t
-//{
-//    auto inputs{ tiny_dnn::vec_t{} };
-//
-//    const auto distances{ car.distances() };
-//    for (auto [angle, distance] : distances)
-//    {
-//        inputs.emplace_back(distance);
-//    }
-//
-//    const auto color{ static_cast<int>(car.color()) };
-//    {
-//        inputs.emplace_back(color);
-//    }
-//
-//    //const auto giroscope{ car.giroscope() };
-//    //for (auto& value : giroscope)
-//    //{
-//    //    inputs.emplace_back(value);
-//    //}
-//    //
-//    //const auto acelerometer{ car.acelerometer() };
-//    //for (auto& value : acelerometer)
-//    //{
-//    //    inputs.emplace_back(value);
-//    //}
-//
-//    return inputs;
-//}
+auto Simulation::inputs(const Car& car) -> tiny_dnn::vec_t
+{
+    auto inputs{ tiny_dnn::vec_t{} };
+
+    const auto distances{ car.distances() };
+    for (auto [angle, distance] : distances)
+    {
+        inputs.emplace_back(distance);
+    }
+
+    const auto color{ static_cast<int>(car.color()) };
+    {
+        inputs.emplace_back(color);
+    }
+
+    //const auto giroscope{ car.giroscope() };
+    //for (auto& value : giroscope)
+    //{
+    //    inputs.emplace_back(value);
+    //}
+    //
+    //const auto acelerometer{ car.acelerometer() };
+    //for (auto& value : acelerometer)
+    //{
+    //    inputs.emplace_back(value);
+    //}
+
+    return inputs;
+}

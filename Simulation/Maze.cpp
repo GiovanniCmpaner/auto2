@@ -408,7 +408,7 @@ auto Maze::createBody() -> void
 
     this->body = this->world->CreateBody(&bd);
 
-    const auto rectangles{ Maze::rectangles(this->matrix, this->x - this->width / 2.0f, this->y - this->height / 2.0f, this->width, this->height, 0.05f) };
+    const auto rectangles{ Maze::rectangles(this->matrix, 0, 0, this->width, this->height, 0.05f) };
     for (const auto& rect : rectangles)
     {
         b2PolygonShape shape{};
@@ -452,6 +452,16 @@ auto Maze::render(GPU_Target* target) const -> void
     }
 }
 
+auto Maze::start() const->b2Vec2
+{
+    return this->toRealPoint({ static_cast<int>(this->columns() - 1), static_cast<int>(this->rows() - 1) });
+}
+
+auto Maze::end() const->b2Vec2
+{
+    return this->toRealPoint({ 0,0 });
+}
+
 auto Maze::solve(const b2Vec2& point) const->std::vector<b2Vec2>
 {
     auto path{ std::vector<b2Vec2>{} };
@@ -463,53 +473,10 @@ auto Maze::solve(const b2Vec2& point) const->std::vector<b2Vec2>
     }
 
     const auto solution{ Maze::solve(this->matrix, coordinate.y, coordinate.x) };
-
-    auto n{ 0 };
-    while (n < solution.size())
+    for (auto&& coordinate : solution)
     {
-        auto [y1, x1] { solution[n] };
-        {
-            const auto tileHeight{ this->height / this->rows() };
-            const auto tileWidth{ this->width / this->columns() };
-
-            const auto point{ this->toRealPoint({ x1 , y1 }) };
-            path.emplace_back(point.x + tileHeight / 2, point.y + tileWidth / 2);
-        }
-        if (n < solution.size() - 1)
-        {
-            auto [y2, x2] { solution[n + 1] };
-
-            ++n;
-
-            if (y2 == y1)
-            {
-                while (n < solution.size() - 1)
-                {
-                    auto [y3, x3] { solution[n + 1] };
-                    if (y3 != y2)
-                    {
-                        break;
-                    }
-                    ++n;
-                }
-            }
-            else if (x2 == x1)
-            {
-                while (n < solution.size() - 1)
-                {
-                    auto [y3, x3] { solution[n + 1] };
-                    if (x3 != x2)
-                    {
-                        break;
-                    }
-                    ++n;
-                }
-            }
-        }
-        else
-        {
-            break;
-        }
+        const auto point{ this->toRealPoint(coordinate) };
+        path.emplace_back(point.x, point.y);
     }
     return path;
 }
@@ -519,8 +486,8 @@ auto Maze::toLocalCoordinate(const b2Vec2& point) const->Coordinate
     const auto tileHeight{ this->height / this->rows() };
     const auto tileWidth{ this->width / this->columns() };
 
-    const auto y{ static_cast<int>( (point.y + this->height / 2.0f) / tileHeight ) };
-    const auto x{ static_cast<int>( (point.x + this->width / 2.0f) / tileWidth ) };
+    const auto y{ static_cast<int>( ( point.y - this->y ) / tileHeight ) };
+    const auto x{ static_cast<int>( ( point.x - this->x ) / tileWidth ) };
 
     return Coordinate{ x, y };
 }
@@ -530,8 +497,8 @@ auto Maze::toRealPoint(const Coordinate& coordinate) const->b2Vec2
     const auto tileHeight{ this->height / this->rows() };
     const auto tileWidth{ this->width / this->columns() };
 
-    const auto y{ static_cast<float>( coordinate.x * tileHeight - this->height / 2.0f ) };
-    const auto x{ static_cast<float>( coordinate.y * tileWidth - this->width / 2.0f ) };
+    const auto y{ static_cast<float>( coordinate.y * tileHeight + tileHeight / 2.0f + this->y ) };
+    const auto x{ static_cast<float>( coordinate.x * tileWidth + tileWidth / 2.0f + this->x ) };
 
     return b2Vec2{ x, y };
 }
