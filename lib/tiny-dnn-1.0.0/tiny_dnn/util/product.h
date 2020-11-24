@@ -7,6 +7,10 @@
 */
 #pragma once
 
+#include <stdio.h>
+#include <memory.h>
+#include <intrin.h>
+
 #if defined(CNN_USE_SSE) || defined(CNN_USE_AVX)
 #include <immintrin.h>
 #endif

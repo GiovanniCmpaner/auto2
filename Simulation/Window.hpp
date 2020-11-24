@@ -18,6 +18,8 @@ public:
     auto onRender(std::function<void(GPU_Target*)> callback) -> void;
     auto onInfos(std::function<void(std::ostringstream&)> callback) -> void;
 
+    auto now() -> unsigned long long;
+
     static constexpr int screenWidth{ 1000 };
     static constexpr int screenHeight{ 1000 };
 
@@ -37,6 +39,7 @@ private:
     
     float realWidth{ NAN };
     float realHeight{ NAN };
+    unsigned long long time{ 0 };
 
     std::function<void(const uint8_t*)> onKeyboardCallback;
     std::function<void(GPU_Target*)> onRenderCallback;

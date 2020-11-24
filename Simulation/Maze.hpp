@@ -35,7 +35,10 @@ public:
     using Matrix = std::vector<std::vector<Tile>>;
     using Path = std::vector<Coordinate>;
 
-    auto init(b2World* world, b2Body* ground, size_t rows, size_t columns, float x, float y, float height, float width) -> void;
+    Maze(b2World* world, b2Body* ground, size_t rows, size_t columns, float x, float y, float height, float width);
+    Maze(const Maze& other);
+    ~Maze();
+
     auto step() -> void;
     auto render(GPU_Target* target) const -> void;
 

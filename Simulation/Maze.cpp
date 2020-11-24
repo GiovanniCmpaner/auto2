@@ -19,7 +19,7 @@ auto Maze::make(size_t rows, size_t columns) -> Matrix
     auto matrix{ std::vector(rows,std::vector(columns,Tile{true,true,true,true})) };
 
     auto tracking{ std::deque<std::tuple<int,int>>{} };
-
+    
     auto rd{ std::random_device{} };
     auto mt{ std::mt19937{rd()} };
 
@@ -376,7 +376,7 @@ auto Maze::rectangles(const Matrix& matrix, float x, float y, float height, floa
     return rectangles;
 }
 
-auto Maze::init(b2World* world, b2Body* ground, size_t rows, size_t columns, float x, float y, float height, float width) -> void
+Maze::Maze(b2World* world, b2Body* ground, size_t rows, size_t columns, float x, float y, float height, float width)
 {
     this->world = world;
     this->ground = ground;
@@ -386,6 +386,23 @@ auto Maze::init(b2World* world, b2Body* ground, size_t rows, size_t columns, flo
     this->width = width;
     this->matrix = Maze::make(rows, columns);
     this->createBody();
+}
+
+Maze::Maze(const Maze& other)
+{
+    this->world = other.world;
+    this->ground = other.ground;
+    this->x = other.x;
+    this->y = other.y;
+    this->height = other.height;
+    this->width = other.width;
+    this->matrix = other.matrix;
+    this->createBody();
+}
+
+Maze::~Maze()
+{
+    this->world->DestroyBody(this->body);
 }
 
 auto Maze::randomize() -> void
@@ -471,6 +488,8 @@ auto Maze::solve(const b2Vec2& point) const->std::vector<b2Vec2>
     {
         return {};
     }
+
+    path.emplace_back(point.x, point.y);
 
     const auto solution{ Maze::solve(this->matrix, coordinate.y, coordinate.x) };
     for (auto&& coordinate : solution)

@@ -41,7 +41,7 @@ auto Window::process() -> void
             GPU_MatrixMode(target, GPU_PROJECTION);
             GPU_LoadIdentity();
             //GPU_Ortho(-this->realHeight, +this->realHeight, +this->realWidth, -this->realWidth, 0, 1); // CENTERED
-            GPU_Ortho(0, 2 * this->realHeight, 2 * this->realWidth, 0, 0, 1); // CORNER
+            GPU_Ortho(0, this->realHeight, this->realWidth, 0, 0, 1); // CORNER
 
             GPU_MatrixMode(target, GPU_MODEL);
             GPU_LoadIdentity();
@@ -71,6 +71,7 @@ auto Window::process() -> void
         {
             SDL_Delay(targetTicks - currentTicks);
         }
+        this->time += 1000 / fps;
     }
 
     GPU_Quit();
@@ -89,4 +90,9 @@ auto Window::onRender(std::function<void(GPU_Target*)> callback) -> void
 auto Window::onInfos(std::function<void(std::ostringstream&)> callback) -> void
 {
     this->onInfosCallback = callback;
+}
+
+auto Window::now() -> unsigned long long
+{
+    return this->time;
 }
