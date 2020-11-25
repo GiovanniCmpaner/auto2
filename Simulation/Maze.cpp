@@ -104,8 +104,10 @@ auto Maze::make(size_t rows, size_t columns) -> Matrix
     return matrix;
 }
 
-auto Maze::solve(const Matrix& matrix, int y, int x)->Path
+auto Maze::solve(const Matrix& matrix, int y, int x, bool bestSolution)->Path
 {
+    auto solution{ Path{} };
+
     auto visited{ std::vector(matrix.size(), std::vector(matrix.front().size(), false)) };
     auto tracking{ std::deque<std::tuple<int,int,int>>{} };
 
@@ -115,20 +117,31 @@ auto Maze::solve(const Matrix& matrix, int y, int x)->Path
     {
         auto& [dir, j, i] { tracking.back() };
 
-        if (j == 0 and i == 0)
+        if (bestSolution)
         {
-            auto solution{ Path{} };
-            while (1)
+            if (j == 0 and i == 0)
             {
-                auto& [dir, j, i] { tracking.back() };
-                solution.emplace(solution.begin(), Coordinate{ i, j });
-                if (j == y and i == x)
+                while (1)
                 {
-                    break;
+                    auto& [dir, j, i] { tracking.back() };
+                    solution.emplace(solution.begin(), Coordinate{ i, j });
+                    if (j == y and i == x)
+                    {
+                        break;
+                    }
+                    tracking.pop_back();
                 }
-                tracking.pop_back();
+                break;
             }
-            return solution;
+        }
+        else
+        {
+            solution.emplace_back(Coordinate{ i, j });
+
+            if (j == 0 and i == 0)
+            {
+                break;
+            }
         }
 
         if (dir == 0) // UP
@@ -172,7 +185,7 @@ auto Maze::solve(const Matrix& matrix, int y, int x)->Path
         dir++;
     }
 
-    return {};
+    return solution;
 }
 
 auto Maze::print(const Matrix& matrix, const Path& path) -> void
@@ -491,7 +504,7 @@ auto Maze::solve(const b2Vec2& point) const->std::vector<b2Vec2>
 
     path.emplace_back(point.x, point.y);
 
-    const auto solution{ Maze::solve(this->matrix, coordinate.y, coordinate.x) };
+    const auto solution{ Maze::solve(this->matrix, coordinate.y, coordinate.x, false) };
     for (auto&& coordinate : solution)
     {
         const auto point{ this->toRealPoint(coordinate) };

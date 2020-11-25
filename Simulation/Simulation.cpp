@@ -112,9 +112,9 @@ auto Simulation::reset() -> void
 
     auto& maze{ this->mazes.emplace_back(&world, ground, 5, 5, 0, 0, 3.0f, 3.0f) };
 
-    for (auto j{ 0 }; j < 20; ++j)
+    for (auto j{ 0 }; j < 1; ++j)
     {
-        for (auto i{ 0 }; i < 10; ++i)
+        for (auto i{ 0 }; i < 1; ++i)
         {
             //auto& maze{ this->mazes.emplace_back(&world, ground, 5, 5, i * 3.2f, j * 3.2f, 3.0f, 3.0f) };
             //
@@ -173,27 +173,29 @@ auto Simulation::init() -> void
         });
 
     auto trained{ true };
-    this->followers.clear();
 
-    auto furthestCar{ -1 };
+    auto bestCar{ -1 };
+    auto bestRatio{ 0.0f };
 
     window.onRender([&](GPU_Target* target)
         {
             const auto now{ this->window.now() };
-            if (now - start > 35000)
+            if (now - start > 65000)
             {
                 this->reset();
                 this->generation++;
-                furthestCar = -1;
+                bestCar = -1;
+                bestRatio = 0.0f;
                 this->start = this->window.now();
             }
-            else if (furthestCar != -1 and now - start > 30000)
+            else if (bestCar != -1 and now - start > 60000)
             {
-                this->cars[furthestCar].render(target);
+                this->cars[bestCar].render(target);
                 this->mazes[0].render(target);
             }
-            else if (furthestCar == -1 and now - start > 30000)
+            else if (bestCar == -1 and now - start > 60000)
             {
+                auto bestRatio{ 0 };
                 for (auto n{ 0 }; n < this->cars.size(); ++n)
                 {
                     //const auto solutionFromStart{ this->mazes[0].solve(this->mazes[0].start()) };
@@ -210,34 +212,48 @@ auto Simulation::init() -> void
                     //    }
                     //}
 
-
-                    if ( furthestCar == -1 or this->distances[n] > this->distances[furthestCar] )
+                    const auto solutionFromCurrent{ this->mazes[0].solve(this->cars[n].position()) };
+                    if (not solutionFromCurrent.empty())
                     {
-                        furthestCar = n;
+                        const auto distanceFromSolution{ Simulation::distance(solutionFromCurrent) };
+                        const auto distanceTraveled{ this->distances[n] };
+
+                        const auto ratio{ distanceFromSolution };
+                        if (bestCar == -1 or ratio < bestRatio)
+                        {
+                            bestCar = n;
+                            bestRatio = ratio;
+                        }
                     }
                 }
 
-                this->base = clone(this->nets[furthestCar]);
+                this->base = clone(this->nets[bestCar]);
                 this->base.save("net_trained.bin");
             }
             else
             {
-                for (auto n{ 0 }; n < this->cars.size(); ++n)
-                {
-                    if (not this->cars[n].collided())
-                    {
-                        this->distances[n] += b2Distance(this->positions[n], this->cars[n].position());
-                        this->positions[n] = this->cars[n].position();
+//#pragma omp parallel for
+//                for (auto n{ 0 }; n < this->cars.size(); ++n)
+//                {
+//                    if (not this->cars[n].collided())
+//                    {
+//                        this->distances[n] += b2Distance(this->positions[n], this->cars[n].position());
+//                        this->positions[n] = this->cars[n].position();
+//
+//                        const auto inputs{ Simulation::inputs(this->cars[n]) };
+//                        const auto prediction{ this->nets[n].predict_label(inputs) };
+//                        this->cars[n].doMove(static_cast<Move>(prediction));
+//                    }
+//                }
 
-                        const auto inputs{ Simulation::inputs(this->cars[n]) };
-                        const auto prediction{ this->nets[n].predict_label(inputs) };
-                        this->cars[n].doMove(static_cast<Move>(prediction));
-                    }
+                for (auto& follower : this->followers)
+                {
+                    follower.step();
                 }
 
                 for (auto& car : this->cars)
                 {
-                    car.step();
+                    car.step(Window::timeStep);
                 }
 
                 for (auto& maze : this->mazes)
@@ -247,19 +263,22 @@ auto Simulation::init() -> void
 
                 world.Step(Window::timeStep, 4, 4);
 
-                for (auto n{ 0 }; n < 0; ++n)
+                for (auto& follower : this->followers)
                 {
-                    this->followers[n].render(target);
+                    follower.render(target);
                 }
 
-                for (auto n{ 0 }; n < 50; ++n)
+                for (auto& car : this->cars)
                 {
-                    this->cars[n].render(target);
+                    if (not car.stucked() and not car.collided())
+                    {
+                        car.render(target);
+                    }
                 }
 
-                for (auto n{ 0 }; n < 1; ++n)
+                for (auto& maze : this->mazes)
                 {
-                    this->mazes[n].render(target);
+                    maze.render(target);
                 }
             }
 

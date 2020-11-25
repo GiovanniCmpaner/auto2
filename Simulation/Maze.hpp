@@ -56,7 +56,7 @@ private:
     auto columns() const->size_t;
 
     static auto make(size_t rows, size_t columns)->Matrix;
-    static auto solve(const Matrix& matrix, int y, int x)->Path;
+    static auto solve(const Matrix& matrix, int y, int x, bool bestSolution = true)->Path;
     static auto lines(const Matrix& matrix, float height, float width)->std::vector<Line>;
     static auto rectangles(const Matrix& matrix, float x, float y, float height, float width, float thickness)->std::vector<Rect>;
     static auto print(const Matrix& matrix, const Path& path = {}) -> void;

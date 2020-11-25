@@ -66,12 +66,12 @@ auto Window::process() -> void
         GPU_Flip(target);
 
         const auto currentTicks{ SDL_GetTicks() };
-        targetTicks += 1000 / fps;
+        targetTicks += Window::tickStep;
         if (targetTicks > currentTicks)
         {
             SDL_Delay(targetTicks - currentTicks);
         }
-        this->time += 1000 / fps;
+        this->time += Window::tickStep;
     }
 
     GPU_Quit();

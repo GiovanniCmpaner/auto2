@@ -25,6 +25,7 @@ public:
 
     static constexpr int fps{ 30 };
     static constexpr float timeStep{ 1.0f / fps };
+    static constexpr float tickStep{ 1000 / fps };
 
     static constexpr SDL_Color backgroundColor{ 0, 0, 0, 255 };
     static constexpr SDL_Color fontColor{ 0, 255, 0, 255 };

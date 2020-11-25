@@ -4,6 +4,7 @@
 #include <box2d/box2d.h>
 
 #include <map>
+#include <deque>
 
 enum class Move
 {
@@ -32,7 +33,7 @@ public:
     Car(b2World* world, b2Body* ground, const b2Vec2& position = {});
     Car(const Car& other);
     ~Car();
-    auto step() -> void;
+    auto step(float timeStep) -> void;
     auto render(GPU_Target* target) const -> void;
     auto reset() -> void;
 
@@ -45,10 +46,11 @@ public:
     auto giroscope() const -> std::vector<float>;
     auto acelerometer() const ->std::vector<float>;
     auto collided() const -> bool;
+    auto stucked() const -> bool;
 
 private:
     auto createBody(const b2Vec2& position) -> void;
-    auto stepBody() -> void;
+    auto stepBody(float timeStep) -> void;
     auto stepSensor(float* distance, float angle) -> void;
     auto renderBody(GPU_Target* target) const -> void;
     auto renderSensor(GPU_Target* target, float distance, float angle) const -> void;
@@ -68,6 +70,11 @@ private:
 
     Move move{ Move::STOP };
     bool collision{ false };
+    bool stuck{ false };
+
+    float totalTime{ 0.0f };
+    std::deque<b2Vec2> previousPositions{};
+    std::deque<float> previousAngles{};
 
     static constexpr float width{ 0.2f };
     static constexpr float height{ 0.2f };
