@@ -14,8 +14,8 @@ class Simulation
 public:
     auto init() -> void;
 
-    static constexpr float realWidth{ 4 };
-    static constexpr float realHeight{ 4 };
+    static constexpr float realWidth{ 16 };
+    static constexpr float realHeight{ 16 };
     static constexpr size_t quantity{ 500 };
 
 private:

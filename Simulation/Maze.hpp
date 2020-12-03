@@ -44,7 +44,7 @@ public:
 
     auto start() const->b2Vec2;
     auto end() const->b2Vec2;
-    auto solve(const b2Vec2& point) const->std::vector<b2Vec2>;
+    auto solve(const b2Vec2& point, bool bestSolution = true) const->std::vector<b2Vec2>;
 
     auto randomize() -> void;
 

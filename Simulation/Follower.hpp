@@ -26,6 +26,6 @@ private:
 
     size_t currentPoint{ 0 };
     float targetAngle{ 0.0f };
-    bool adjustingAngle{ false };
+    int adjustingAngle{ 0 };
     Move move{ Move::STOP };
 };

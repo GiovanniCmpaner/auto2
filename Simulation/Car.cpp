@@ -120,9 +120,9 @@ auto Car::createBody(const b2Vec2& position) -> void
     }
 }
 
-auto Car::step(float timeStep) -> void
+auto Car::step() -> void
 {
-    stepBody(timeStep);
+    stepBody();
     for (auto&& [angle, distance] : sensors)
     {
         const auto radians{ (angle / 180.0f) * b2_pi };
@@ -192,12 +192,7 @@ auto Car::collided() const -> bool
     return this->collision;
 }
 
-auto Car::stucked() const -> bool
-{
-    return this->stuck;
-}
-
-auto Car::stepBody(float timeStep) -> void
+auto Car::stepBody() -> void
 {
     if (collision)
     {
@@ -234,35 +229,6 @@ auto Car::stepBody(float timeStep) -> void
         this->body->ApplyForce(force, point, true);
     }
     this->move = Move::STOP;
-
-    {
-        this->previousPositions.emplace_back(this->body->GetPosition());
-        this->previousAngles.emplace_back(this->body->GetAngle());
-
-        if (this->totalTime < 3.0f)
-        {
-            this->totalTime += timeStep;
-        }
-        else
-        {
-            this->previousPositions.pop_front();
-            this->previousAngles.pop_front();
-
-            auto distanceVariation{ 0.0f };
-            for (auto n{ 1 }; n < this->previousPositions.size(); ++n)
-            {
-                distanceVariation += b2Distance(this->previousPositions[n], this->previousPositions[n - 1]);
-            }
-
-            auto angleVariation{ 0.0f };
-            for (auto n{ 1 }; n < this->previousAngles.size(); ++n)
-            {
-                angleVariation += ( this->previousAngles[n] - this->previousAngles[n - 1] );
-            }
-
-            this->stuck = (distanceVariation < 0.05 and angleVariation < M_PI / 24);
-        }
-    }
 }
 
 auto Car::stepSensor(float* distance, float angle) -> void

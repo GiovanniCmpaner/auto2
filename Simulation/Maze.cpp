@@ -492,7 +492,7 @@ auto Maze::end() const->b2Vec2
     return this->toRealPoint({ 0,0 });
 }
 
-auto Maze::solve(const b2Vec2& point) const->std::vector<b2Vec2>
+auto Maze::solve(const b2Vec2& point, bool bestSolution) const->std::vector<b2Vec2>
 {
     auto path{ std::vector<b2Vec2>{} };
 
@@ -504,7 +504,7 @@ auto Maze::solve(const b2Vec2& point) const->std::vector<b2Vec2>
 
     path.emplace_back(point.x, point.y);
 
-    const auto solution{ Maze::solve(this->matrix, coordinate.y, coordinate.x, false) };
+    const auto solution{ Maze::solve(this->matrix, coordinate.y, coordinate.x, bestSolution) };
     for (auto&& coordinate : solution)
     {
         const auto point{ this->toRealPoint(coordinate) };

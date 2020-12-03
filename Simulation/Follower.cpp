@@ -31,10 +31,24 @@ auto Follower::nextPoint() -> void
 
             if (this->currentPoint < this->path.size())
             {
-                const auto distanceVector{ this->path[this->currentPoint] - carPosition };
+                const auto carDistance{ this->path[this->currentPoint] - carPosition };
+                const auto carAngle{ Follower::normalizeAngle(this->car->angle() + b2_pi / 2.0f) };
 
-                targetAngle = Follower::normalizeAngle(std::atan2(distanceVector.y, distanceVector.x));
-                adjustingAngle = true;
+                this->targetAngle = Follower::normalizeAngle(std::atan2(carDistance.y, carDistance.x));
+
+                const auto da{ this->targetAngle - carAngle };
+                if (( da > +0.05f and da < +b2_pi ) or da < -b2_pi)
+                {
+                    this->adjustingAngle = -1; // RIGHT
+                }
+                else if (( da < -0.05f and da > -b2_pi) or da > +b2_pi)
+                {
+                    this->adjustingAngle = +1; // LEFT
+                }
+                else
+                {
+                    this->adjustingAngle = 0; // NONE
+                }
             }
         }
     }
@@ -60,27 +74,35 @@ auto Follower::followPath() -> void
 {
     if (this->currentPoint < path.size())
     {
-        if (adjustingAngle)
+        this->move = Move::MOVE_FORWARD;
+
+        if (this->adjustingAngle != 0)
         {
             const auto carAngle{ Follower::normalizeAngle(this->car->angle() + b2_pi / 2.0f) };
 
-            const auto da{ this->targetAngle - carAngle };
-            if (da > 0.05f)
+            const auto da{ std::abs( this->targetAngle - carAngle ) };
+            if (this->adjustingAngle == -1)
             {
-                this->move = Move::ROTATE_RIGHT;
+                if (da > 0.05f)
+                {
+                    this->move = Move::ROTATE_RIGHT;
+                }
+                else
+                {
+                    this->adjustingAngle = 0;
+                }
             }
-            else if (da < -0.05f)
+            else if (this->adjustingAngle == +1)
             {
-                this->move = Move::ROTATE_LEFT;
+                if (da > 0.05f)
+                {
+                    this->move = Move::ROTATE_LEFT;
+                }
+                else
+                {
+                    this->adjustingAngle = 0;
+                }
             }
-            else
-            {
-                this->adjustingAngle = false;
-            }
-        }
-        else
-        {
-            this->move = Move::MOVE_FORWARD;
         }
 
         this->car->doMove(this->move);
