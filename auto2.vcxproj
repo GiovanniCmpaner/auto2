@@ -45,13 +45,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\tensorflow-2.3.0;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\tensorflow-2.3.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(SolutionDir)\lib\tensorflow-2.3.0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\tensorflow-2.3.0;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\tensorflow-2.3.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(SolutionDir)\lib\tensorflow-2.3.0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -93,6 +93,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Neural.cpp" />
     <ClCompile Include="Simulation\Car.cpp" />
     <ClCompile Include="Simulation\Follower.cpp" />
     <ClCompile Include="Simulation\Maze.cpp" />
@@ -114,6 +115,7 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Neural.hpp" />
     <ClInclude Include="Simulation\Car.hpp" />
     <ClInclude Include="Simulation\Follower.hpp" />
     <ClInclude Include="Simulation\Maze.hpp" />

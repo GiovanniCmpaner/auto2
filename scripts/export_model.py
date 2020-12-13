@@ -34,9 +34,18 @@ seed = 1
 np.random.seed(seed)
 tf.random.set_seed(seed)
 
-#fig, ax = plt.subplots(3, 3)
+# Subplotting options and layout
 fig = plt.figure()
 fig.subplots_adjust(left=0.06, bottom=0.03, right=0.97, top=0.97, wspace=0.25, hspace=0.4)
+
+# -------------------------------------------------------------------------------
+# Load the Data
+# -------------------------------------------------------------------------------
+
+# Get file data
+df = pd.read_csv(csv_file)
+
+
 
 # -------------------------------------------------------------------------------
 # Generate the Data

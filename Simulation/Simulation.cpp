@@ -1,95 +1,27 @@
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
+
+#include "tensorflow/c/c_api.h"
 
 #include "Simulation.hpp"
 #include "Follower.hpp"
 
 
-auto randomize(tiny_dnn::network<tiny_dnn::sequential>& net) -> void
+
+auto Simulation::netLoad() -> void
 {
-    for (auto& layer : net)
-    {
-        for (auto& weights : layer->weights())
-        {
-            for (auto& weight : *weights)
-            {
-                const auto direction{ tiny_dnn::uniform_rand(0, 1) };
-                const auto multiplier{ tiny_dnn::uniform_rand(0.9f, +1.1f) };
-                const auto offset{ tiny_dnn::uniform_rand(-0.1f, +0.1f) };
- 
-                weight = weight + offset;
-            }
-        }
-    }
+    
 }
 
-auto clone(const tiny_dnn::network<tiny_dnn::sequential>& other) -> tiny_dnn::network<tiny_dnn::sequential>
+auto Simulation::netUnload() -> void
 {
-    auto net{ tiny_dnn::network<tiny_dnn::sequential>{} };
-
-    auto ss{ std::stringstream{} };
-
-    auto bo{ cereal::BinaryOutputArchive{ ss } };
-    other.to_archive(bo, tiny_dnn::content_type::weights_and_model);
-
-    auto bi{ cereal::BinaryInputArchive{ ss } };
-    net.from_archive(bi, tiny_dnn::content_type::weights_and_model);
-
-    return net;
+    
 }
 
-auto Simulation::constructDNN() -> void
+auto Simulation::netInference() -> void
 {
-    //using namespace tiny_dnn;
-    //{
-    //    // 6 x sensores distancia
-    //    // (2) x giroscopio (x,y)
-    //    // (2) x acelerometro (x,y)
-    //    // 1 x cor
-    //    auto net{ tiny_dnn::network<tiny_dnn::sequential>{} };
-    //
-    //    if (std::filesystem::exists("net.bin"))
-    //    {
-    //        net.load("net.bin");
-    //    }
-    //    else
-    //    {
-    //        net << layers::fc(7, 15) << activation::tanh()
-    //            << layers::fc(15, 15) << activation::tanh()
-    //            << layers::fc(15, 15) << activation::tanh()
-    //            << layers::fc(15, 5);
-    //
-    //        net.init_weight();
-    //        net.save("net.bin");
-    //    }
-    //}
-
-    using namespace tiny_dnn;
-
-    this->base << layers::fc(7, 10) << activation::tanh()
-            << layers::fc(10, 10) << activation::tanh()
-            << layers::fc(10, 10) << activation::tanh()
-            << layers::fc(10, 5);
-
-    if (std::filesystem::exists("net_trained.bin"))
-    {
-        base.load("net_trained.bin");
-    }
-    else
-    {
-        base.init_weight();
-    }
-
-    assert(base.in_data_size() == 7);
-    assert(base.out_data_size() == 5);
-
-    //std::vector<vec_t> train_data{ { 1,2,3,4,5,6,7,8,9,10,11 }, { 1,2,3,4,5,6,7,8,9,10,11 } };
-    //std::vector<label_t> train_labels{ 1, 2 };
-    //
-    //adagrad optimizer{};
-    //net.train<mse, adagrad>(optimizer, train_data, train_labels, 30, 10);
-
-    //net.save("C:/Users/Giovanni/Desktop/auto2/net.bin", content_type::weights_and_model, file_format::json);
+    
 }
 
 auto Simulation::reset() -> void
@@ -98,7 +30,6 @@ auto Simulation::reset() -> void
     this->cars.clear();
     this->solutions.clear();
     this->followers.clear();
-    this->nets.clear();
     //this->positions.clear();
     //this->distances.clear();
 
@@ -106,7 +37,6 @@ auto Simulation::reset() -> void
     this->cars.reserve(500);
     this->solutions.reserve(500);
     this->followers.reserve(500);
-    this->nets.reserve(500);
     //this->positions.reserve(500);
     //this->distances.reserve(500);
 
@@ -128,8 +58,6 @@ auto Simulation::reset() -> void
 
             auto& follower{ this->followers.emplace_back(&car, solution) };
 
-            auto& net{ this->nets.emplace_back(clone(this->base)) };
-
             //randomize(net);
         }
     }
@@ -143,7 +71,7 @@ auto Simulation::init() -> void
     this->window.init(Simulation::realWidth, Simulation::realHeight);
     this->ground = this->createGround(&world);
 
-    this->constructDNN();
+    this->netLoad();
     this->reset();
     this->start = this->window.now();
     this->generation = 0;
@@ -170,7 +98,7 @@ auto Simulation::init() -> void
             //this->cars.front().doMove(this->move);
         });
 
-    auto trained{ true };
+    auto trained{ false };
 
     //auto bestCar{ -1 };
     //auto bestRatio{ 0.0f };
@@ -266,7 +194,7 @@ auto Simulation::init() -> void
                             const auto inputs{ Simulation::inputs(this->cars[n]) };
                             {
                                 this->data.emplace_back(inputs);
-                                this->labels.emplace_back(static_cast<tiny_dnn::label_t>(this->followers[n].movement()));
+                                this->labels.emplace_back(static_cast<int>(this->followers[n].movement()));
                             }
                         }
                     }
@@ -274,9 +202,7 @@ auto Simulation::init() -> void
             
                 if (finished == this->followers.size() and not trained)
                 {
-                    tiny_dnn::RMSprop optimizer{};
-                    this->base.train<tiny_dnn::mse>(optimizer, this->data, this->labels, 500, 5);
-                    this->base.save("net_trained_500.bin");
+                    this->generateCSV();
             
                     trained = true;
 
@@ -286,16 +212,6 @@ auto Simulation::init() -> void
             else
             {
 
-#pragma omp parallel for
-                for (auto n{ 0 }; n < this->cars.size(); ++n)
-                {
-                    if (b2Distance(this->mazes[n].end(), this->cars[n].position()) > 0.05f)
-                    {
-                        const auto inputs{ Simulation::inputs(this->cars[n]) };
-                        const auto prediction{ this->nets[n].predict_label(inputs) };
-                        this->cars[n].doMove(static_cast<Move>(prediction));
-                    }
-                }
             }
 
             for (auto& car : this->cars)
@@ -390,9 +306,9 @@ auto Simulation::distance(const std::vector<b2Vec2>& path) -> float
     return distance;
 }
 
-auto Simulation::inputs(const Car& car) -> tiny_dnn::vec_t
+auto Simulation::inputs(const Car& car) -> std::vector<float>
 {
-    auto inputs{ tiny_dnn::vec_t{} };
+    auto inputs{ std::vector<float>{} };
 
     const auto distances{ car.distances() };
     for (auto [angle, distance] : distances)
@@ -418,4 +334,36 @@ auto Simulation::inputs(const Car& car) -> tiny_dnn::vec_t
     //}
 
     return inputs;
+}
+
+auto Simulation::generateCSV() -> void
+{
+    {
+        auto ofs{ std::ofstream{"data.csv"} };
+        for (auto j{ 0 }; j < this->data.size(); ++j)
+        {
+            for (auto i{ 0 }; i < this->data[j].size(); ++i)
+            {
+                if (i > 0)
+                {
+                    ofs << ';';
+                }
+                ofs << this->data[j][i];
+            }
+            ofs << '\n';
+        }
+        ofs.close();
+    }
+
+    {
+        auto ofs{ std::ofstream{"labels.csv"} };
+        for (auto j{ 0 }; j < this->labels.size(); ++j)
+        {
+            ofs << this->labels[j] << '\n';
+        }
+        ofs.close();
+    }
+
+    //for(auto )
+    //ofs 
 }

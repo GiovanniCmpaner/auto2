@@ -2,8 +2,6 @@
 
 #include <vector>
 
-#include <tiny_dnn/tiny_dnn.h>
-
 #include "Window.hpp"
 #include "Maze.hpp"
 #include "Car.hpp"
@@ -19,11 +17,15 @@ public:
     static constexpr size_t quantity{ 500 };
 
 private:
-    auto constructDNN()->void;
+    auto netLoad() -> void;
+    auto netUnload() -> void;
+    auto netInference() -> void;
+
     auto reset() -> void;
+    auto generateCSV() -> void;
 
     static auto createGround(b2World* world)->b2Body*;
-    static auto inputs(const Car& car) ->tiny_dnn::vec_t;
+    static auto inputs(const Car& car) ->std::vector<float>;
     static auto distance(const std::vector<b2Vec2>& path) -> float;
 
     Window window{ };
@@ -42,10 +44,8 @@ private:
 
     unsigned long long start{};
     int generation{ 0 };
-    std::vector<tiny_dnn::vec_t> data{};
-    std::vector<tiny_dnn::label_t> labels{};
-    tiny_dnn::network<tiny_dnn::sequential> base{};
-    std::vector<tiny_dnn::network<tiny_dnn::sequential>> nets{};
+    std::vector<std::vector<float>> data{};
+    std::vector<int> labels{};
 
     Move move{ Move::STOP };
 };
