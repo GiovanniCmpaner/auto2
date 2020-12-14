@@ -78,9 +78,11 @@ auto Neural::inference(const std::vector<float>& inputData) const->std::vector<f
 auto Neural::readBinaryFile(const std::string& fileName)->TF_Buffer*
 {
     auto ifs(std::ifstream{ fileName, std::ios::binary });
+
     auto oss{ std::ostringstream{} };
     oss << ifs.rdbuf();
     const auto str{ oss.str() };
+
     return TF_NewBufferFromString(str.data(), str.size());
 }
 
@@ -93,9 +95,11 @@ auto Neural::tensorToVector(TF_Tensor* tensor, TF_Output output) const->std::vec
     assert(TF_GetCode(status) == TF_OK, TF_Message(status));
 
     const auto dataSize{ std::accumulate(dims.begin(), dims.end(), 1, std::multiplies{}) };
-    auto outputData{ std::vector<float>{} };
-    outputData.resize(dataSize);
-    std::memcpy(outputData.data(), TF_TensorData(tensor), dataSize * sizeof(float));
+    auto vector{ std::vector<float>{} };
+    vector.resize(dataSize);
+    std::memcpy(vector.data(), TF_TensorData(tensor), dataSize * sizeof(float));
+
+    return vector;
 }
 
 auto Neural::vectorToTensor(const std::vector<float>& vector, TF_Output output) const->TF_Tensor*

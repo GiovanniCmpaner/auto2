@@ -6,6 +6,7 @@
 #include "Maze.hpp"
 #include "Car.hpp"
 #include "Follower.hpp"
+//#include "../Neural.hpp"
 
 class Simulation
 {
@@ -17,10 +18,6 @@ public:
     static constexpr size_t quantity{ 500 };
 
 private:
-    auto netLoad() -> void;
-    auto netUnload() -> void;
-    auto netInference() -> void;
-
     auto reset() -> void;
     auto generateCSV() -> void;
 
@@ -44,8 +41,10 @@ private:
 
     unsigned long long start{};
     int generation{ 0 };
-    std::vector<std::vector<float>> data{};
-    std::vector<int> labels{};
+    std::vector<std::vector<float>> features{};
+    std::vector<std::vector<int>> labels{};
 
     Move move{ Move::STOP };
+
+    //std::unique_ptr<Neural> neural{};
 };

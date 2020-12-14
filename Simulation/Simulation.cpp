@@ -7,23 +7,6 @@
 #include "Simulation.hpp"
 #include "Follower.hpp"
 
-
-
-auto Simulation::netLoad() -> void
-{
-    
-}
-
-auto Simulation::netUnload() -> void
-{
-    
-}
-
-auto Simulation::netInference() -> void
-{
-    
-}
-
 auto Simulation::reset() -> void
 {
     this->mazes.clear();
@@ -33,14 +16,14 @@ auto Simulation::reset() -> void
     //this->positions.clear();
     //this->distances.clear();
 
-    this->mazes.reserve(500);
-    this->cars.reserve(500);
-    this->solutions.reserve(500);
-    this->followers.reserve(500);
+    this->mazes.reserve(200);
+    this->cars.reserve(200);
+    this->solutions.reserve(200);
+    this->followers.reserve(200);
     //this->positions.reserve(500);
     //this->distances.reserve(500);
 
-    for (auto j{ 0 }; j < 25; ++j)
+    for (auto j{ 0 }; j < 10; ++j)
     {
         for (auto i{ 0 }; i < 20; ++i)
         {
@@ -71,7 +54,7 @@ auto Simulation::init() -> void
     this->window.init(Simulation::realWidth, Simulation::realHeight);
     this->ground = this->createGround(&world);
 
-    this->netLoad();
+    //this->neural = std::make_unique<Neural>("../test/graphs/x_times_two.pb", "x", "y");
     this->reset();
     this->start = this->window.now();
     this->generation = 0;
@@ -193,8 +176,13 @@ auto Simulation::init() -> void
                         {
                             const auto inputs{ Simulation::inputs(this->cars[n]) };
                             {
-                                this->data.emplace_back(inputs);
-                                this->labels.emplace_back(static_cast<int>(this->followers[n].movement()));
+                                this->features.emplace_back(inputs);
+
+                                auto label{ std::vector<int>{} };
+                                label.resize(5);
+                                label[static_cast<int>(this->followers[n].movement())] = 1;
+
+                                this->labels.emplace_back(label);
                             }
                         }
                     }
@@ -339,29 +327,63 @@ auto Simulation::inputs(const Car& car) -> std::vector<float>
 auto Simulation::generateCSV() -> void
 {
     {
-        auto ofs{ std::ofstream{"data.csv"} };
-        for (auto j{ 0 }; j < this->data.size(); ++j)
+        auto ofs{ std::ofstream{"features.csv"} };
+
+        for (auto j{ 0 }; j < this->features.size(); ++j)
         {
-            for (auto i{ 0 }; i < this->data[j].size(); ++i)
+            if (j == 0)
             {
-                if (i > 0)
+                for (auto i{ 0 }; i < this->features[j].size(); ++i)
+                {
+                    if (i != 0)
+                    {
+                        ofs << ';';
+                    }
+                    ofs << "f" << i;
+                }
+                ofs << '\n';
+            }
+
+            for (auto i{ 0 }; i < this->features[j].size(); ++i)
+            {
+                if (i != 0)
                 {
                     ofs << ';';
                 }
-                ofs << this->data[j][i];
+                ofs << this->features[j][i];
             }
             ofs << '\n';
         }
-        ofs.close();
     }
 
     {
         auto ofs{ std::ofstream{"labels.csv"} };
+
         for (auto j{ 0 }; j < this->labels.size(); ++j)
         {
-            ofs << this->labels[j] << '\n';
+            if (j == 0)
+            {
+                for (auto i{ 0 }; i < this->labels[j].size(); ++i)
+                {
+                    if (i != 0)
+                    {
+                        ofs << ';';
+                    }
+                    ofs << "l" << i;
+                }
+                ofs << '\n';
+            }
+
+            for (auto i{ 0 }; i < this->labels[j].size(); ++i)
+            {
+                if (i != 0)
+                {
+                    ofs << ';';
+                }
+                ofs << this->labels[j][i];
+            }
+            ofs << '\n';
         }
-        ofs.close();
     }
 
     //for(auto )
