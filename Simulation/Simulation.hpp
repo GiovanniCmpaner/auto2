@@ -6,7 +6,7 @@
 #include "Maze.hpp"
 #include "Car.hpp"
 #include "Follower.hpp"
-//#include "../Neural.hpp"
+#include "../Neural.hpp"
 
 class Simulation
 {
@@ -46,5 +46,5 @@ private:
 
     Move move{ Move::STOP };
 
-    //std::unique_ptr<Neural> neural{};
+    std::unique_ptr<Neural> neural{};
 };

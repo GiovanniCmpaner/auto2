@@ -3,16 +3,12 @@
 #include <vector>
 #include <string>
 
-#include <tensorflow/c/c_api.h>
+#include <tensorflow/lite/c/c_api.h>
 
 class Neural
 {
 public:
-    Neural(
-        const std::string& binaryGraphdefProtobufFilename,
-        const std::string& inputNodeName,
-        const std::string& outputNodeName
-    );
+    Neural(const std::string& tfliteModelFile, bool quantized);
     ~Neural();
     Neural(const Neural&) = delete;
     Neural(Neural&&) = delete;
@@ -20,16 +16,12 @@ public:
     auto inference(const std::vector<float>& inputData) const -> std::vector<float>;
 
 private:
-    static auto readBinaryFile(const std::string& fileName)->TF_Buffer*;
-    auto tensorToVector(TF_Tensor* tensor, TF_Output output) const->std::vector<float>;
-    auto vectorToTensor(const std::vector<float>& vector, TF_Output output) const->TF_Tensor*;
+	auto initDetectionModel(const std::string& tfliteModelFile) -> void;
 
-    TF_Status* status{ nullptr };
-    TF_Graph* graph{ nullptr };
-    TF_Session* session{ nullptr };
-    TF_Operation* inputOp{ nullptr };
-    TF_Output input{ };
-    TF_Operation* outputOp{ nullptr };
-    TF_Output output{ };
+	bool m_modelQuantized = false;
+	TfLiteModel* m_model;
+	TfLiteInterpreter* m_interpreter;
+	TfLiteTensor* m_input_tensor = nullptr;
+	const TfLiteTensor* m_output_tensor = nullptr;
 
 };

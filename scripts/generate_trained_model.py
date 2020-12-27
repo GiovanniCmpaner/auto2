@@ -108,7 +108,7 @@ model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 # -------------------------------------------------------------------------------
 
 # Train the model on our training data while validating on our validation set
-history = model.fit(x_train, y_train, epochs=1, batch_size=64, validation_data=(x_validate, y_validate))
+history = model.fit(x_train, y_train, epochs=500, batch_size=128, validation_data=(x_validate, y_validate))
 
 # Save the model to disk
 model.save(MODEL_TF)

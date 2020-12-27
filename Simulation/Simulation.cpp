@@ -2,10 +2,9 @@
 #include <filesystem>
 #include <fstream>
 
-#include "tensorflow/c/c_api.h"
-
 #include "Simulation.hpp"
 #include "Follower.hpp"
+#include "../Neural.hpp"
 
 auto Simulation::reset() -> void
 {
@@ -25,9 +24,9 @@ auto Simulation::reset() -> void
 
     for (auto j{ 0 }; j < 10; ++j)
     {
-        for (auto i{ 0 }; i < 20; ++i)
+        for (auto i{ 0 }; i < 10; ++i)
         {
-            auto& maze{ this->mazes.emplace_back(&world, ground, 5, 5, i * 3.2f, j * 3.2f, 3.0f, 3.0f) };
+            auto& maze{ this->mazes.emplace_back(&world, ground, 20, 20, i * 10.2f, j * 10.2f, 10.0f, 10.0f) };
             
             maze.randomize();
 
@@ -54,7 +53,7 @@ auto Simulation::init() -> void
     this->window.init(Simulation::realWidth, Simulation::realHeight);
     this->ground = this->createGround(&world);
 
-    //this->neural = std::make_unique<Neural>("../test/graphs/x_times_two.pb", "x", "y");
+    this->neural = std::make_unique<Neural>(R"(C:\Users\Giovanni\Desktop\auto2\x64\Debug\model_no_quant.tflite)", false);
     this->reset();
     this->start = this->window.now();
     this->generation = 0;
@@ -199,7 +198,13 @@ auto Simulation::init() -> void
             }
             else
             {
-
+                for (auto n{ 0 }; n < this->cars.size(); ++n)
+                {
+                    const auto inputs{ Simulation::inputs(this->cars[n]) };
+                    const auto outputs{ neural->inference(inputs) };
+                    const auto max{ std::max_element(outputs.begin(), outputs.end()) - outputs.begin() };
+                    this->cars[n].doMove(static_cast<Move>(max));
+                }
             }
 
             for (auto& car : this->cars)

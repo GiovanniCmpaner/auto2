@@ -53,6 +53,9 @@
     <CopyFileToFolders Include="lib\SDL_gpu-0.12.0\lib\x64\SDL2_gpu.dll">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\tflite-2.3.0\lib\x64\tensorflowlite_c.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Simulation\Simulation.hpp">
