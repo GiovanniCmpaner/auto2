@@ -35,27 +35,35 @@ Matrix = List[List[Tile]]
 Path = List[Coordinate]
 
 class Maze(object):
-    world: b2.world = None
-    ground: b2.body = None
-    body: b2.body = None
+    __world: b2.world = None
+    __ground: b2.body = None
+    __body: b2.body = None
 
-    x: float = 0.0
-    y: float = 0.0
-    width: float = 0.0
-    height: float = 0.0
-    thickness: float = 0.0
-    matrix: Matrix = []
+    __rows: int = 0
+    __columns: int = 0
+    __x: float = 0.0
+    __y: float = 0.0
+    __width: float = 0.0
+    __height: float = 0.0
+    __thickness: float = 0.0
+    __tileWidth: float = 0.0
+    __tileHeight: float = 0.0
+    __matrix: Matrix = []
    
     def __init__(self, world: b2.world, ground: b2.body, rows: int, columns: int, x: float, y: float, height: float, width: float, thickness: float):
-        self.world = world
-        self.ground = ground
-        self.x = x
-        self.y = y
-        self.height = height
-        self.width = width
-        self.thickness = thickness
-        self.matrix = Maze.make(rows, columns)
-        self.body = self.createBody()
+        self.__world = world
+        self.__ground = ground
+        self.__rows = rows
+        self.__columns = columns
+        self.__x = x
+        self.__y = y
+        self.__height = height
+        self.__width = width
+        self.__thickness = thickness
+        self.__tileHeight = self.__height / self.__rows
+        self.__tileWidth = self.__width / self.__columns
+        self.__matrix = Maze.make(self.__rows, self.__columns)
+        self.__createBody()
     
     @staticmethod
     def make(rows: int, columns: int) -> Matrix:
@@ -111,8 +119,8 @@ class Maze(object):
 
                 j, i = tracking[-1]
         
-        matrix[0][0].up = False
-        matrix[-1][-1].down = False
+        #matrix[0][0].up = False
+        #matrix[-1][-1].down = False
         
         return matrix
 
@@ -241,19 +249,19 @@ class Maze(object):
 
         return rectangles
     
-    def createBody(self) -> None:
-        if (self.body != None):
-            self.world.DestroyBody(self.body)
+    def __createBody(self) -> None:
+        if (self.__body != None):
+            self.__world.DestroyBody(self.__body)
 
-        self.body = self.world.CreateBody(
+        self.__body = self.__world.CreateBody(
             type = b2.staticBody,
-            position = (self.x, self.y),
+            position = (self.__x, self.__y),
             userData = 'maze'
         )
 
-        rectangles = Maze.rectangles(self.matrix, 0, 0, self.width, self.height, self.thickness)
+        rectangles = Maze.rectangles(self.__matrix, 0, 0, self.__width, self.__height, self.__thickness)
         for rect in rectangles:
-            self.body.CreateFixture(
+            self.__body.CreateFixture(
                 shape = b2.polygonShape(
                     vertices=[
                         (rect.x, rect.y),
@@ -266,7 +274,53 @@ class Maze(object):
                 restitution = 0.4,
                 categoryBits = 0x0001,
                 maskBits = 0x0003,
-                userData = 'wall'
+                userData = (
+                    'wall',
+                    (172, 0, 172, 255),
+                    (172, 0, 172, 127)
+                )
             )
 
+        self.__body.CreateFixture(
+            shape=b2.circleShape(
+                pos = (self.start() - self.__body.position),
+                radius = min(self.__tileHeight, self.__tileWidth) / 4.0
+            ),
+            isSensor = True,
+            userData = (
+                'start',
+                (0, 255, 0, 255),
+                (0, 255, 0, 64)
+            )
+        )
+
+        self.__body.CreateFixture(
+            shape=b2.circleShape(
+                pos = (self.end() - self.__body.position),
+                radius = min(self.__tileHeight,self.__tileWidth) / 4.0
+            ),
+            isSensor = True,
+            userData = (
+                'end',
+                (255, 0, 0, 255),
+                (255, 0, 0, 64)
+            )
+        )
+
         return
+
+    def start(self) -> b2.vec2:
+        return self.toRealPoint(Coordinate(self.__columns - 1, self.__rows - 1))
+
+    def end(self) -> b2.vec2:
+        return self.toRealPoint(Coordinate( 0,0 ))
+
+    def toLocalCoordinate(self, point: b2.vec2) -> Coordinate:
+        y = ( point.y - self.__y ) / self.__tileHeight
+        x = ( point.x - self.__x ) / self.__tileWidth
+        return Coordinate( x, y )
+
+    def toRealPoint(self, coordinate: Coordinate) -> b2.vec2:
+        y = coordinate.y * self.__tileHeight + self.__tileHeight / 2.0 + self.__y
+        x = coordinate.x * self.__tileWidth + self.__tileWidth / 2.0 + self.__x
+        return b2.vec2(x, y)
