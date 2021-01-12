@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from typing import *
 from Box2D import b2
@@ -64,6 +66,8 @@ class Maze(object):
         self.__tileWidth = self.__width / self.__columns
         self.__matrix = Maze.make(self.__rows, self.__columns)
         self.__createBody()
+        
+        return
     
     @staticmethod
     def make(rows: int, columns: int) -> Matrix:
@@ -286,7 +290,9 @@ class Maze(object):
                 pos = (self.start() - self.__body.position),
                 radius = min(self.__tileHeight, self.__tileWidth) / 4.0
             ),
-            isSensor = True,
+            isSensor=True,
+            categoryBits = 0x0002,
+            maskBits = 0x0001,
             userData = (
                 'start',
                 (0, 255, 0, 255),
@@ -299,7 +305,9 @@ class Maze(object):
                 pos = (self.end() - self.__body.position),
                 radius = min(self.__tileHeight,self.__tileWidth) / 4.0
             ),
-            isSensor = True,
+            isSensor=True,
+            categoryBits = 0x0002,
+            maskBits = 0x0001,
             userData = (
                 'end',
                 (255, 0, 0, 255),

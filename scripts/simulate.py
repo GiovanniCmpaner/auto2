@@ -9,6 +9,7 @@ import pygame.freetype
 import pygame.gfxdraw
 
 from maze import Maze
+from car import Car
 
 from Box2D import b2
 from Box2D import (b2World, b2AABB, b2CircleShape, b2Color, b2Vec2, b2BodyDef)
@@ -18,7 +19,7 @@ from Box2D import (b2GetPointStates, b2QueryCallback, b2Random)
 from Box2D import (b2_addState, b2_dynamicBody, b2_epsilon, b2_persistState)
 
 TARGET_FPS = 60
-PPM = 60.0
+PIXELS_PER_METER = 100.0
 TIMESTEP = 1.0 / TARGET_FPS
 VEL_ITERS, POS_ITERS = 5, 5
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
@@ -28,7 +29,7 @@ pygame.init()
 font = pygame.freetype.Font("C:/Windows/Fonts/Arial.ttf", 24)
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
-world = b2World()
+world = b2World((0,0))
 
 def show_fps(screen, clock) -> None:
     font.render_to(screen, (0, 0), str(clock.get_fps()), (255,0,0))
@@ -63,25 +64,25 @@ def fix_vertices(vertices):
 # ---------------------------------------------------------------------------------------------------------
 def _draw_polygon(polygon, screen, body, fixture, border, fill):
     transform = body.transform
-    vertices = fix_vertices([transform * v * PPM for v in polygon.vertices])
+    vertices = fix_vertices([transform * v * PIXELS_PER_METER for v in polygon.vertices])
     pygame.gfxdraw.filled_polygon(screen, vertices, fill)
     pygame.gfxdraw.polygon(screen, vertices, border)
 b2.polygonShape.draw = _draw_polygon
 
 def _draw_circle(circle, screen, body, fixture, border, fill):
-    position = fix_vertices([body.transform * circle.pos * PPM])[0]
-    pygame.gfxdraw.filled_circle(screen, position[0], position[1], int(circle.radius * PPM), fill)
-    pygame.gfxdraw.circle(screen, position[0], position[1], int(circle.radius * PPM), border)
+    position = fix_vertices([body.transform * circle.pos * PIXELS_PER_METER])[0]
+    pygame.gfxdraw.filled_circle(screen, position[0], position[1], int(circle.radius * PIXELS_PER_METER), fill)
+    pygame.gfxdraw.circle(screen, position[0], position[1], int(circle.radius * PIXELS_PER_METER), border)
 b2.circleShape.draw = _draw_circle
 
 def _draw_edge(edge, screen, body, fixture, border, fill):
-    vertices = fix_vertices([body.transform * edge.vertex1 * PPM, body.transform * edge.vertex2 * PPM])
+    vertices = fix_vertices([body.transform * edge.vertex1 * PIXELS_PER_METER, body.transform * edge.vertex2 * PIXELS_PER_METER])
     pygame.draw.line(screen, border, vertices[0], vertices[1])
 b2.edgeShape.draw = _draw_edge
 
 def _draw_loop(loop, screen, body, fixture, border, fill):
     transform = body.transform
-    vertices = fix_vertices([transform * v * PPM for v in loop.vertices])
+    vertices = fix_vertices([transform * v * PIXELS_PER_METER for v in loop.vertices])
     v1 = vertices[-1]
     for v2 in vertices:
         pygame.draw.line(screen, border, v1, v2)
@@ -95,6 +96,8 @@ for y in range(10):
     for x in range(10):
         mazes.append(Maze(world, ground, 5, 5, 0.5 + x * 3.2, 0.5 + y * 3.2, 3, 3, 0.05))
 
+car = Car(world,ground,mazes[0].start())
+
 running = True
 while running:
     clock.tick(TARGET_FPS)
@@ -103,6 +106,8 @@ while running:
         if e.type == pygame.QUIT:
             running = False
     
+    car.step()
+
     # Step the world
     world.Step(TIMESTEP, VEL_ITERS, POS_ITERS)
     world.ClearForces()
