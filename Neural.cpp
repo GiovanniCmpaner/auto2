@@ -4,117 +4,112 @@
 #include <cassert>
 #include <cstdint>
 
-#include <tensorflow/lite/c/c_api.h>
+#include <tensorflow/c/c_api.h>
 
 #include "Neural.hpp"
 
-Neural::Neural(const std::string& tfliteModelFile, bool modelQuantized)
+Neural::Neural(
+    const std::string& binaryGraphdefProtobufFilename,
+    const std::string& inputNodeName,
+    const std::string& outputNodeName)
 {
-	m_modelQuantized = modelQuantized;
-	initDetectionModel(tfliteModelFile);
+    this->status = TF_NewStatus();
+    this->graph = TF_NewGraph();
+
+    // objects for session
+    const auto graphDef{ Neural::readBinaryFile(binaryGraphdefProtobufFilename) };
+    const auto opts{ TF_NewImportGraphDefOptions() };
+    const auto sessionOpts{ TF_NewSessionOptions() };
+
+    // import graph
+    TF_GraphImportGraphDef(graph, graphDef, opts, status);
+    assert(TF_GetCode(status) == TF_OK, TF_Message(status));
+
+    // setup session
+    this->session = TF_NewSession(graph, sessionOpts, status);
+    assert(TF_GetCode(status) == TF_OK, TF_Message(status));
+
+    // input
+    this->inputOp = TF_GraphOperationByName(graph, inputNodeName.data());
+    this->input = TF_Output{ inputOp, 0 };
+
+    // output
+    this->outputOp = TF_GraphOperationByName(graph, outputNodeName.data());
+    this->output = TF_Output{ outputOp, 0 };
+
+    // Clean Up all temporary objects
+    TF_DeleteBuffer(graphDef);
+    TF_DeleteImportGraphDefOptions(opts);
+    TF_DeleteSessionOptions(sessionOpts);
 }
 
 Neural::~Neural()
 {
-	if (m_model != nullptr)
-		TfLiteModelDelete(m_model);
+    TF_CloseSession(session, status);
+    TF_DeleteGraph(graph);
+    TF_DeleteSession(session, status);
+    TF_DeleteStatus(status);
 }
 
-auto Neural::initDetectionModel(const std::string& tfliteModelFile) -> void
+auto Neural::inference(const std::vector<float>& inputData) const->std::vector<float>
 {
-	m_model = TfLiteModelCreateFromFile(tfliteModelFile.data());
-	if (m_model == nullptr)
-	{
-		printf("Failed to load model");
-		return;
-	}
+    const auto inputTensor{ this->vectorToTensor(inputData, input) };
+    auto outputTensor{ static_cast<TF_Tensor*>(nullptr) };
 
-	// Build the interpreter
-	TfLiteInterpreterOptions* options = TfLiteInterpreterOptionsCreate();
-	TfLiteInterpreterOptionsSetNumThreads(options, 1);
+    TF_SessionRun(
+        session,
+        nullptr,
+        &input, &inputTensor, 1,
+        &output, &outputTensor, 1,
+        &outputOp, 1,
+        nullptr,
+        status
+    );
+    assert(TF_GetCode(status) == TF_OK, TF_Message(status));
 
-	// Create the interpreter.
-	m_interpreter = TfLiteInterpreterCreate(m_model, options);
-	if (m_interpreter == nullptr)
-	{
-		printf("Failed to create interpreter");
-		return;
-	}
+    const auto outputData{ this->tensorToVector(outputTensor,output) };
 
-	// Allocate tensor buffers.
-	if (TfLiteInterpreterAllocateTensors(m_interpreter) != kTfLiteOk)
-	{
-		printf("Failed to allocate tensors!");
-		return;
-	}
+    TF_DeleteTensor(outputTensor);
+    TF_DeleteTensor(inputTensor);
 
-	// Find input tensors.
-	if (TfLiteInterpreterGetInputTensorCount(m_interpreter) != 1)
-	{
-		printf("Detection model graph needs to have 1 and only 1 input!");
-		return;
-	}
-
-	m_input_tensor = TfLiteInterpreterGetInputTensor(m_interpreter, 0);
-	m_output_tensor = TfLiteInterpreterGetOutputTensor(m_interpreter, 0);
-
-	if (m_modelQuantized && m_input_tensor->type != kTfLiteUInt8)
-	{
-		printf("Detection model input should be kTfLiteUInt8!");
-		return;
-	}
-
-	if (!m_modelQuantized && m_input_tensor->type != kTfLiteFloat32)
-	{
-		printf("Detection model input should be kTfLiteFloat32!");
-		return;
-	}
-
-	
-	if (TfLiteInterpreterGetInputTensorCount(m_interpreter) != 1 
-		or m_input_tensor->dims->data[0] != 1 
-		or m_input_tensor->dims->data[1] != 7 
-	)
-	{
-		printf("Model must have 1 input with dims 1 x 7");
-		return;
-	}
-
-	// Find output tensors.
-	if (TfLiteInterpreterGetOutputTensorCount(m_interpreter) != 1
-		or m_output_tensor->dims->data[0] != 1
-		or m_output_tensor->dims->data[1] != 5
-	)
-	{
-		printf("Modelodel graph must have 1 output with dims 1 x 5");
-		return;
-	}
+    return outputData;
 }
 
-auto Neural::inference(const std::vector<float>& inputData) const-> std::vector<float>
+auto Neural::readBinaryFile(const std::string& fileName)->TF_Buffer*
 {
-	if (m_modelQuantized)
-	{
-		// Copy image into input tensor
-		//uchar* dst = m_input_tensor->data.uint8;
-		//memcpy(dst, image.data,
-			//sizeof(uchar) * DETECTION_MODEL_SIZE * DETECTION_MODEL_SIZE * DETECTION_MODEL_CNLS);
-	}
-	else
-	{
-		// Copy image into input tensor
-		auto dst{ m_input_tensor->data.f };
-		std::memcpy(dst, inputData.data(), sizeof(float) * inputData.size());
-	}
-	
-	if (TfLiteInterpreterInvoke(m_interpreter) != kTfLiteOk)
-	{
-		printf("Error invoking detection model");
-		return {};
-	}
-	
-	auto outputData{ std::vector<float>{} };
-	outputData.resize(5);
-	std::memcpy(outputData.data(), m_output_tensor->data.f, sizeof(float) * outputData.size());
-	return outputData;
+    auto ifs(std::ifstream{ fileName, std::ios::binary });
+    auto oss{ std::ostringstream{} };
+    oss << ifs.rdbuf();
+    const auto str{ oss.str() };
+    return TF_NewBufferFromString(str.data(), str.size());
+}
+
+auto Neural::tensorToVector(TF_Tensor* tensor, TF_Output output) const->std::vector<float>
+{
+    const auto numDims{ TF_GraphGetTensorNumDims(this->graph, output, status) };
+    auto dims{ std::vector<int64_t>{} };
+    dims.resize(numDims);
+    TF_GraphGetTensorShape(this->graph, output, dims.data(), dims.size(), status);
+    assert(TF_GetCode(status) == TF_OK, TF_Message(status));
+
+    const auto dataSize{ std::accumulate(dims.begin(), dims.end(), 1, std::multiplies{}) };
+    auto outputData{ std::vector<float>{} };
+    outputData.resize(dataSize);
+    std::memcpy(outputData.data(), TF_TensorData(tensor), dataSize * sizeof(float));
+}
+
+auto Neural::vectorToTensor(const std::vector<float>& vector, TF_Output output) const->TF_Tensor*
+{
+    const auto numDims{ TF_GraphGetTensorNumDims(this->graph, output, status) };
+    auto dims{ std::vector<int64_t>{} };
+    dims.resize(numDims);
+    TF_GraphGetTensorShape(this->graph, output, dims.data(), dims.size(), status);
+    assert(TF_GetCode(status) == TF_OK, TF_Message(status));
+
+    const auto dataSize{ std::accumulate(dims.begin(), dims.end(), 1, std::multiplies{}) };
+    auto tensor(TF_AllocateTensor(TF_FLOAT, dims.data(), dims.size(), dataSize * sizeof(float)));
+    assert(vector.size() == dataSize);
+    std::memcpy(TF_TensorData(tensor), vector.data(), dataSize * sizeof(float));
+
+    return tensor;
 }
