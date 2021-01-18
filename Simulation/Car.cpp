@@ -201,7 +201,9 @@ auto Car::stepBody() -> void
 
     for (auto c{ this->body->GetContactList() }; c != nullptr; c = c->next)
     {
-        if (c->contact->IsTouching())
+        if (c->contact->IsTouching() 
+            and not c->contact->GetFixtureA()->IsSensor() 
+            and not c->contact->GetFixtureB()->IsSensor())
         {
             collision = true;
             return;

@@ -2,11 +2,13 @@
 
 #include <vector>
 
+#include "cppflow/ops.h"
+#include "cppflow/model.h"
+
 #include "Window.hpp"
 #include "Maze.hpp"
 #include "Car.hpp"
 #include "Follower.hpp"
-#include "../Neural.hpp"
 
 class Simulation
 {
@@ -45,6 +47,4 @@ private:
     std::vector<std::vector<int>> labels{};
 
     Move move{ Move::STOP };
-
-    std::unique_ptr<Neural> neural{};
 };

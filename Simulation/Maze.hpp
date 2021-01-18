@@ -69,6 +69,8 @@ private:
     float y{ 0.0f };
     float width{ 0.0f };
     float height{ 0.0f };
+    float tileWidth{ 0.0f };
+    float tileHeight{ 0.0f };
     Matrix matrix{};
     
     static constexpr SDL_Color backgroundColor{ 0, 0, 0, 255 };

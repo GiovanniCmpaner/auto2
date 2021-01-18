@@ -13,6 +13,7 @@
 #include <SDL_FontCache.h>
 
 #include "maze.hpp"
+#include "..\Draw.hpp"
 
 auto Maze::make(size_t rows, size_t columns) -> Matrix
 {
@@ -97,9 +98,6 @@ auto Maze::make(size_t rows, size_t columns) -> Matrix
             std::tie(j, i) = tracking.back();
         }
     }
-
-    matrix.front().front().up = false;
-    matrix.back().back().down = false;
 
     return matrix;
 }
@@ -397,6 +395,8 @@ Maze::Maze(b2World* world, b2Body* ground, size_t rows, size_t columns, float x,
     this->y = y;
     this->height = height;
     this->width = width;
+    this->tileHeight = height / rows;
+    this->tileWidth = width / columns;
     this->matrix = Maze::make(rows, columns);
     this->createBody();
 }
@@ -409,6 +409,8 @@ Maze::Maze(const Maze& other)
     this->y = other.y;
     this->height = other.height;
     this->width = other.width;
+    this->tileHeight = other.tileHeight;
+    this->tileWidth = other.tileWidth;
     this->matrix = other.matrix;
     this->createBody();
 }
@@ -454,6 +456,26 @@ auto Maze::createBody() -> void
         shape.SetAsBox(rect.width / 2.0f, rect.height / 2.0f, { rect.x + rect.width / 2.0f, rect.y + rect.height / 2.0f }, 0.0f);
         this->body->CreateFixture(&fd);
     }
+
+    {
+        b2CircleShape shape{};
+
+        b2FixtureDef fd{};
+        fd.shape = &shape;
+        fd.isSensor = true;
+        fd.filter.categoryBits = 0x0001;
+        fd.filter.maskBits = 0x0003;
+
+        shape.m_radius = std::min(this->tileHeight, this->tileHeight) / 4;
+
+        shape.m_p = this->start();
+        fd.userData = const_cast<char*>("start");
+        this->body->CreateFixture(&fd);
+
+        shape.m_p = this->end();
+        fd.userData = const_cast<char*>("end");
+        this->body->CreateFixture(&fd);
+    }
 }
 
 auto Maze::step() -> void
@@ -464,22 +486,8 @@ auto Maze::step() -> void
 auto Maze::render(GPU_Target* target) const -> void
 {
     GPU_SetLineThickness(0.02f);
-
-    for (auto fixture{ body->GetFixtureList() }; fixture != nullptr; fixture = fixture->GetNext())
-    {
-        const auto polygon{ reinterpret_cast<const b2PolygonShape*>(fixture->GetShape()) };
-
-        float vertices[2 * b2_maxPolygonVertices];
-        for (auto n{ 0 }; n < polygon->m_count; ++n)
-        {
-            const auto vertice{ this->body->GetWorldPoint(polygon->m_vertices[n]) };
-            vertices[n * 2 + 0] = vertice.x;
-            vertices[n * 2 + 1] = vertice.y;
-        }
-
-        GPU_Polygon(target, polygon->m_count, vertices, solidBorderColor);
-        GPU_PolygonFilled(target, polygon->m_count, vertices, solidFillColor);
-    }
+    
+    Draw::draw(target, this->body);
 }
 
 auto Maze::start() const->b2Vec2
@@ -515,22 +523,16 @@ auto Maze::solve(const b2Vec2& point, bool bestSolution) const->std::vector<b2Ve
 
 auto Maze::toLocalCoordinate(const b2Vec2& point) const->Coordinate
 {
-    const auto tileHeight{ this->height / this->rows() };
-    const auto tileWidth{ this->width / this->columns() };
-
-    const auto y{ static_cast<int>( ( point.y - this->y ) / tileHeight ) };
-    const auto x{ static_cast<int>( ( point.x - this->x ) / tileWidth ) };
+    const auto y{ static_cast<int>( ( point.y - this->y ) / this->tileHeight ) };
+    const auto x{ static_cast<int>( ( point.x - this->x ) / this->tileWidth ) };
 
     return Coordinate{ x, y };
 }
 
 auto Maze::toRealPoint(const Coordinate& coordinate) const->b2Vec2
 {
-    const auto tileHeight{ this->height / this->rows() };
-    const auto tileWidth{ this->width / this->columns() };
-
-    const auto y{ static_cast<float>( coordinate.y * tileHeight + tileHeight / 2.0f + this->y ) };
-    const auto x{ static_cast<float>( coordinate.x * tileWidth + tileWidth / 2.0f + this->x ) };
+    const auto y{ static_cast<float>( coordinate.y * this->tileHeight + this->tileHeight / 2.0f + this->y ) };
+    const auto x{ static_cast<float>( coordinate.x * this->tileWidth + this->tileWidth / 2.0f + this->x ) };
 
     return b2Vec2{ x, y };
 }

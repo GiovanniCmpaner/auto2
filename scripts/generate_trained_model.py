@@ -17,6 +17,8 @@ MODEL_TFLITE_MICRO = MODELS_DIR + 'model.cc'
 
 # TensorFlow is an open source machine learning library
 import tensorflow as tf
+from tensorflow.python.framework import graph_util
+from tensorflow.python.framework import graph_io
 
 # Keras is TensorFlow's high-level API for deep learning
 from tensorflow import keras
@@ -88,17 +90,10 @@ assert (len(x_train) + len(x_test) + len(x_validate)) ==  SAMPLES
 # -------------------------------------------------------------------------------
 
 # We'll use Keras to create a simple model architecture
-model = tf.keras.Sequential()
-
-# First layer takes a scalar input and feeds it through 16 "neurons". The
-# neurons decide whether to activate based on the 'relu' activation function.
-model.add(keras.layers.Dense(16, activation='relu', input_shape=(7,)))
-
-# The new second and third layer will help the network learn more complex representations
-model.add(keras.layers.Dense(16, activation='relu'))
-
-# Final layer is a single neuron, since we want to output a single value
-model.add(keras.layers.Dense(5))
+input = tf.keras.Input(shape=(7,))
+output = tf.keras.layers.Dense(16, activation='relu')(input)
+output = tf.keras.layers.Dense(5, activation='relu')(output)
+model = tf.keras.Model(inputs=input, outputs=output)
 
 # Compile the model using the standard 'adam' optimizer and the mean squared error or 'mse' loss function for regression.
 model.compile(optimizer='adam', loss='mse', metrics=['mae'])
@@ -108,10 +103,10 @@ model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 # -------------------------------------------------------------------------------
 
 # Train the model on our training data while validating on our validation set
-history = model.fit(x_train, y_train, epochs=500, batch_size=128, validation_data=(x_validate, y_validate))
+history = model.fit(x_train, y_train, epochs=1, batch_size=128, validation_data=(x_validate, y_validate))
 
 # Save the model to disk
-model.save(MODEL_TF)
+model.save(MODEL_TF, save_format='tf')
 
 # -------------------------------------------------------------------------------
 # Plot Metrics - Loss (or Mean Squared Error)
