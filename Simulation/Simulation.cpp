@@ -63,11 +63,6 @@ auto Simulation::init() -> void
         const auto input{ std::vector<float>{1,1,1,1,1,1,1} };
         const auto output{ model.inference(input) };
     }
-    {
-        auto model{ cppflow::model{ R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)" } };
-        const auto input{ cppflow::fill({ 1, 7 }, 1.0f) };
-        const auto output{ model(input).get_data<float>() };
-    }
 
     this->reset();
     this->start = this->window.now();
