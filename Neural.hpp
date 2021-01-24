@@ -8,28 +8,26 @@
 class Neural
 {
 public:
-    Neural(
-        const std::string& binaryGraphdefProtobufFilename,
-        const std::string& inputNodeName,
-        const std::string& outputNodeName
-    );
+    Neural(const std::string& folderPath);
     ~Neural();
     Neural(const Neural&) = delete;
     Neural(Neural&&) = delete;
 
     auto inference(const std::vector<float>& inputData) const -> std::vector<float>;
+    auto saveModel() -> void;
 
 private:
-    static auto readBinaryFile(const std::string& fileName)->TF_Buffer*;
-    auto tensorToVector(TF_Tensor* tensor, TF_Output output) const->std::vector<float>;
     auto vectorToTensor(const std::vector<float>& vector, TF_Output output) const->TF_Tensor*;
+    auto tensorToVector(TF_Tensor* tensor, TF_Output output) const->std::vector<float>;
+    auto checkStatus() const -> void;
 
     TF_Status* status{ nullptr };
     TF_Graph* graph{ nullptr };
     TF_Session* session{ nullptr };
-    TF_Operation* inputOp{ nullptr };
+    TF_Operation* inputOperation{ nullptr };
     TF_Output input{ };
-    TF_Operation* outputOp{ nullptr };
+    TF_Operation* outputOperation{ nullptr };
     TF_Output output{ };
-
+    TF_Operation* saveOperation{ nullptr };
+    TF_Output save{ };
 };

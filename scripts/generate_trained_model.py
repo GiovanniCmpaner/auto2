@@ -108,6 +108,9 @@ history = model.fit(x_train, y_train, epochs=1, batch_size=128, validation_data=
 # Save the model to disk
 model.save(MODEL_TF, save_format='tf')
 
+saver_filename = model.get_tensor_by_name('saver_filename:0')
+
+quit()
 # -------------------------------------------------------------------------------
 # Plot Metrics - Loss (or Mean Squared Error)
 # -------------------------------------------------------------------------------

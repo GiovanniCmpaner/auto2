@@ -9,43 +9,52 @@
 
 #include "Neural.hpp"
 
-Neural::Neural(
-    const std::string& folderPath,
-    const std::string& inputNodeName,
-    const std::string& outputNodeName)
+Neural::Neural(const std::string& folderPath)
 {
     this->status = TF_NewStatus();
     this->graph = TF_NewGraph();
 
     // objects for session
-    const auto graphDef{ Neural::readBinaryFile(binaryGraphdefProtobufFilename) };
     const auto opts{ TF_NewImportGraphDefOptions() };
     const auto sessionOpts{ TF_NewSessionOptions() };
+    const auto tag{ "serve" };
 
     // load session
-    TF_LoadSessionFromSavedModel(folderPath)
-
-    TF_GraphImportGraphDef(graph, graphDef, opts, status);
-    if (TF_GetCode(status) != TF_OK)
-    {
-        std::cerr << TF_Message(status);
-        return;
-    }
-
-    // setup session
-    this->session = TF_NewSession(graph, sessionOpts, status);
-    assert(TF_GetCode(status) == TF_OK && TF_Message(status));
+    this->session = TF_LoadSessionFromSavedModel(
+        sessionOpts, 
+        nullptr, 
+        folderPath.c_str(),
+        &tag, 1, 
+        this->graph, 
+        nullptr, 
+        status
+    );
+    this->checkStatus();
 
     // input
-    this->inputOp = TF_GraphOperationByName(graph, inputNodeName.data());
-    this->input = TF_Output{ inputOp, 0 };
-
+    static constexpr auto inputOperationName{ "serving_default_input_1" };
+    this->inputOperation = TF_GraphOperationByName(this->graph, inputOperationName);
+    this->input = TF_Output{ this->inputOperation, 0 };
+    
     // output
-    this->outputOp = TF_GraphOperationByName(graph, outputNodeName.data());
-    this->output = TF_Output{ outputOp, 0 };
+    static constexpr auto outputOperationName{ "StatefulPartitionedCall" };
+    this->outputOperation = TF_GraphOperationByName(this->graph, outputOperationName);
+    this->output = TF_Output{ this->outputOperation, 0 };
+
+    // save
+    static constexpr auto saveOperationName{ "saver_filename" };
+    this->saveOperation = TF_GraphOperationByName(this->graph, saveOperationName);
+    this->save = TF_Output{ this->saveOperation, 0 };
+
+    std::cout << "--- operations ---" << std::endl;
+    auto pos{ static_cast<size_t>(0) };
+    auto oper{ static_cast<TF_Operation*>( nullptr ) };
+    while ((oper = TF_GraphNextOperation(this->graph, &pos)) != nullptr)
+    {
+        std::cout << TF_OperationName(oper) << std::endl;
+    }
 
     // Clean Up all temporary objects
-    TF_DeleteBuffer(graphDef);
     TF_DeleteImportGraphDefOptions(opts);
     TF_DeleteSessionOptions(sessionOpts);
 }
@@ -58,46 +67,15 @@ Neural::~Neural()
     TF_DeleteStatus(status);
 }
 
-auto Neural::inference(const std::vector<float>& inputData) const->std::vector<float>
-{
-    const auto inputTensor{ this->vectorToTensor(inputData, input) };
-    auto outputTensor{ static_cast<TF_Tensor*>(nullptr) };
-
-    TF_SessionRun(
-        session,
-        nullptr,
-        &input, &inputTensor, 1,
-        &output, &outputTensor, 1,
-        &outputOp, 1,
-        nullptr,
-        status
-    );
-    assert(TF_GetCode(status) == TF_OK && TF_Message(status));
-
-    const auto outputData{ this->tensorToVector(outputTensor,output) };
-
-    TF_DeleteTensor(outputTensor);
-    TF_DeleteTensor(inputTensor);
-
-    return outputData;
-}
-
-auto Neural::readBinaryFile(const std::string& fileName)->TF_Buffer*
-{
-    auto ifs(std::ifstream{ fileName, std::ios::binary });
-    auto oss{ std::ostringstream{} };
-    oss << ifs.rdbuf();
-    const auto str{ oss.str() };
-    return TF_NewBufferFromString(str.data(), str.size());
-}
-
 auto Neural::tensorToVector(TF_Tensor* tensor, TF_Output output) const->std::vector<float>
 {
     const auto numDims{ TF_GraphGetTensorNumDims(this->graph, output, status) };
     auto dims{ std::vector<int64_t>{} };
     dims.resize(numDims);
     TF_GraphGetTensorShape(this->graph, output, dims.data(), dims.size(), status);
-    assert(TF_GetCode(status) == TF_OK && TF_Message(status));
+    this->checkStatus();
+
+    dims[0] = 1;
 
     const auto dataSize{ std::accumulate(dims.begin(), dims.end(), 1, std::multiplies{}) };
     auto outputData{ std::vector<float>{} };
@@ -113,12 +91,68 @@ auto Neural::vectorToTensor(const std::vector<float>& vector, TF_Output output) 
     auto dims{ std::vector<int64_t>{} };
     dims.resize(numDims);
     TF_GraphGetTensorShape(this->graph, output, dims.data(), dims.size(), status);
-    assert(TF_GetCode(status) == TF_OK && TF_Message(status));
+    this->checkStatus();
 
     const auto dataSize{ std::accumulate(dims.begin(), dims.end(), 1, std::multiplies{}) };
+    assert(vector.size() == dataSize && "Size mismatch");
     auto tensor(TF_AllocateTensor(TF_FLOAT, dims.data(), dims.size(), dataSize * sizeof(float)));
-    assert(vector.size() == dataSize);
     std::memcpy(TF_TensorData(tensor), vector.data(), dataSize * sizeof(float));
 
     return tensor;
+}
+
+auto Neural::inference(const std::vector<float>& inputData) const->std::vector<float>
+{
+    const auto inputTensor{ this->vectorToTensor(inputData, input) };
+    auto outputTensor{ static_cast<TF_Tensor*>(nullptr) };
+
+    TF_SessionRun(
+        session,
+        nullptr,
+        &input, &inputTensor, 1,
+        &output, &outputTensor, 1,
+        &outputOperation, 1,
+        nullptr,
+        status
+    );
+    this->checkStatus();
+
+    const auto outputData{ this->tensorToVector(outputTensor,output) };
+
+    TF_DeleteTensor(outputTensor);
+    TF_DeleteTensor(inputTensor);
+
+    return outputData;
+}
+
+auto Neural::saveModel() -> void
+{
+    auto input = TF_Output{ TF_GraphOperationByName(graph, "saver_filename"), 0 };
+    const auto str{ R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model2)" };
+    const auto str_len{ strlen(str) };
+    auto nbytes = 8 + TF_StringEncodedSize(str_len); // 8 extra bytes - for start_offset.
+    auto tensor = TF_AllocateTensor(TF_STRING,nullptr,0,nbytes);
+    auto data = static_cast<char*>(TF_TensorData(tensor));
+    std::memset(data, 0, 8);
+    TF_StringEncode(str, str_len, data + 8, nbytes - 8, status);
+
+    TF_SessionRun(
+        session,
+        nullptr,
+        nullptr, &tensor, 1,
+        nullptr, nullptr, 0,
+        &saveOperation, 1,
+        nullptr,
+        status
+    );
+    this->checkStatus();
+}
+
+auto Neural::checkStatus() const -> void
+{
+    if (TF_GetCode(this->status) != TF_OK)
+    {
+        std::cerr << TF_Message(status);
+        std::abort();
+    }
 }

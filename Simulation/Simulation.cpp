@@ -8,6 +8,8 @@
 #include "cppflow/ops.h"
 #include "cppflow/model.h"
 
+#include "..\Neural.hpp"
+
 auto Simulation::reset() -> void
 {
     this->mazes.clear();
@@ -55,9 +57,17 @@ auto Simulation::init() -> void
     this->window.init(Simulation::realWidth, Simulation::realHeight);
     this->ground = this->createGround(&world);
 
-    auto model{ cppflow::model{ R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)" } };
-    const auto input{ cppflow::fill({ 1, 7 }, 1.0f) };
-    const auto output{ model(input) };
+    {
+        auto model{ Neural{ R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)" } };
+        model.saveModel();
+        const auto input{ std::vector<float>{1,1,1,1,1,1,1} };
+        const auto output{ model.inference(input) };
+    }
+    {
+        auto model{ cppflow::model{ R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)" } };
+        const auto input{ cppflow::fill({ 1, 7 }, 1.0f) };
+        const auto output{ model(input).get_data<float>() };
+    }
 
     this->reset();
     this->start = this->window.now();
