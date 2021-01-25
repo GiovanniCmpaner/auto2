@@ -2,9 +2,6 @@
 
 #include <vector>
 
-#include "cppflow/ops.h"
-#include "cppflow/model.h"
-
 #include "Window.hpp"
 #include "Maze.hpp"
 #include "Car.hpp"

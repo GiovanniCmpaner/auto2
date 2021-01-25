@@ -19,7 +19,6 @@ public:
 private:
     auto vectorToTensor(const std::vector<float>& vector, TF_Output output) const->TF_Tensor*;
     auto tensorToVector(TF_Tensor* tensor, TF_Output output) const->std::vector<float>;
-    auto checkStatus() const -> void;
 
     TF_Status* status{ nullptr };
     TF_Graph* graph{ nullptr };

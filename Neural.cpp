@@ -29,7 +29,7 @@ Neural::Neural(const std::string& folderPath)
         nullptr, 
         status
     );
-    this->checkStatus();
+    assert(TF_GetCode(this->status) == TF_OK);
 
     // input
     static constexpr auto inputOperationName{ "serving_default_input_1" };
@@ -41,14 +41,9 @@ Neural::Neural(const std::string& folderPath)
     this->outputOperation = TF_GraphOperationByName(this->graph, outputOperationName);
     this->output = TF_Output{ this->outputOperation, 0 };
 
-    // save
-    static constexpr auto saveOperationName{ "saver_filename" };
-    this->saveOperation = TF_GraphOperationByName(this->graph, saveOperationName);
-    this->save = TF_Output{ this->saveOperation, 0 };
-
     std::cout << "--- operations ---" << std::endl;
-    auto pos{ static_cast<size_t>(0) };
-    auto oper{ static_cast<TF_Operation*>( nullptr ) };
+    size_t pos{ 0 };
+    TF_Operation* oper{ nullptr };
     while ((oper = TF_GraphNextOperation(this->graph, &pos)) != nullptr)
     {
         std::cout << TF_OperationName(oper) << std::endl;
@@ -73,8 +68,9 @@ auto Neural::tensorToVector(TF_Tensor* tensor, TF_Output output) const->std::vec
     auto dims{ std::vector<int64_t>{} };
     dims.resize(numDims);
     TF_GraphGetTensorShape(this->graph, output, dims.data(), dims.size(), status);
-    this->checkStatus();
+    assert(TF_GetCode(this->status) == TF_OK);
 
+    assert(dims[0] == -1);
     dims[0] = 1;
 
     const auto dataSize{ std::accumulate(dims.begin(), dims.end(), 1, std::multiplies{}) };
@@ -91,10 +87,13 @@ auto Neural::vectorToTensor(const std::vector<float>& vector, TF_Output output) 
     auto dims{ std::vector<int64_t>{} };
     dims.resize(numDims);
     TF_GraphGetTensorShape(this->graph, output, dims.data(), dims.size(), status);
-    this->checkStatus();
+    assert(TF_GetCode(this->status) == TF_OK);
+
+    assert(dims[0] == -1);
+    dims[0] = 1;
 
     const auto dataSize{ std::accumulate(dims.begin(), dims.end(), 1, std::multiplies{}) };
-    assert(vector.size() == dataSize && "Size mismatch");
+    assert(vector.size() == dataSize);
     auto tensor(TF_AllocateTensor(TF_FLOAT, dims.data(), dims.size(), dataSize * sizeof(float)));
     std::memcpy(TF_TensorData(tensor), vector.data(), dataSize * sizeof(float));
 
@@ -115,7 +114,7 @@ auto Neural::inference(const std::vector<float>& inputData) const->std::vector<f
         nullptr,
         status
     );
-    this->checkStatus();
+    assert(TF_GetCode(this->status) == TF_OK);
 
     const auto outputData{ this->tensorToVector(outputTensor,output) };
 
@@ -136,23 +135,20 @@ auto Neural::saveModel() -> void
     std::memset(data, 0, 8);
     TF_StringEncode(str, str_len, data + 8, nbytes - 8, status);
 
+    std::cout << TF_OperationOpType(saveOperation) << std::endl;
+
     TF_SessionRun(
         session,
         nullptr,
-        nullptr, &tensor, 1,
+        &input, &tensor, 1,
         nullptr, nullptr, 0,
         &saveOperation, 1,
         nullptr,
         status
     );
-    this->checkStatus();
-}
-
-auto Neural::checkStatus() const -> void
-{
     if (TF_GetCode(this->status) != TF_OK)
     {
-        std::cerr << TF_Message(status);
+        std::cerr << TF_Message(this->status) << std::endl;
         std::abort();
     }
 }

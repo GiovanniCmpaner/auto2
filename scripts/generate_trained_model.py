@@ -38,6 +38,10 @@ seed = 1
 np.random.seed(seed)
 tf.random.set_seed(seed)
 
+# configure gpu
+physical_devices = tf.config.list_physical_devices('GPU') 
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
 # Subplotting options and layout
 fig = plt.figure()
 fig.subplots_adjust(left=0.06, bottom=0.03, right=0.97, top=0.97, wspace=0.25, hspace=0.4)
@@ -102,13 +106,24 @@ model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 # Train the Model
 # -------------------------------------------------------------------------------
 
+options = tf.saved_model.SaveOptions(save_debug_info=True, experimental_variable_policy=tf.saved_model.experimental.VariablePolicy.SAVE_VARIABLE_DEVICES)
+
 # Train the model on our training data while validating on our validation set
 history = model.fit(x_train, y_train, epochs=1, batch_size=128, validation_data=(x_validate, y_validate))
 
 # Save the model to disk
 model.save(MODEL_TF, save_format='tf')
 
-saver_filename = model.get_tensor_by_name('saver_filename:0')
+tf.keras.models.save_model(
+    model,
+    "C:/Users/Giovanni/Desktop/auto2/scripts/models/model2",
+    overwrite=True,
+    include_optimizer=True,
+    save_format=None,
+    signatures=None,
+    options=None
+)
+
 
 quit()
 # -------------------------------------------------------------------------------

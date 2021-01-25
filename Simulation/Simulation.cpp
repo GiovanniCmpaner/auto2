@@ -5,8 +5,6 @@
 #include "Simulation.hpp"
 #include "Follower.hpp"
 
-#include "cppflow/ops.h"
-#include "cppflow/model.h"
 
 #include "..\Neural.hpp"
 
@@ -58,8 +56,7 @@ auto Simulation::init() -> void
     this->ground = this->createGround(&world);
 
     {
-        auto model{ Neural{ R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)" } };
-        model.saveModel();
+        auto model{ Neural{ R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model2)" } };
         const auto input{ std::vector<float>{1,1,1,1,1,1,1} };
         const auto output{ model.inference(input) };
     }
