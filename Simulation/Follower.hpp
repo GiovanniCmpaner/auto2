@@ -24,7 +24,7 @@ private:
     Car* car{ nullptr };
     std::vector<b2Vec2> path{};
 
-    size_t currentPoint{ 0 };
+    size_t targetPoint{ 0 };
     float targetAngle{ 0.0f };
     int adjustingAngle{ 0 };
     Move move{ Move::STOP };

@@ -45,7 +45,7 @@ public:
     auto color() const ->Color;
     auto giroscope() const -> std::vector<float>;
     auto acelerometer() const ->std::vector<float>;
-    auto collided() const -> bool;
+    //auto collided() const -> bool;
 
 private:
     auto createBody(const b2Vec2& position) -> void;
@@ -68,7 +68,7 @@ private:
     };
 
     Move move{ Move::STOP };
-    bool collision{ false };
+    //bool collision{ false };
     bool stuck{ false };
 
     static constexpr float width{ 0.2f };

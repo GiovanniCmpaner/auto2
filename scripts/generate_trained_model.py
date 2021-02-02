@@ -94,10 +94,13 @@ assert (len(x_train) + len(x_test) + len(x_validate)) ==  SAMPLES
 # -------------------------------------------------------------------------------
 
 # We'll use Keras to create a simple model architecture
-input = tf.keras.Input(shape=(7,))
-output = tf.keras.layers.Dense(16, activation='relu')(input)
-output = tf.keras.layers.Dense(5, activation='relu')(output)
-model = tf.keras.Model(inputs=input, outputs=output)
+model = tf.keras.Sequential([
+    keras.layers.Dense(7, activation='relu'),
+    keras.layers.Dense(16, activation='relu'),
+    keras.layers.Dense(32, activation='relu'),
+    keras.layers.Dense(16, activation='relu'),
+    keras.layers.Dense(5),
+])
 
 # Compile the model using the standard 'adam' optimizer and the mean squared error or 'mse' loss function for regression.
 model.compile(optimizer='adam', loss='mse', metrics=['mae'])
@@ -109,21 +112,17 @@ model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 options = tf.saved_model.SaveOptions(save_debug_info=True, experimental_variable_policy=tf.saved_model.experimental.VariablePolicy.SAVE_VARIABLE_DEVICES)
 
 # Train the model on our training data while validating on our validation set
-history = model.fit(x_train, y_train, epochs=1, batch_size=128, validation_data=(x_validate, y_validate))
+history = model.fit(x_train, y_train, epochs=200, batch_size=1024, validation_data=(x_validate, y_validate))
 
 # Save the model to disk
 model.save(MODEL_TF, save_format='tf')
 
-tf.keras.models.save_model(
-    model,
-    "C:/Users/Giovanni/Desktop/auto2/scripts/models/model2",
-    overwrite=True,
-    include_optimizer=True,
-    save_format=None,
-    signatures=None,
-    options=None
-)
+# Converting a SavedModel to a TensorFlow Lite model.
+converter = tf.lite.TFLiteConverter.from_keras_model(model)
+tflite_model = converter.convert()
 
+# Save the model to disk
+open(MODEL_NO_QUANT_TFLITE, "wb").write(tflite_model)
 
 quit()
 # -------------------------------------------------------------------------------
@@ -164,34 +163,6 @@ plt.plot(epochs[SKIP:], val_mae[SKIP:], 'b.', label='Validation MAE')
 plt.xlabel('Epochs')
 plt.ylabel('MAE')
 plt.legend()
-
-# -------------------------------------------------------------------------------
-# Generate a TensorFlow Lite Model - With or Without Quantization
-# -------------------------------------------------------------------------------
-
-# Convert the model to the TensorFlow Lite format without quantization
-converter = tf.lite.TFLiteConverter.from_saved_model(MODEL_TF)
-model_no_quant_tflite = converter.convert()
-
-# Save the model to disk
-open(MODEL_NO_QUANT_TFLITE, "wb").write(model_no_quant_tflite)
-
-# Convert the model to the TensorFlow Lite format with quantization
-def representative_dataset_gen():
-  for i in range(500):
-    yield [np.expand_dims([x_train[i].astype("float32")], axis=0)]
-# Set the optimization flag.
-converter.optimizations = [tf.lite.Optimize.DEFAULT]
-# Enforce integer only quantization
-converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-converter.inference_input_type = tf.int8
-converter.inference_output_type = tf.int8
-# Provide a representative dataset to ensure we quantize correctly.
-converter.representative_dataset = representative_dataset_gen
-model_tflite = converter.convert()
-
-# Save the model to disk
-open(MODEL_TFLITE, "wb").write(model_tflite)
 
 # -------------------------------------------------------------------------------
 # Compare Model Performance - Helper functions

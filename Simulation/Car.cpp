@@ -41,6 +41,7 @@ Car::Car(b2World* world, b2Body* ground, const b2Vec2& position)
     this->world = world;
     this->ground = ground;
     this->createBody(position);
+    this->step();
 }
 
 Car::Car(const Car& other) : Car{ other.world, other.ground, other.body->GetPosition() }
@@ -149,7 +150,7 @@ auto Car::reset() -> void
     this->body->SetTransform({ 0, 0 }, 0);
 
     this->move = Move::STOP;
-    this->collision = false;
+    //this->collision = false;
 }
 
 auto Car::position() const->b2Vec2
@@ -187,28 +188,28 @@ auto Car::acelerometer() const->std::vector<float>
     return {};
 }
 
-auto Car::collided() const -> bool
-{
-    return this->collision;
-}
+//auto Car::collided() const -> bool
+//{
+//    return this->collision;
+//}
 
 auto Car::stepBody() -> void
 {
-    if (collision)
-    {
-        return;
-    }
-
-    for (auto c{ this->body->GetContactList() }; c != nullptr; c = c->next)
-    {
-        if (c->contact->IsTouching() 
-            and not c->contact->GetFixtureA()->IsSensor() 
-            and not c->contact->GetFixtureB()->IsSensor())
-        {
-            collision = true;
-            return;
-        }
-    }
+    //if (collision)
+    //{
+    //    return;
+    //}
+    //
+    //for (auto c{ this->body->GetContactList() }; c != nullptr; c = c->next)
+    //{
+    //    if (c->contact->IsTouching() 
+    //        and not c->contact->GetFixtureA()->IsSensor() 
+    //        and not c->contact->GetFixtureB()->IsSensor())
+    //    {
+    //        collision = true;
+    //        return;
+    //    }
+    //}
 
     if (this->move == Move::ROTATE_LEFT)
     {
@@ -251,7 +252,7 @@ auto Car::stepSensor(float* distance, float angle) -> void
     }
     else
     {
-        *distance = b2Distance(start, end);
+        *distance = +INFINITY;//b2Distance(start, end);
     }
 
 }
@@ -277,6 +278,11 @@ auto Car::renderBody(GPU_Target* target) const -> void
 
 auto Car::renderSensor(GPU_Target* target, float distance, float angle) const -> void
 {
+    if (std::isnan(distance) or std::isinf(distance))
+    {
+        return;
+    }
+
     const auto start{ this->body->GetWorldPoint(b2Mul(b2Rot{ angle }, b2Vec2{ 0.0f, 0.1f })) };
     const auto end{ this->body->GetWorldPoint(b2Mul(b2Rot{ angle }, b2Vec2{ 0.0f, 0.1f + distance })) };
 

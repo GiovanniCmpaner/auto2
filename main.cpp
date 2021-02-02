@@ -92,73 +92,75 @@ Simulation simulation{};
 
 int main(int argc, char* args[])
 {
-    const auto status{ TF_NewStatus() };
-    const auto graph{ TF_NewGraph() };
-    const auto opts{ TF_NewImportGraphDefOptions() };
-    const auto sessionOpts{ TF_NewSessionOptions() };
-    const auto tag{ "serve" };
-
-    const auto session{ TF_LoadSessionFromSavedModel( 
-        sessionOpts, 
-        nullptr, 
-        "C:/Users/Giovanni/Desktop/auto2/scripts/model_path", 
-        &tag, 1,
-        graph, 
-        nullptr, 
-        status
-    ) };
-    assert(TF_GetCode(status) == TF_OK);
-
-    const auto inputOperationName{ "serving_default_input_1" };
-    const auto inputOperation{ TF_GraphOperationByName(graph, inputOperationName) };
-    const auto input{ TF_Output{ inputOperation, 0 } };
-
-    const auto outputOperationName{ "StatefulPartitionedCall" };
-    const auto outputOperation{ TF_GraphOperationByName(graph, outputOperationName) };
-    const auto output{ TF_Output{ outputOperation, 0 } };
-
-    const int64_t inputDims[2]{ 1, 7 };
-    auto inputTensor{ TF_AllocateTensor(TF_FLOAT, inputDims, 2, 7 * sizeof(float)) };
-    const float inputData[7]{ 1,2,3,4,5,6,7 };
-    std::memcpy(TF_TensorData(inputTensor), inputData, 7 * sizeof(float));
-
-    TF_Tensor* outputTensor{ nullptr };
-
-    TF_SessionRun(
-        session,
-        nullptr,
-        &input, &inputTensor, 1,
-        &output, &outputTensor, 1,
-        &outputOperation, 1,
-        nullptr,
-        status
-    );
-    assert(TF_GetCode(status) == TF_OK);
-
-    const auto outputData{ static_cast<float*>(TF_TensorData(outputTensor)) };
-
-    for (auto i = 0; i < 7; i++)
-    {
-        std::cout << "input[" << i << "] = " << inputData[i] << std::endl;
-    }
-    for (auto i = 0; i < 5; i++)
-    {
-        std::cout << "output[" << i << "] = " << outputData[i] << std::endl;
-    }
-
-    size_t pos{ 0 };
-    TF_Operation* oper{ nullptr };
-    while ((oper = TF_GraphNextOperation(graph, &pos)) != nullptr)
-    {
-        std::cout << TF_OperationName(oper) << std::endl;
-    }
-
-    return EXIT_SUCCESS;
-
-    //_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+    //const auto status{ TF_NewStatus() };
+    //const auto graph{ TF_NewGraph() };
+    //const auto opts{ TF_NewImportGraphDefOptions() };
+    //const auto sessionOpts{ TF_NewSessionOptions() };
+    //const auto tag{ "serve" };
     //
-    //simulation.init();
+    //const auto session{ TF_LoadSessionFromSavedModel( 
+    //    sessionOpts, 
+    //    nullptr, 
+    //    R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)", 
+    //    &tag, 1,
+    //    graph, 
+    //    nullptr, 
+    //    status
+    //) };
+    //assert(TF_GetCode(status) == TF_OK);
+    //
+    //const auto inputOperationName{ "serving_default_dense_input" };
+    //const auto inputOperation{ TF_GraphOperationByName(graph, inputOperationName) };
+    //const auto input{ TF_Output{ inputOperation, 0 } };
+    //assert(inputOperation != nullptr);
+    //
+    //const auto outputOperationName{ "StatefulPartitionedCall" };
+    //const auto outputOperation{ TF_GraphOperationByName(graph, outputOperationName) };
+    //const auto output{ TF_Output{ outputOperation, 0 } };
+    //assert(outputOperation != nullptr);
+    //
+    //const int64_t inputDims[2]{ 1, 7 };
+    //auto inputTensor{ TF_AllocateTensor(TF_FLOAT, inputDims, 2, 7 * sizeof(float)) };
+    //const float inputData[7]{ 1,2,3,4,5,6,7 };
+    //std::memcpy(TF_TensorData(inputTensor), inputData, 7 * sizeof(float));
+    //
+    //TF_Tensor* outputTensor{ nullptr };
+    //
+    //TF_SessionRun(
+    //    session,
+    //    nullptr,
+    //    &input, &inputTensor, 1,
+    //    &output, &outputTensor, 1,
+    //    &outputOperation, 1,
+    //    nullptr,
+    //    status
+    //);
+    //assert(TF_GetCode(status) == TF_OK);
+    //
+    //const auto outputData{ static_cast<float*>(TF_TensorData(outputTensor)) };
+    //
+    //for (auto i = 0; i < 7; i++)
+    //{
+    //    std::cout << "input[" << i << "] = " << inputData[i] << std::endl;
+    //}
+    //for (auto i = 0; i < 5; i++)
+    //{
+    //    std::cout << "output[" << i << "] = " << outputData[i] << std::endl;
+    //}
+    //
+    //size_t pos{ 0 };
+    //TF_Operation* oper{ nullptr };
+    //while ((oper = TF_GraphNextOperation(graph, &pos)) != nullptr)
+    //{
+    //    std::cout << TF_OperationName(oper) << std::endl;
+    //}
     //
     //return EXIT_SUCCESS;
+
+    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+    
+    simulation.init();
+    
+    return EXIT_SUCCESS;
 }
 
