@@ -13,18 +13,13 @@
 
 auto Simulation::reset() -> void
 {
-	this->mode = Mode::STOPPED;
-	this->control = Control::MANUAL;
-	this->data = Data::IDLE;
-
 	this->mazes.clear();
 	this->cars.clear();
 	this->followers.clear();
 
-	this->features.clear();
-	this->labels.clear();
-
 	const auto quantity{ 500 };
+	const auto complexity{ 5 };
+	const auto size{ 3.0f };
 	if (quantity > 0)
 	{
 		this->mazes.reserve(quantity);
@@ -43,7 +38,7 @@ auto Simulation::reset() -> void
 		{
 			for (auto i{ 0 }; i < squareWidth; ++i)
 			{
-				auto& maze{ this->mazes.emplace_back(&world, ground, 5, 5, i * 3.2f, j * 3.2f, 3.0f, 3.0f) };
+				auto& maze{ this->mazes.emplace_back(&world, ground, complexity, complexity, i * (size + 0.2f), j * (size + 0.2f), size, size) };
 
 				maze.randomize();
 
@@ -93,6 +88,11 @@ auto Simulation::init() -> void
 				if (not resetChanged)
 				{
 					this->resetChanged = true;
+
+					this->mode = Mode::STOPPED;
+					this->control = Control::MANUAL;
+					this->data = Data::IDLE;
+					this->generation = 0;
 
 					this->reset();
 				}
@@ -145,7 +145,8 @@ auto Simulation::init() -> void
 					}
 					else if (this->data == Data::GENERATING)
 					{
-						// Nothing
+						this->generationTask = this->generateCSV();
+						this->data = Data::SAVING;
 					}
 					else if (this->data == Data::SAVING)
 					{
@@ -273,8 +274,16 @@ auto Simulation::init() -> void
 
 						if (finished == this->followers.size())
 						{
-							this->generationTask = this->generateCSV();
-							this->data = Data::SAVING;
+							if (generation < 10)
+							{
+								generation++;
+								this->reset();
+							}
+							else 
+							{
+								this->generationTask = this->generateCSV();
+								this->data = Data::SAVING;
+							}
 						}
 					}
 				}
@@ -282,9 +291,18 @@ auto Simulation::init() -> void
 				{
 					for (auto n{ 0 }; n < this->cars.size(); ++n)
 					{
-						const auto inputs{ Simulation::inputs(this->cars[n]) };
+						auto inputs{ Simulation::inputs(this->cars[n]) };
+						{
+							for (auto& input : inputs)
+							{
+								if (std::isnan(input) or std::isinf(input))
+								{
+									input = 9999.9;
+								}
+							}
+						}
 						const auto outputs{ neural->inference(inputs) };
-						const auto max{ std::max_element(outputs.begin(), outputs.end()) - outputs.begin() };
+						const auto max{ std::max_element(outputs.begin() + 1, outputs.end()) - outputs.begin() };
 						this->cars[n].doMove(static_cast<Move>(max));
 					}
 				}
@@ -294,6 +312,8 @@ auto Simulation::init() -> void
 					if (this->generationTask.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
 					{
 						this->data = Data::DONE;
+						this->features.clear();
+						this->labels.clear();
 					}
 				}
 

@@ -59,7 +59,8 @@ private:
     std::vector<Car> cars{ };
     std::vector<Maze> mazes{ };
     std::vector<Follower> followers{ };
-
+    
+    int generation{ 0 };
     std::future<void> generationTask{};
     std::vector<std::vector<float>> features{};
     std::vector<std::vector<int>> labels{};

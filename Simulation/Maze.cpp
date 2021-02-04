@@ -444,7 +444,7 @@ auto Maze::createBody() -> void
     for (const auto& rect : rectangles)
     {
         b2PolygonShape shape{};
-
+    
         b2FixtureDef fd{};
         fd.shape = &shape;
         fd.density = 0.0f;
@@ -452,10 +452,34 @@ auto Maze::createBody() -> void
         fd.filter.categoryBits = 0x0001;
         fd.filter.maskBits = 0x0003;
         fd.userData = const_cast<char*>("wall");
-
+    
         shape.SetAsBox(rect.width / 2.0f, rect.height / 2.0f, { rect.x + rect.width / 2.0f, rect.y + rect.height / 2.0f }, 0.0f);
         this->body->CreateFixture(&fd);
     }
+
+    //{
+    //    b2PolygonShape shape{};
+    //
+    //    b2FixtureDef fd{};
+    //    fd.shape = &shape;
+    //    fd.density = 0.0f;
+    //    fd.restitution = 0.4f;
+    //    fd.filter.categoryBits = 0x0001;
+    //    fd.filter.maskBits = 0x0003;
+    //    fd.userData = const_cast<char*>("wall");
+    //    
+    //    shape.SetAsBox(0.05f / 2.0f, this->height / 2.0f, { -this->width, this->height / 2.0f }, 0.0f);
+    //    this->body->CreateFixture(&fd);
+    //
+    //    shape.SetAsBox(0.05f / 2.0f, this->height / 2.0f, { +this->width, this->height / 2.0f }, 0.0f);
+    //    this->body->CreateFixture(&fd);
+    //
+    //    shape.SetAsBox(this->width / 2.0f, 0.05f / 2.0f, { this->width / 2.0f, -this->height }, 0.0f);
+    //    this->body->CreateFixture(&fd);
+    //    
+    //    shape.SetAsBox(this->width / 2.0f, 0.05f / 2.0f, { this->width / 2.0f, +this->height }, 0.0f);
+    //    this->body->CreateFixture(&fd);
+    //}
 
     {
         b2CircleShape shape{};
