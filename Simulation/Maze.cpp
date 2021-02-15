@@ -23,6 +23,7 @@ auto Maze::make(size_t rows, size_t columns) -> Matrix
     
     auto rd{ std::random_device{} };
     auto mt{ std::mt19937{rd()} };
+    //auto mt{ std::mt19937{999} };
 
     auto j{ 0 }, i{ 0 };
 
@@ -373,7 +374,7 @@ auto Maze::lines(const Matrix& matrix, float height, float width) -> std::vector
     return lines;
 }
 
-auto Maze::rectangles(const Matrix& matrix, float x, float y, float height, float width, float thickness) -> std::vector<Rect>
+auto Maze::rectangles(const Matrix& matrix, float x, float y, float width, float height, float thickness) -> std::vector<Rect>
 {
     const auto lines{ Maze::lines(matrix,height,width) };
     auto rectangles{ std::vector<Rect>{} };
@@ -387,7 +388,7 @@ auto Maze::rectangles(const Matrix& matrix, float x, float y, float height, floa
     return rectangles;
 }
 
-Maze::Maze(b2World* world, b2Body* ground, size_t rows, size_t columns, float x, float y, float height, float width)
+Maze::Maze(b2World* world, b2Body* ground, size_t columns, size_t rows, float x, float y, float width, float height)
 {
     this->world = world;
     this->ground = ground;
@@ -487,10 +488,10 @@ auto Maze::createBody() -> void
         b2FixtureDef fd{};
         fd.shape = &shape;
         fd.isSensor = true;
-        fd.filter.categoryBits = 0x0001;
-        fd.filter.maskBits = 0x0003;
+        fd.filter.categoryBits = 0x0002;
+        fd.filter.maskBits = 0x0001;
 
-        shape.m_radius = std::min(this->tileHeight, this->tileHeight) / 4;
+        shape.m_radius = std::min(this->tileHeight, this->tileWidth) / 4;
 
         shape.m_p = this->start();
         fd.userData = const_cast<char*>("start");

@@ -35,7 +35,7 @@ public:
     using Matrix = std::vector<std::vector<Tile>>;
     using Path = std::vector<Coordinate>;
 
-    Maze(b2World* world, b2Body* ground, size_t rows, size_t columns, float x, float y, float height, float width);
+    Maze(b2World* world, b2Body* ground, size_t columns, size_t rows, float x, float y, float width, float height);
     Maze(const Maze& other);
     ~Maze();
 

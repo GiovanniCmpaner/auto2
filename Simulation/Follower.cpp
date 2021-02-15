@@ -78,40 +78,41 @@ auto Follower::followPath() -> void
 {
 	if (this->targetPoint == this->path.size())
 	{
-		return;
+		this->move = Move::STOP;
 	}
-
-	this->move = Move::MOVE_FORWARD;
-
-	if (this->adjustingAngle != 0)
+	else 
 	{
-		const auto carAngle{ Follower::normalizeAngle(this->car->angle() + b2_pi / 2.0f) };
+		this->move = Move::MOVE_FORWARD;
 
-		const auto da{ std::abs(this->targetAngle - carAngle) };
-		if (this->adjustingAngle == -1)
+		if (this->adjustingAngle != 0)
 		{
-			if (da > 0.05f)
+			const auto carAngle{ Follower::normalizeAngle(this->car->angle() + b2_pi / 2.0f) };
+
+			const auto da{ std::abs(this->targetAngle - carAngle) };
+			if (this->adjustingAngle == -1)
 			{
-				this->move = Move::ROTATE_RIGHT;
+				if (da > 0.05f)
+				{
+					this->move = Move::ROTATE_RIGHT;
+				}
+				else
+				{
+					this->adjustingAngle = 0;
+				}
 			}
-			else
+			else if (this->adjustingAngle == +1)
 			{
-				this->adjustingAngle = 0;
-			}
-		}
-		else if (this->adjustingAngle == +1)
-		{
-			if (da > 0.05f)
-			{
-				this->move = Move::ROTATE_LEFT;
-			}
-			else
-			{
-				this->adjustingAngle = 0;
+				if (da > 0.05f)
+				{
+					this->move = Move::ROTATE_LEFT;
+				}
+				else
+				{
+					this->adjustingAngle = 0;
+				}
 			}
 		}
 	}
-
 	this->car->doMove(this->move);
 }
 

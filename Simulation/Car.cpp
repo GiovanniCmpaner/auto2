@@ -246,15 +246,14 @@ auto Car::stepSensor(float* distance, float angle) -> void
 
     auto callback{ RayCastCallback{&filter} };
     this->world->RayCast(&callback, start, end);
-    if (callback.valid)
+    if (not callback.valid or *distance > 2.0f)
+    {
+        *distance = 2.0f;
+    }
+    else 
     {
         *distance = b2Distance(start, callback.point);
     }
-    else
-    {
-        *distance = +INFINITY;//b2Distance(start, end);
-    }
-
 }
 
 auto Car::renderBody(GPU_Target* target) const -> void

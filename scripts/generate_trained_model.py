@@ -97,22 +97,25 @@ assert (len(x_train) + len(x_test) + len(x_validate)) ==  SAMPLES
 model = tf.keras.Sequential([
     keras.layers.Dense(7, activation='relu'),
     keras.layers.Dense(16, activation='relu'),
-    keras.layers.Dense(32, activation='relu'),
     keras.layers.Dense(16, activation='relu'),
     keras.layers.Dense(5),
 ])
 
 # Compile the model using the standard 'adam' optimizer and the mean squared error or 'mse' loss function for regression.
-model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+model.compile(optimizer='adam', loss='mse', metrics=['categorical_accuracy'])
 
 # -------------------------------------------------------------------------------
 # Train the Model
 # -------------------------------------------------------------------------------
 
+
+
 options = tf.saved_model.SaveOptions(save_debug_info=True, experimental_variable_policy=tf.saved_model.experimental.VariablePolicy.SAVE_VARIABLE_DEVICES)
 
+
+
 # Train the model on our training data while validating on our validation set
-history = model.fit(x_train, y_train, epochs=200, batch_size=1024, validation_data=(x_validate, y_validate))
+history = model.fit(x_train, y_train, epochs=10, batch_size=256, shuffle=True, validation_data=(x_validate, y_validate))
 
 # Save the model to disk
 model.save(MODEL_TF, save_format='tf')

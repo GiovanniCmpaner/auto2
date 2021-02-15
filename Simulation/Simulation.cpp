@@ -17,9 +17,11 @@ auto Simulation::reset() -> void
 	this->cars.clear();
 	this->followers.clear();
 
-	const auto quantity{ 500 };
-	const auto complexity{ 5 };
-	const auto size{ 3.0f };
+	constexpr auto quantity{ 500 };
+	constexpr auto rows{ 5 };
+	constexpr auto columns{ 1 };
+	constexpr auto width{ 6.0f };
+	constexpr auto height{ 3.0f };
 	if (quantity > 0)
 	{
 		this->mazes.reserve(quantity);
@@ -38,7 +40,7 @@ auto Simulation::reset() -> void
 		{
 			for (auto i{ 0 }; i < squareWidth; ++i)
 			{
-				auto& maze{ this->mazes.emplace_back(&world, ground, complexity, complexity, i * (size + 0.2f), j * (size + 0.2f), size, size) };
+				auto& maze{ this->mazes.emplace_back(&world, ground, columns, rows, i * (width + 0.2f), 2 + j * (height + 0.2f), width, height) };
 
 				maze.randomize();
 
@@ -206,30 +208,29 @@ auto Simulation::init() -> void
 
 					if (data == Data::GENERATING)
 					{
-						auto inputs{ Simulation::inputs(this->cars[0]) };
-						{
-							for (auto& input : inputs)
-							{
-								if (std::isnan(input) or std::isinf(input))
-								{
-									input = 9999.9;
-								}
-							}
+						const auto inputs{ Simulation::inputs(this->cars[0]) };
+						this->features.emplace_back(inputs);
 
-							this->features.emplace_back(inputs);
+						auto label{ std::vector<int>{} };
+						label.resize(5);
+						label[static_cast<int>(this->move)] = 1;
 
-							auto label{ std::vector<int>{} };
-							label.resize(5);
-							label[static_cast<int>(this->move)] = 1;
-
-							this->labels.emplace_back(label);
-						}
+						this->labels.emplace_back(label);
 
 						const auto currentDistance{ b2Distance(this->cars[0].position(), this->mazes[0].end()) };
 						if (currentDistance < 0.05f)
 						{
-							this->generationTask = this->generateCSV();
-							this->data = Data::SAVING;
+							if (generation < 10)
+							{
+								generation++;
+								this->reset();
+							}
+							else
+							{
+								this->generation = 0;
+								this->generationTask = this->generateCSV();
+								this->data = Data::SAVING;
+							}
 						}
 					}
 				}
@@ -249,41 +250,32 @@ auto Simulation::init() -> void
 					{
 						for (auto n{ 0 }; n < this->followers.size(); ++n)
 						{
-							if (not this->followers[n].finished())
-							{
-								auto inputs{ Simulation::inputs(this->cars[n]) };
-								{
-									for (auto& input : inputs)
-									{
-										if (std::isnan(input) or std::isinf(input))
-										{
-											input = 9999.9;
-										}
-									}
+							//if (not this->followers[n].finished())
+							//{
+								const auto inputs{ Simulation::inputs(this->cars[n]) };
+								this->features.emplace_back(inputs);
 
-									this->features.emplace_back(inputs);
+								auto label{ std::vector<int>{} };
+								label.resize(5);
+								label[static_cast<int>(this->followers[n].movement())] = 1;
 
-									auto label{ std::vector<int>{} };
-									label.resize(5);
-									label[static_cast<int>(this->followers[n].movement())] = 1;
-
-									this->labels.emplace_back(label);
-								}
-							}
+								this->labels.emplace_back(label);
+							//}
 						}
 
 						if (finished == this->followers.size())
 						{
-							if (generation < 10)
+							if (generation < 0)
 							{
 								generation++;
 								this->reset();
 							}
-							else 
-							{
-								this->generationTask = this->generateCSV();
-								this->data = Data::SAVING;
-							}
+							//else 
+							//{
+							//	this->generation = 0;
+							//	this->generationTask = this->generateCSV();
+							//	this->data = Data::SAVING;
+							//}
 						}
 					}
 				}
@@ -292,17 +284,26 @@ auto Simulation::init() -> void
 					for (auto n{ 0 }; n < this->cars.size(); ++n)
 					{
 						auto inputs{ Simulation::inputs(this->cars[n]) };
+
+						for (auto n{ 0 }; n < inputs.size(); ++n)
 						{
-							for (auto& input : inputs)
+							if (std::isnan(inputs[n]) or std::isinf(inputs[n]) or inputs[n] > 2.0f)
 							{
-								if (std::isnan(input) or std::isinf(input))
-								{
-									input = 9999.9;
-								}
+								inputs[n] = 2.0f;
 							}
 						}
+
 						const auto outputs{ neural->inference(inputs) };
-						const auto max{ std::max_element(outputs.begin() + 1, outputs.end()) - outputs.begin() };
+
+						auto max{ 0 };
+						for (auto n{ 1 }; n < outputs.size(); ++n)
+						{
+							if (std::abs(outputs[n]) > std::abs(outputs[max]))
+							{
+								max = n;
+							}
+						}
+
 						this->cars[n].doMove(static_cast<Move>(max));
 					}
 				}
@@ -494,7 +495,7 @@ auto Simulation::generateCSV() -> std::future<void>
 	return std::async(std::launch::async, [this]
 		{
 			{
-				auto ofs{ std::ofstream{"features.csv"} };
+				auto ofs{ std::ofstream{R"(scripts\features.csv)"} };
 
 				for (auto j{ 0 }; j < this->features.size(); ++j)
 				{
@@ -524,7 +525,7 @@ auto Simulation::generateCSV() -> std::future<void>
 			}
 
 			{
-				auto ofs{ std::ofstream{"labels.csv"} };
+				auto ofs{ std::ofstream{R"(scripts\labels.csv)"} };
 
 				for (auto j{ 0 }; j < this->labels.size(); ++j)
 				{
