@@ -15,16 +15,20 @@ public:
         bool left, right;
     };
 
+    struct Point
+    {
+        float x, y;
+    };
+
     struct Line
     {
         float x0, y0;
         float x1, y1;
     };
 
-    struct Rect
+    struct Polygon
     {
-        float x, y;
-        float width, height;
+        std::vector<Point> vertices;
     };
 
     struct Coordinate
@@ -58,7 +62,7 @@ private:
     static auto make(size_t rows, size_t columns)->Matrix;
     static auto solve(const Matrix& matrix, int y, int x, bool bestSolution = true)->Path;
     static auto lines(const Matrix& matrix, float height, float width)->std::vector<Line>;
-    static auto rectangles(const Matrix& matrix, float x, float y, float height, float width, float thickness)->std::vector<Rect>;
+    static auto polygons(const Matrix& matrix, float x, float y, float height, float width, float thickness)->std::vector<Polygon>;
     static auto print(const Matrix& matrix, const Path& path = {}) -> void;
 
     b2World* world{ nullptr };

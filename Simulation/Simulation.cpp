@@ -17,10 +17,10 @@ auto Simulation::reset() -> void
 	this->cars.clear();
 	this->followers.clear();
 
-	constexpr auto quantity{ 500 };
+	constexpr auto quantity{ 1 };
 	constexpr auto rows{ 5 };
 	constexpr auto columns{ 1 };
-	constexpr auto width{ 6.0f };
+	constexpr auto width{ 3.0f };
 	constexpr auto height{ 3.0f };
 	if (quantity > 0)
 	{
@@ -208,7 +208,16 @@ auto Simulation::init() -> void
 
 					if (data == Data::GENERATING)
 					{
-						const auto inputs{ Simulation::inputs(this->cars[0]) };
+						auto inputs{ Simulation::inputs(this->cars[0]) };
+
+						for (auto n{ 0 }; n < inputs.size(); ++n)
+						{
+							if (std::isnan(inputs[n]) or std::isinf(inputs[n]) or inputs[n] > 2.0f)
+							{
+								inputs[n] = 2.0f;
+							}
+						}
+
 						this->features.emplace_back(inputs);
 
 						auto label{ std::vector<int>{} };
@@ -220,17 +229,17 @@ auto Simulation::init() -> void
 						const auto currentDistance{ b2Distance(this->cars[0].position(), this->mazes[0].end()) };
 						if (currentDistance < 0.05f)
 						{
-							if (generation < 10)
+							if (generation < 2)
 							{
 								generation++;
 								this->reset();
 							}
-							else
-							{
-								this->generation = 0;
-								this->generationTask = this->generateCSV();
-								this->data = Data::SAVING;
-							}
+							//else
+							//{
+							//	this->generation = 0;
+							//	this->generationTask = this->generateCSV();
+							//	this->data = Data::SAVING;
+							//}
 						}
 					}
 				}
@@ -252,7 +261,16 @@ auto Simulation::init() -> void
 						{
 							//if (not this->followers[n].finished())
 							//{
-								const auto inputs{ Simulation::inputs(this->cars[n]) };
+								auto inputs{ Simulation::inputs(this->cars[n]) };
+
+								for (auto n{ 0 }; n < inputs.size(); ++n)
+								{
+									if (std::isnan(inputs[n]) or std::isinf(inputs[n]) or inputs[n] > 2.0f)
+									{
+										inputs[n] = 2.0f;
+									}
+								}
+
 								this->features.emplace_back(inputs);
 
 								auto label{ std::vector<int>{} };
@@ -328,7 +346,7 @@ auto Simulation::init() -> void
 					maze.step();
 				}
 
-				world.Step(Window::timeStep, 4, 4);
+				world.Step(Window::timeStep, 6, 6);
 			}
 
 			if (control == Control::AUTO)
@@ -406,6 +424,24 @@ auto Simulation::init() -> void
 				oss << "PLAYING";
 			}
 			oss << '\n';
+
+			static auto count{ 0 };
+			static auto linearVelocity{ 0.0f };
+			static auto angularVelocity{ 0.0f };
+			if (count == 10)
+			{
+				count = 0;
+
+				if (this->cars.size() > 0)
+				{
+					linearVelocity = this->cars[0].linearVelocity();
+					angularVelocity = this->cars[0].angularVelocity();
+				}
+			}
+			count++;
+
+			oss << "linear velocity = " << linearVelocity << '\n';
+			oss << "angular velocity = " << angularVelocity << '\n';
 		});
 
 	window.process();

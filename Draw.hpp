@@ -23,8 +23,10 @@ namespace Draw
                 {
                     const auto circle{ reinterpret_cast<const b2CircleShape*>(shape) };
 
-                    GPU_Circle(target, circle->m_p.x, circle->m_p.y, circle->m_radius, solidBorderColor);
-                    GPU_CircleFilled(target, circle->m_p.x, circle->m_p.y, circle->m_radius, solidFillColor);
+                    const auto center{ body->GetWorldPoint(circle->m_p) };
+
+                    GPU_Circle(target, center.x, center.y, circle->m_radius, solidBorderColor);
+                    GPU_CircleFilled(target, center.x, center.y, circle->m_radius, solidFillColor);
 
                     break;
                 }
@@ -32,7 +34,10 @@ namespace Draw
                 {
                     const auto edge{ reinterpret_cast<const b2EdgeShape*>(shape) };
                     
-                    GPU_Line(target, edge->m_vertex1.x, edge->m_vertex1.y, edge->m_vertex2.x, edge->m_vertex2.y, solidBorderColor);
+                    const auto vertice1{ body->GetWorldPoint(edge->m_vertex1) };
+                    const auto vertice2{ body->GetWorldPoint(edge->m_vertex2) };
+
+                    GPU_Line(target, vertice1.x, vertice1.y, vertice2.x, vertice2.y, solidBorderColor);
 
                     break;
                 }
@@ -54,7 +59,7 @@ namespace Draw
 
                     break;
                 }
-                
+                case b2Shape::e_chain:
                 {
                     const auto chain{ reinterpret_cast<const b2ChainShape*>(shape) };
 

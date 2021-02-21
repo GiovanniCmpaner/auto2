@@ -374,18 +374,29 @@ auto Maze::lines(const Matrix& matrix, float height, float width) -> std::vector
     return lines;
 }
 
-auto Maze::rectangles(const Matrix& matrix, float x, float y, float width, float height, float thickness) -> std::vector<Rect>
+auto Maze::polygons(const Matrix& matrix, float x, float y, float width, float height, float thickness) -> std::vector<Polygon>
 {
     const auto lines{ Maze::lines(matrix,height,width) };
-    auto rectangles{ std::vector<Rect>{} };
-    rectangles.reserve(lines.size());
+    auto polygons{ std::vector<Polygon>{} };
+    polygons.reserve(lines.size());
 
     for (const auto& line : lines)
     {
-        rectangles.emplace_back(Rect{ x + line.x0, y + line.y0, line.x1 - line.x0 + thickness, line.y1 - line.y0 + thickness });
+        const auto x0{ x + line.x0 };
+        const auto y0{ y + line.y0 };
+        const auto width{ line.x1 - line.x0 + thickness };
+        const auto height{ line.y1 - line.y0 + thickness };
+
+        polygons.emplace_back(Polygon{{
+            {x0, y0},
+            {x0 + width, y0},
+            {x0 + width, y0 + height},
+            {x0, y0 + height}
+        }});
     }
 
-    return rectangles;
+
+    return polygons;
 }
 
 Maze::Maze(b2World* world, b2Body* ground, size_t columns, size_t rows, float x, float y, float width, float height)
@@ -441,20 +452,20 @@ auto Maze::createBody() -> void
 
     this->body = this->world->CreateBody(&bd);
 
-    const auto rectangles{ Maze::rectangles(this->matrix, 0, 0, this->width, this->height, 0.05f) };
-    for (const auto& rect : rectangles)
+    const auto polygons{ Maze::polygons(this->matrix, 0, 0, this->width, this->height, 0.05f) };
+    for (const auto& poly : polygons)
     {
         b2PolygonShape shape{};
     
         b2FixtureDef fd{};
         fd.shape = &shape;
         fd.density = 0.0f;
-        fd.restitution = 0.4f;
+        fd.restitution = 0.1f;
         fd.filter.categoryBits = 0x0001;
         fd.filter.maskBits = 0x0003;
         fd.userData = const_cast<char*>("wall");
     
-        shape.SetAsBox(rect.width / 2.0f, rect.height / 2.0f, { rect.x + rect.width / 2.0f, rect.y + rect.height / 2.0f }, 0.0f);
+        shape.Set(reinterpret_cast<const b2Vec2*>(poly.vertices.data()), poly.vertices.size());
         this->body->CreateFixture(&fd);
     }
 
@@ -483,6 +494,29 @@ auto Maze::createBody() -> void
     //}
 
     {
+        //b2BodyDef bd{};
+        //bd.type = b2_staticBody;
+        //bd.position = b2Vec2{ this->width / 2.0f, this->height / 2.0f };
+        //bd.userData = const_cast<char*>("obstacle");
+        //
+        //auto body{ this->world->CreateBody(&bd) };
+
+        b2CircleShape shape{};
+        
+        b2FixtureDef fd{};
+        fd.shape = &shape;
+        fd.density = 0.0f;
+        fd.restitution = 0.1f;
+        fd.filter.categoryBits = 0x0001;
+        fd.filter.maskBits = 0x0003;
+        fd.userData = const_cast<char*>("circle");
+        
+        shape.m_radius = 0.1f;
+        shape.m_p = { this->width / 2.0f, this->height / 2.0f };
+        this->body->CreateFixture(&fd);
+    }
+
+    {
         b2CircleShape shape{};
 
         b2FixtureDef fd{};
@@ -494,10 +528,12 @@ auto Maze::createBody() -> void
         shape.m_radius = std::min(this->tileHeight, this->tileWidth) / 4;
 
         shape.m_p = this->start();
+        shape.m_p -= { this->x, this->y };
         fd.userData = const_cast<char*>("start");
         this->body->CreateFixture(&fd);
 
         shape.m_p = this->end();
+        shape.m_p -= { this->x, this->y };
         fd.userData = const_cast<char*>("end");
         this->body->CreateFixture(&fd);
     }

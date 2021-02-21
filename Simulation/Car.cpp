@@ -61,7 +61,8 @@ auto Car::createBody(const b2Vec2& position) -> void
         bd.type = b2_dynamicBody;
         bd.position = position;
         bd.angle = b2_pi;
-        bd.angularDamping = 6.0f;
+        bd.linearDamping = 5.0f;
+        bd.angularDamping = 6.5f;
         bd.userData = const_cast<char*>("car");
 
         this->body = this->world->CreateBody(&bd);
@@ -73,8 +74,8 @@ auto Car::createBody(const b2Vec2& position) -> void
 
         b2FixtureDef fd{};
         fd.shape = &square;
-        fd.density = 2.0f;
-        fd.friction = 0.5f;
+        fd.density = 10.0f;
+        fd.friction = 2.0f;
         fd.filter.categoryBits = 0x0002;
         fd.filter.maskBits = 0x0001;
         fd.userData = const_cast<char*>("chassis");
@@ -113,8 +114,8 @@ auto Car::createBody(const b2Vec2& position) -> void
         jd.localAnchorA = b2Vec2{ 0.0f, 0.0f };
         jd.localAnchorB = this->body->GetLocalCenter();
         jd.collideConnected = true;
-        jd.maxForce = 1.35f * mass * gravity;
-        jd.maxTorque = 8.975f * mass * radius * gravity;
+        jd.maxForce = 0.25f * mass * gravity;
+        jd.maxTorque = 3.435f * mass * radius * gravity;
         jd.userData = const_cast<char*>("friction");
 
         this->world->CreateJoint(&jd);
@@ -213,21 +214,21 @@ auto Car::stepBody() -> void
 
     if (this->move == Move::ROTATE_LEFT)
     {
-        this->body->ApplyTorque(-1.0f, true);
+        this->body->ApplyTorque(-2.0f, true);
     }
     else if(this->move == Move::ROTATE_RIGHT)
     {
-        this->body->ApplyTorque(+1.0f, true);
+        this->body->ApplyTorque(+2.0f, true);
     }
     else if (this->move == Move::MOVE_FORWARD)
     {
-        const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, +1.1f }) };
+        const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, +2.0f }) };
         const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, 0.0f }) };
         this->body->ApplyForce(force, point, true);
     }
     else if (this->move == Move::MOVE_BACKWARD)
     {
-        const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, -1.1f }) };
+        const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, -2.0f }) };
         const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, 0.0f }) };
         this->body->ApplyForce(force, point, true);
     }
@@ -288,4 +289,14 @@ auto Car::renderSensor(GPU_Target* target, float distance, float angle) const ->
     // Crosshair
     GPU_Line(target, end.x - 0.075f, end.y, end.x + 0.075f, end.y, sensorColor);
     GPU_Line(target, end.x, end.y - 0.075f, end.x, end.y + 0.075f, sensorColor);
+}
+
+auto Car::linearVelocity() const -> float
+{
+    return this->body->GetLinearVelocity().Length();
+}
+
+auto Car::angularVelocity() const -> float
+{
+    return this->body->GetAngularVelocity();
 }

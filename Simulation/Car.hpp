@@ -45,6 +45,8 @@ public:
     auto color() const ->Color;
     auto giroscope() const -> std::vector<float>;
     auto acelerometer() const ->std::vector<float>;
+    auto linearVelocity() const -> float;
+    auto angularVelocity() const -> float;
     //auto collided() const -> bool;
 
 private:
