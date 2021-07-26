@@ -21,9 +21,9 @@ auto Maze::make(size_t rows, size_t columns) -> Matrix
 
     auto tracking{ std::deque<std::tuple<int,int>>{} };
     
-    auto rd{ std::random_device{} };
-    auto mt{ std::mt19937{rd()} };
-    //auto mt{ std::mt19937{999} };
+    //auto rd{ std::random_device{} };
+    //auto mt{ std::mt19937{rd()} };
+    auto mt{ std::mt19937{10001} };
 
     auto j{ 0 }, i{ 0 };
 
@@ -493,28 +493,21 @@ auto Maze::createBody() -> void
     //    this->body->CreateFixture(&fd);
     //}
 
-    {
-        //b2BodyDef bd{};
-        //bd.type = b2_staticBody;
-        //bd.position = b2Vec2{ this->width / 2.0f, this->height / 2.0f };
-        //bd.userData = const_cast<char*>("obstacle");
-        //
-        //auto body{ this->world->CreateBody(&bd) };
-
-        b2CircleShape shape{};
-        
-        b2FixtureDef fd{};
-        fd.shape = &shape;
-        fd.density = 0.0f;
-        fd.restitution = 0.1f;
-        fd.filter.categoryBits = 0x0001;
-        fd.filter.maskBits = 0x0003;
-        fd.userData = const_cast<char*>("circle");
-        
-        shape.m_radius = 0.1f;
-        shape.m_p = { this->width / 2.0f, this->height / 2.0f };
-        this->body->CreateFixture(&fd);
-    }
+    //{
+    //    b2CircleShape shape{};
+    //    
+    //    b2FixtureDef fd{};
+    //    fd.shape = &shape;
+    //    fd.density = 0.0f;
+    //    fd.restitution = 0.1f;
+    //    fd.filter.categoryBits = 0x0001;
+    //    fd.filter.maskBits = 0x0003;
+    //    fd.userData = const_cast<char*>("circle");
+    //    
+    //    shape.m_radius = 0.1f;
+    //    shape.m_p = { this->width / 2.0f, this->height / 2.0f };
+    //    this->body->CreateFixture(&fd);
+    //}
 
     {
         b2CircleShape shape{};
@@ -573,11 +566,18 @@ auto Maze::solve(const b2Vec2& point, bool bestSolution) const->std::vector<b2Ve
 
     path.emplace_back(point.x, point.y);
 
+    auto rd{ std::random_device{} };
+    auto mt{ std::mt19937{rd()} };
+
     const auto solution{ Maze::solve(this->matrix, coordinate.y, coordinate.x, bestSolution) };
     for (auto&& coordinate : solution)
     {
+        auto dist{ std::uniform_real_distribution<float>{ -0.075f, +0.075f } };
+        const auto nx{ dist(mt) };
+        const auto ny{ dist(mt) };
+
         const auto point{ this->toRealPoint(coordinate) };
-        path.emplace_back(point.x, point.y);
+        path.emplace_back(point.x + nx, point.y + ny);
     }
     return path;
 }

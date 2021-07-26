@@ -74,8 +74,8 @@ auto Car::createBody(const b2Vec2& position) -> void
 
         b2FixtureDef fd{};
         fd.shape = &square;
-        fd.density = 10.0f;
-        fd.friction = 2.0f;
+        fd.density = 50.0f;
+        fd.friction = 0.5f;
         fd.filter.categoryBits = 0x0002;
         fd.filter.maskBits = 0x0001;
         fd.userData = const_cast<char*>("chassis");
@@ -214,11 +214,11 @@ auto Car::stepBody() -> void
 
     if (this->move == Move::ROTATE_LEFT)
     {
-        this->body->ApplyTorque(-2.0f, true);
+        this->body->ApplyTorque(-500.0f, true);
     }
     else if(this->move == Move::ROTATE_RIGHT)
     {
-        this->body->ApplyTorque(+2.0f, true);
+        this->body->ApplyTorque(+500.0f, true);
     }
     else if (this->move == Move::MOVE_FORWARD)
     {

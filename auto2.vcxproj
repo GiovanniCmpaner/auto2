@@ -45,13 +45,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\tensorflow-cpu-2.3.0\include;$(SolutionDir)\lib\cppflow2\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(SolutionDir)\lib\tensorflow-cpu-2.3.0\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\tensorflow-cpu-2.3.0\include;$(SolutionDir)\lib\fuzzylite-6.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(SolutionDir)\lib\tensorflow-cpu-2.3.0\lib\x64;$(SolutionDir)\lib\fuzzylite-6.0\lib\x64;$(LibraryPath)</LibraryPath>
+    <SourcePath>$(VC_SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\tensorflow-cpu-2.3.0\include;$(SolutionDir)\lib\cppflow2\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(SolutionDir)\lib\tensorflow-cpu-2.3.0\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\lib\SDL2-2.0.12\include;$(SolutionDir)\lib\SDL2_ttf-2.0.15\include;$(SolutionDir)\lib\box2d-2.4.0\include;$(SolutionDir)\lib\SDL_gpu-0.12.0\include;$(SolutionDir)\lib\SDL_FontCache-1.0\include;$(SolutionDir)\src\video;$(SolutionDir)\lib\tensorflow-cpu-2.3.0\include;$(SolutionDir)\lib\fuzzylite-6.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\lib\SDL2-2.0.12\lib\x64;$(SolutionDir)\lib\SDL2_ttf-2.0.15\lib\x64;$(SolutionDir)\lib\box2d-2.4.0\lib\x64;$(SolutionDir)\lib\SDL_gpu-0.12.0\lib\x64;$(SolutionDir)\lib\SDL_FontCache-1.0\lib\x64;$(SolutionDir)\lib\tensorflow-cpu-2.3.0\lib\x64;$(SolutionDir)\lib\fuzzylite-6.0\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -70,7 +71,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;opengl32.lib;box2d.lib;SDL2_gpu_s.lib;SDL_FontCache.lib;tensorflow.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;opengl32.lib;box2d.lib;SDL2_gpu_s.lib;SDL_FontCache.lib;tensorflow.lib;fuzzylite.lib;fuzzylite.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -88,7 +89,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;opengl32.lib;box2d.lib;SDL2_gpu_s.lib;SDL_FontCache;tensorflow.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;opengl32.lib;box2d.lib;SDL2_gpu_s.lib;SDL_FontCache;tensorflow.lib;fuzzylite.lib;fuzzylite.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -113,6 +114,12 @@
     <CopyFileToFolders Include="lib\SDL2_ttf-2.0.15\lib\x64\zlib1.dll">
       <FileType>Document</FileType>
     </CopyFileToFolders>
+		<CopyFileToFolders Include="lib\SDL_gpu-0.12.0\lib\x64\SDL2_gpu.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+		<CopyFileToFolders Include="lib\tensorflow-cpu-2.3.0\lib\x64\tensorflow.dll">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Draw.hpp" />
@@ -122,16 +129,6 @@
     <ClInclude Include="Simulation\Maze.hpp" />
     <ClInclude Include="Simulation\Simulation.hpp" />
     <ClInclude Include="Simulation\Window.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <CopyFileToFolders Include="lib\SDL_gpu-0.12.0\lib\x64\SDL2_gpu.dll">
-      <FileType>Document</FileType>
-    </CopyFileToFolders>
-  </ItemGroup>
-  <ItemGroup>
-    <CopyFileToFolders Include="lib\tensorflow-cpu-2.3.0\lib\x64\tensorflow.dll">
-      <FileType>Document</FileType>
-    </CopyFileToFolders>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

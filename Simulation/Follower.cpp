@@ -28,7 +28,7 @@ auto Follower::nextPoint() -> void
 
 	const auto carPosition{ this->car->position() };
 	const auto currentDistance{ b2Distance(carPosition, this->path[this->targetPoint]) };
-	if (currentDistance < 0.05f)
+	if (currentDistance < 0.075f)
 	{
 		this->targetPoint++;
 
@@ -43,11 +43,11 @@ auto Follower::nextPoint() -> void
 		this->targetAngle = Follower::normalizeAngle(std::atan2(carDistance.y, carDistance.x));
 
 		const auto da{ this->targetAngle - carAngle };
-		if ((da > +0.05f and da < +b2_pi) or da < -b2_pi)
+		if ((da > +0.075f and da < +b2_pi) or da < -b2_pi)
 		{
 			this->adjustingAngle = -1; // RIGHT
 		}
-		else if ((da < -0.05f and da > -b2_pi) or da > +b2_pi)
+		else if ((da < -0.075f and da > -b2_pi) or da > +b2_pi)
 		{
 			this->adjustingAngle = +1; // LEFT
 		}
@@ -91,7 +91,7 @@ auto Follower::followPath() -> void
 			const auto da{ std::abs(this->targetAngle - carAngle) };
 			if (this->adjustingAngle == -1)
 			{
-				if (da > 0.05f)
+				if (da > 0.075f)
 				{
 					this->move = Move::ROTATE_RIGHT;
 				}
@@ -102,7 +102,7 @@ auto Follower::followPath() -> void
 			}
 			else if (this->adjustingAngle == +1)
 			{
-				if (da > 0.05f)
+				if (da > 0.075f)
 				{
 					this->move = Move::ROTATE_LEFT;
 				}

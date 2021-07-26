@@ -9,6 +9,8 @@
 
 #include "Simulation/Simulation.hpp"
 
+#include "fl/Headers.h"
+
 //static int resizingEventWatcher(void* data, SDL_Event* event)
 //{
 //    return 0;
@@ -92,6 +94,9 @@ Simulation simulation{};
 
 int main(int argc, char* args[])
 {
+    fl::fuzzylite::setDebugging(true);
+    fl::fuzzylite::setLogging(true);
+
     //const auto status{ TF_NewStatus() };
     //const auto graph{ TF_NewGraph() };
     //const auto opts{ TF_NewImportGraphDefOptions() };

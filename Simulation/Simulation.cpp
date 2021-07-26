@@ -17,9 +17,9 @@ auto Simulation::reset() -> void
 	this->cars.clear();
 	this->followers.clear();
 
-	constexpr auto quantity{ 1 };
+	constexpr auto quantity{ 100 };
 	constexpr auto rows{ 5 };
-	constexpr auto columns{ 1 };
+	constexpr auto columns{ 5 };
 	constexpr auto width{ 3.0f };
 	constexpr auto height{ 3.0f };
 	if (quantity > 0)
@@ -49,7 +49,6 @@ auto Simulation::reset() -> void
 				const auto solution{ maze.solve(car.position(), false) };
 
 				auto& follower{ this->followers.emplace_back(&car, solution) };
-
 			}
 		}
 	}
@@ -288,12 +287,12 @@ auto Simulation::init() -> void
 								generation++;
 								this->reset();
 							}
-							//else 
-							//{
-							//	this->generation = 0;
-							//	this->generationTask = this->generateCSV();
-							//	this->data = Data::SAVING;
-							//}
+							else 
+							{
+								this->generation = 0;
+								this->generationTask = this->generateCSV();
+								this->data = Data::SAVING;
+							}
 						}
 					}
 				}
@@ -313,8 +312,8 @@ auto Simulation::init() -> void
 
 						const auto outputs{ neural->inference(inputs) };
 
-						auto max{ 0 };
-						for (auto n{ 1 }; n < outputs.size(); ++n)
+						auto max{ 1 };
+						for (auto n{ 2 }; n < outputs.size(); ++n)
 						{
 							if (std::abs(outputs[n]) > std::abs(outputs[max]))
 							{
