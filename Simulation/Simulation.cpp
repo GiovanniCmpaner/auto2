@@ -17,7 +17,7 @@ auto Simulation::reset() -> void
 	this->cars.clear();
 	this->followers.clear();
 
-	constexpr auto quantity{ 100 };
+	constexpr auto quantity{ 1 };
 	constexpr auto rows{ 5 };
 	constexpr auto columns{ 5 };
 	constexpr auto width{ 3.0f };
@@ -61,6 +61,7 @@ auto Simulation::init() -> void
 	this->window.init(Simulation::realWidth, Simulation::realHeight);
 	this->ground = this->createGround(&world);
 	this->neural = std::make_unique<Neural>(R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)");
+	this->fuzzy = std::make_unique<Fuzzy>(R"(C:\Users\Giovanni\Desktop\auto2\fuzzy.fll)");
 	this->reset();
 
 	window.onKeyboard([&](const uint8_t* state) -> void
@@ -124,6 +125,10 @@ auto Simulation::init() -> void
 						this->control = Control::NEURAL;
 					}
 					else if (this->control == Control::NEURAL)
+					{
+						this->control = Control::FUZZY;
+					}
+					else if (this->control == Control::FUZZY)
 					{
 						this->control = Control::MANUAL;
 					}
@@ -190,8 +195,6 @@ auto Simulation::init() -> void
 
 	auto trained{ false };
 
-	//auto bestCar{ -1 };
-	//auto bestRatio{ 0.0f };
 
 	window.onRender([&](GPU_Target* target)
 		{
@@ -208,15 +211,6 @@ auto Simulation::init() -> void
 					if (data == Data::GENERATING)
 					{
 						auto inputs{ Simulation::inputs(this->cars[0]) };
-
-						for (auto n{ 0 }; n < inputs.size(); ++n)
-						{
-							if (std::isnan(inputs[n]) or std::isinf(inputs[n]) or inputs[n] > 2.0f)
-							{
-								inputs[n] = 2.0f;
-							}
-						}
-
 						this->features.emplace_back(inputs);
 
 						auto label{ std::vector<int>{} };
@@ -245,31 +239,25 @@ auto Simulation::init() -> void
 				else if (control == Control::AUTO)
 				{
 					auto finished{ 0 };
+#pragma omp parallel for
 					for (auto n{ 0 }; n < this->followers.size(); ++n)
 					{
 						this->followers[n].step();
 						if (this->followers[n].finished())
 						{
+#pragma omp atomic
 							++finished;
 						}
 					}
 
 					if (data == Data::GENERATING)
 					{
+
 						for (auto n{ 0 }; n < this->followers.size(); ++n)
 						{
-							//if (not this->followers[n].finished())
-							//{
+							if (not this->followers[n].finished())
+							{
 								auto inputs{ Simulation::inputs(this->cars[n]) };
-
-								for (auto n{ 0 }; n < inputs.size(); ++n)
-								{
-									if (std::isnan(inputs[n]) or std::isinf(inputs[n]) or inputs[n] > 2.0f)
-									{
-										inputs[n] = 2.0f;
-									}
-								}
-
 								this->features.emplace_back(inputs);
 
 								auto label{ std::vector<int>{} };
@@ -277,12 +265,12 @@ auto Simulation::init() -> void
 								label[static_cast<int>(this->followers[n].movement())] = 1;
 
 								this->labels.emplace_back(label);
-							//}
+							}
 						}
 
 						if (finished == this->followers.size())
 						{
-							if (generation < 0)
+							if (generation < 1)
 							{
 								generation++;
 								this->reset();
@@ -298,22 +286,34 @@ auto Simulation::init() -> void
 				}
 				else if (control == Control::NEURAL)
 				{
+#pragma omp parallel for
 					for (auto n{ 0 }; n < this->cars.size(); ++n)
 					{
-						auto inputs{ Simulation::inputs(this->cars[n]) };
+						const auto inputs{ Simulation::inputs(this->cars[n]) };
+						const auto outputs{ this->neural->inference(inputs) };
 
-						for (auto n{ 0 }; n < inputs.size(); ++n)
+						auto max{ 0 };
+						for (auto n{ 1 }; n < outputs.size(); ++n)
 						{
-							if (std::isnan(inputs[n]) or std::isinf(inputs[n]) or inputs[n] > 2.0f)
+							if (std::abs(outputs[n]) > std::abs(outputs[max]))
 							{
-								inputs[n] = 2.0f;
+								max = n;
 							}
 						}
 
-						const auto outputs{ neural->inference(inputs) };
+						this->cars[n].doMove(static_cast<Move>(max));
+					}
+				}
+				else if (control == Control::FUZZY)
+				{
+//#pragma omp parallel for
+					for (auto n{ 0 }; n < this->cars.size(); ++n)
+					{
+						const auto inputs{ Simulation::inputs(this->cars[n]) };
+						const auto outputs{ this->fuzzy->inference(inputs) };
 
-						auto max{ 1 };
-						for (auto n{ 2 }; n < outputs.size(); ++n)
+						auto max{ 0 };
+						for (auto n{ 1 }; n < outputs.size(); ++n)
 						{
 							if (std::abs(outputs[n]) > std::abs(outputs[max]))
 							{
@@ -335,36 +335,39 @@ auto Simulation::init() -> void
 					}
 				}
 
-				for (auto& car : this->cars)
+#pragma omp parallel for
+				for (auto n{ 0 }; n < this->cars.size(); n++)
 				{
-					car.step();
+					this->cars[n].step();
 				}
 
-				for (auto& maze : this->mazes)
+#pragma omp parallel for
+				for (auto n{ 0 }; n < this->mazes.size(); n++)
 				{
-					maze.step();
+					this->mazes[n].step();
 				}
 
-				world.Step(Window::timeStep, 6, 6);
+				world.Step(Window::timeStep, 4, 4);
 			}
 
 			if (control == Control::AUTO)
 			{
-				for (const auto& follower : this->followers)
+				for (auto n{ 0 }; n < this->followers.size(); ++n)
 				{
-					follower.render(target);
+					this->followers[n].render(target);
 				}
 			}
-
-			for (const auto& car : this->cars)
+			
+			for (auto n{ 0 }; n < this->cars.size(); n++)
 			{
-				car.render(target);
+				this->cars[n].render(target);
+			}
+			
+			for (auto n{ 0 }; n < this->mazes.size(); n++)
+			{
+				this->mazes[n].render(target);
 			}
 
-			for (const auto& maze : this->mazes)
-			{
-				maze.render(target);
-			}
 		});
 
 	window.onInfos([&](std::ostringstream& oss)
@@ -391,6 +394,10 @@ auto Simulation::init() -> void
 			else if (this->control == Control::NEURAL)
 			{
 				oss << "NEURAL";
+			}
+			else if (this->control == Control::FUZZY)
+			{
+				oss << "FUZZY";
 			}
 			oss << '\n';
 

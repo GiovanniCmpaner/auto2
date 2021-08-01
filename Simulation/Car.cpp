@@ -3,6 +3,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <random>
 
 #include <box2d/box2d.h>
 #include <SDL_gpu.h>
@@ -74,8 +75,8 @@ auto Car::createBody(const b2Vec2& position) -> void
 
         b2FixtureDef fd{};
         fd.shape = &square;
-        fd.density = 50.0f;
-        fd.friction = 0.5f;
+        fd.density = 10.0f;
+        fd.friction = 2.0f;
         fd.filter.categoryBits = 0x0002;
         fd.filter.maskBits = 0x0001;
         fd.userData = const_cast<char*>("chassis");
@@ -130,6 +131,10 @@ auto Car::step() -> void
         const auto radians{ (angle / 180.0f) * b2_pi };
         stepSensor(&distance, radians);
     }
+
+    //sensors[-90] = (sensors[-90] + sensors[-30]) / 2;
+    //sensors[+90] = (sensors[+90] + sensors[+30]) / 2;
+    sensors[0] = std::min({ sensors[0], sensors[-30] * std::cosf(0.523599), sensors[+30] * std::cosf(0.523599) });
 }
 
 auto Car::render(GPU_Target* target) const -> void
@@ -214,11 +219,11 @@ auto Car::stepBody() -> void
 
     if (this->move == Move::ROTATE_LEFT)
     {
-        this->body->ApplyTorque(-500.0f, true);
+        this->body->ApplyTorque(-2.0f, true);
     }
     else if(this->move == Move::ROTATE_RIGHT)
     {
-        this->body->ApplyTorque(+500.0f, true);
+        this->body->ApplyTorque(+2.0f, true);
     }
     else if (this->move == Move::MOVE_FORWARD)
     {
@@ -241,19 +246,22 @@ auto Car::stepSensor(float* distance, float angle) -> void
     filter.categoryBits = 0x0002;
     filter.maskBits = 0x0001;
 
-    const auto maxDistance{ 2.0f };
+    const auto maxDistance{ 10.0f };
     const auto start{ this->body->GetWorldPoint(b2Mul(b2Rot{ angle }, b2Vec2{ 0.0f, 0.1f })) };
     const auto end{ this->body->GetWorldPoint(b2Mul(b2Rot{ angle }, b2Vec2{ 0.0f, 0.1f + maxDistance })) };
 
+    auto rd{ std::random_device{} };
+    auto mt{ std::mt19937{rd()} };
+
     auto callback{ RayCastCallback{&filter} };
     this->world->RayCast(&callback, start, end);
-    if (not callback.valid or *distance > 2.0f)
+    if (callback.valid)
     {
-        *distance = 2.0f;
-    }
-    else 
-    {
-        *distance = b2Distance(start, callback.point);
+        auto dist{ std::uniform_real_distribution{ -0.05f, +0.05f } };
+        const auto noise{ dist(mt) };
+
+        const auto measuredDistance{ b2Distance(start, callback.point) };
+        *distance = std::clamp(measuredDistance + noise, 0.0f, 2.0f);
     }
 }
 

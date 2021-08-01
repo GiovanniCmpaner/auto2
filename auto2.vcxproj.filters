@@ -36,6 +36,9 @@
     <ClCompile Include="Neural.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Fuzzy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\SDL2-2.0.12\lib\x64\SDL2.dll">
@@ -54,6 +57,9 @@
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="lib\tensorflow-cpu-2.3.0\lib\x64\tensorflow.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="lib\fuzzylite-6.0\lib\x64\fuzzylite.dll">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>
@@ -77,6 +83,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Draw.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Fuzzy.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

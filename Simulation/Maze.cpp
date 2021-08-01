@@ -21,9 +21,8 @@ auto Maze::make(size_t rows, size_t columns) -> Matrix
 
     auto tracking{ std::deque<std::tuple<int,int>>{} };
     
-    //auto rd{ std::random_device{} };
-    //auto mt{ std::mt19937{rd()} };
-    auto mt{ std::mt19937{10001} };
+    auto rd{ std::random_device{} };
+    auto mt{ std::mt19937{rd()} };
 
     auto j{ 0 }, i{ 0 };
 
@@ -572,12 +571,14 @@ auto Maze::solve(const b2Vec2& point, bool bestSolution) const->std::vector<b2Ve
     const auto solution{ Maze::solve(this->matrix, coordinate.y, coordinate.x, bestSolution) };
     for (auto&& coordinate : solution)
     {
-        auto dist{ std::uniform_real_distribution<float>{ -0.075f, +0.075f } };
-        const auto nx{ dist(mt) };
-        const auto ny{ dist(mt) };
+        //auto dist{ std::uniform_real_distribution<float>{ -0.075f, +0.075f } };
+        //const auto nx{ dist(mt) };
+        //const auto ny{ dist(mt) };
+        //
+        //const auto point{ this->toRealPoint(coordinate) };
+        //path.emplace_back(point.x + nx, point.y + ny);
 
-        const auto point{ this->toRealPoint(coordinate) };
-        path.emplace_back(point.x + nx, point.y + ny);
+        path.emplace_back(this->toRealPoint(coordinate));
     }
     return path;
 }

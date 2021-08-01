@@ -77,8 +77,8 @@ SAMPLES = len(df_features.values)
 
 # We'll use 60% of our data for training and 20% for testing. The remaining 20%
 # will be used for validation. Calculate the indices of each section.
-TRAIN_SPLIT =  int(0.6 * SAMPLES)
-TEST_SPLIT = int(0.2 * SAMPLES + TRAIN_SPLIT)
+TRAIN_SPLIT =  int(0.7 * SAMPLES)
+TEST_SPLIT = int(0.3 * SAMPLES + TRAIN_SPLIT)
 
 # Use np.split to chop our data into three parts.
 # The second argument to np.split is an array of indices where the data will be
@@ -97,6 +97,7 @@ assert (len(x_train) + len(x_test) + len(x_validate)) ==  SAMPLES
 model = tf.keras.Sequential([
     keras.layers.Dense(7, activation='relu'),
     keras.layers.Dense(16, activation='relu'),
+    keras.layers.Dense(32, activation='relu'),
     keras.layers.Dense(16, activation='relu'),
     keras.layers.Dense(5),
 ])
@@ -115,7 +116,7 @@ options = tf.saved_model.SaveOptions(save_debug_info=True, experimental_variable
 
 
 # Train the model on our training data while validating on our validation set
-history = model.fit(x_train, y_train, epochs=10, batch_size=32, shuffle=True, validation_data=(x_validate, y_validate))
+history = model.fit(x_train, y_train, epochs=20, batch_size=2048, shuffle=True, validation_data=(x_validate, y_validate))
 
 # Save the model to disk
 model.save(MODEL_TF, save_format='tf')

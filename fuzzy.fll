@@ -1,0 +1,182 @@
+Engine: TCC Senai - 3 Variáveis
+InputVariable: Sesquerdo
+  enabled: true
+  range: 0.000 2.000
+  term: MuitoPerto Ramp 0.200 0.000
+  term: Perto Triangle 0.200 0.300 0.400
+  term: Medio Triangle 0.400 0.600 0.800
+  term: Longe Triangle 0.800 1.000 1.200
+  term: MuitoLonge Ramp 1.200 2.000
+InputVariable: Sdireito
+  enabled: true
+  range: 0.000 2.000
+  term: MuitoPerto Ramp 0.200 0.000
+  term: Perto Triangle 0.200 0.300 0.400
+  term: Medio Triangle 0.400 0.600 0.800
+  term: Longe Triangle 0.800 1.000 1.200
+  term: MuitoLonge Ramp 1.200 2.000
+InputVariable: Sfrente
+  enabled: true
+  range: 0.000 2.000
+  term: MuitoPerto Ramp 0.200 0.000
+  term: Perto Triangle 0.200 0.300 0.400
+  term: Medio Triangle 0.400 0.600 0.800
+  term: Longe Triangle 0.800 1.000 1.200
+  term: MuitoLonge Ramp 1.200 2.000
+OutputVariable: Frente
+  enabled: true
+  range: 0.000 1.000
+  accumulation: AlgebraicSum
+  defuzzifier: LargestOfMaximum 200
+  default: 0.000
+  lock-valid: false
+  lock-range: false
+  term: Ativo SShape 0.000 1.000
+OutputVariable: Direita
+  enabled: true
+  range: 0.000 1.000
+  accumulation: AlgebraicSum
+  defuzzifier: LargestOfMaximum 200
+  default: 0.000
+  lock-valid: false
+  lock-range: false
+  term: Ativo SShape 0.000 1.000
+OutputVariable: Esquerda
+  enabled: true
+  range: 0.000 1.000
+  accumulation: AlgebraicSum
+  defuzzifier: LargestOfMaximum 200
+  default: 0.000
+  lock-valid: false
+  lock-range: false
+  term: Ativo SShape 0.000 1.000
+RuleBlock: 
+  enabled: true
+  conjunction: AlgebraicProduct
+  disjunction: AlgebraicSum
+  activation: AlgebraicProduct
+  rule: if Sfrente is MuitoLonge and Sdireito is MuitoPerto and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is MuitoPerto and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is MuitoPerto and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is MuitoPerto and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is MuitoPerto and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Perto and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Perto and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Perto and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Perto and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Perto and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Medio and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Medio and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Medio and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Medio and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Medio and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Longe and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Longe and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Longe and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Longe and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is Longe and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is MuitoLonge and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is MuitoLonge and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is MuitoLonge and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is MuitoLonge and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is MuitoLonge and Sdireito is MuitoLonge and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is MuitoPerto and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is MuitoPerto and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is MuitoPerto and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is MuitoPerto and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is MuitoPerto and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Perto and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Perto and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Perto and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Perto and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Perto and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Medio and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Medio and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Medio and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Medio and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Medio and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Longe and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Longe and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Longe and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Longe and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is Longe and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is MuitoLonge and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is MuitoLonge and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is MuitoLonge and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is MuitoLonge and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Longe and Sdireito is MuitoLonge and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is MuitoPerto and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is MuitoPerto and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is MuitoPerto and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is MuitoPerto and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is MuitoPerto and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Perto and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Perto and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Perto and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Perto and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Perto and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Medio and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Medio and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Medio and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Medio and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Medio and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Longe and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Longe and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Longe and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Longe and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is Longe and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is MuitoLonge and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is MuitoLonge and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is MuitoLonge and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is MuitoLonge and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Medio and Sdireito is MuitoLonge and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is MuitoPerto and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is MuitoPerto and Sesquerdo is Perto then Esquerda is Ativo
+  rule: if Sfrente is Perto and Sdireito is MuitoPerto and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is MuitoPerto and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is MuitoPerto and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Perto and Sesquerdo is MuitoPerto then Direita is Ativo
+  rule: if Sfrente is Perto and Sdireito is Perto and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Perto and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Perto and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Perto and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Medio and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Medio and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Medio and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Medio and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Medio and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Longe and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Longe and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Longe and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Longe and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is Longe and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is MuitoLonge and Sesquerdo is MuitoPerto then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is MuitoLonge and Sesquerdo is Perto then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is MuitoLonge and Sesquerdo is Medio then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is MuitoLonge and Sesquerdo is Longe then Frente is Ativo
+  rule: if Sfrente is Perto and Sdireito is MuitoLonge and Sesquerdo is MuitoLonge then Frente is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is MuitoPerto and Sesquerdo is MuitoPerto then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is MuitoPerto and Sesquerdo is Perto then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is MuitoPerto and Sesquerdo is Medio then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is MuitoPerto and Sesquerdo is Longe then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is MuitoPerto and Sesquerdo is MuitoLonge then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Perto and Sesquerdo is MuitoPerto then Direita is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Perto and Sesquerdo is Perto then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Perto and Sesquerdo is Medio then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Perto and Sesquerdo is Longe then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Perto and Sesquerdo is MuitoLonge then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Medio and Sesquerdo is MuitoPerto then Direita is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Medio and Sesquerdo is Perto then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Medio and Sesquerdo is Medio then Direita is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Medio and Sesquerdo is Longe then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Medio and Sesquerdo is MuitoLonge then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Longe and Sesquerdo is MuitoPerto then Direita is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Longe and Sesquerdo is Perto then Direita is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Longe and Sesquerdo is Medio then Direita is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Longe and Sesquerdo is Longe then Direita is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is Longe and Sesquerdo is MuitoLonge then Esquerda is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is MuitoLonge and Sesquerdo is MuitoPerto then Direita is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is MuitoLonge and Sesquerdo is Perto then Direita is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is MuitoLonge and Sesquerdo is Medio then Direita is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is MuitoLonge and Sesquerdo is Longe then Direita is Ativo
+  rule: if Sfrente is MuitoPerto and Sdireito is MuitoLonge and Sesquerdo is MuitoLonge then Direita is Ativo

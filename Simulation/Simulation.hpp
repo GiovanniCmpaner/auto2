@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "..\Neural.hpp"
+#include "..\Fuzzy.hpp"
 #include "Window.hpp"
 #include "Maze.hpp"
 #include "Car.hpp"
@@ -21,7 +22,8 @@ enum class Control
 {
     MANUAL = 0,
     AUTO,
-    NEURAL
+    NEURAL,
+    FUZZY
 };
 
 enum class Data 
@@ -56,6 +58,7 @@ private:
     b2Body* ground{ nullptr };
 
     std::unique_ptr<Neural> neural{};
+    std::unique_ptr<Fuzzy> fuzzy{};
     std::vector<Car> cars{ };
     std::vector<Maze> mazes{ };
     std::vector<Follower> followers{ };
