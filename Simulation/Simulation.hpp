@@ -4,6 +4,8 @@
 #include <future>
 #include <thread>
 #include <memory>
+#include <filesystem>
+#include <fstream>
 
 #include "..\Neural.hpp"
 #include "..\Fuzzy.hpp"
@@ -67,6 +69,9 @@ private:
     std::future<void> generationTask{};
     std::vector<std::vector<float>> features{};
     std::vector<std::vector<int>> labels{};
+
+    std::ofstream featuresFile{};
+    std::ofstream labelsFile{};
 
     bool resetChanged{ false };
     bool modeChanged{ false };

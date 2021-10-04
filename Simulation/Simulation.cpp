@@ -270,7 +270,7 @@ auto Simulation::init() -> void
 
 						if (finished == this->followers.size())
 						{
-							if (generation < 1)
+							if (generation < 0)
 							{
 								generation++;
 								this->reset();
@@ -512,10 +512,10 @@ auto Simulation::inputs(const Car& car) -> std::vector<float>
 		inputs.emplace_back(distance);
 	}
 
-	const auto color{ static_cast<int>(car.color()) };
-	{
-		inputs.emplace_back(color);
-	}
+	//const auto color{ static_cast<int>(car.color()) };
+	//{
+	//	inputs.emplace_back(color);
+	//}
 
 	//const auto giroscope{ car.giroscope() };
 	//for (auto& value : giroscope)

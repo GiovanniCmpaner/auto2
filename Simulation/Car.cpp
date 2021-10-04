@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <random>
+#include <array>
 
 #include <box2d/box2d.h>
 #include <SDL_gpu.h>
@@ -125,16 +126,17 @@ auto Car::createBody(const b2Vec2& position) -> void
 
 auto Car::step() -> void
 {
-    stepBody();
-    for (auto&& [angle, distance] : sensors)
+    for (auto&& [angle, distance] : this->sensors)
     {
         const auto radians{ (angle / 180.0f) * b2_pi };
         stepSensor(&distance, radians);
     }
 
-    //sensors[-90] = (sensors[-90] + sensors[-30]) / 2;
-    //sensors[+90] = (sensors[+90] + sensors[+30]) / 2;
-    sensors[0] = std::min({ sensors[0], sensors[-30] * std::cosf(0.523599), sensors[+30] * std::cosf(0.523599) });
+    stepBody();
+
+    //sensors[-90] = std::min({ sensors[-90], sensors[-30] * std::sinf(0.523599) });
+    //sensors[+90] = std::min({ sensors[+90], sensors[+30] * std::sinf(0.523599) });
+    //sensors[0] = std::min({ sensors[0], sensors[-30] * std::cosf(0.523599), sensors[+30] * std::cosf(0.523599) });
 }
 
 auto Car::render(GPU_Target* target) const -> void
@@ -155,8 +157,9 @@ auto Car::reset() -> void
     this->body->SetAngularVelocity(0);
     this->body->SetTransform({ 0, 0 }, 0);
 
+    this->ready = true;
+    this->stuck = false;
     this->move = Move::STOP;
-    //this->collision = false;
 }
 
 auto Car::position() const->b2Vec2
@@ -171,7 +174,20 @@ auto Car::angle() const->float
 
 auto Car::doMove(Move move) -> void
 {
-    this->move = move;
+    if (this->ready)
+    {
+        this->move = move;
+    }
+}
+
+auto Car::isReady() const -> bool 
+{
+    return this->ready;
+}
+
+auto Car::isStuck() const -> bool
+{
+    return this->stuck;
 }
 
 auto Car::distances() const -> std::map<int, float>
@@ -194,11 +210,6 @@ auto Car::acelerometer() const->std::vector<float>
     return {};
 }
 
-//auto Car::collided() const -> bool
-//{
-//    return this->collision;
-//}
-
 auto Car::stepBody() -> void
 {
     //if (collision)
@@ -217,27 +228,74 @@ auto Car::stepBody() -> void
     //    }
     //}
 
-    if (this->move == Move::ROTATE_LEFT)
+
+
+    if (this->ready)
     {
-        this->body->ApplyTorque(-2.0f, true);
+        if (this->move == Move::ROTATE_LEFT)
+        {
+            this->requested = {
+                   {0, this->sensors[-90]},
+                   {+90, this->sensors[0]},
+                   {-90, this->sensors[180]},
+                   {180, this->sensors[+90]}
+            };
+            this->ready = false;
+        }
+        else if (this->move == Move::ROTATE_RIGHT)
+        {
+            this->requested = {
+                {0, this->sensors[+90]},
+                {+90, this->sensors[180]},
+                {-90, this->sensors[0]},
+                {180, this->sensors[-90]}
+            };
+            this->ready = false;
+        }
+        else if (this->move == Move::MOVE_FORWARD)
+        {
+            const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, +2.0f }) };
+            const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, 0.0f }) };
+            this->body->ApplyForce(force, point, true);
+        }
+        else if (this->move == Move::MOVE_BACKWARD)
+        {
+            const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, -2.0f }) };
+            const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, 0.0f }) };
+            this->body->ApplyForce(force, point, true);
+        }
     }
-    else if(this->move == Move::ROTATE_RIGHT)
+
+    if (not this->ready)
     {
-        this->body->ApplyTorque(+2.0f, true);
+        const auto dif{ std::array<float,4> {
+            std::abs(this->sensors[0] - this->requested[0]),
+            std::abs(this->sensors[+90] - this->requested[+90]),
+            std::abs(this->sensors[-90] - this->requested[-90]),
+            std::abs(this->sensors[180] - this->requested[180])
+        }};
+
+        if (std::all_of(dif.begin(), dif.end(), [](float d) { return d < 0.008f; }))
+        {
+            this->ready = true;
+        }
+        else 
+        {
+            if (this->move == Move::ROTATE_LEFT)
+            {
+                this->body->ApplyTorque(-1.94f, true);
+            }
+            else if (this->move == Move::ROTATE_RIGHT)
+            {
+                this->body->ApplyTorque(+1.94f, true);
+            }
+        }
     }
-    else if (this->move == Move::MOVE_FORWARD)
+
+    if (this->ready)
     {
-        const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, +2.0f }) };
-        const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, 0.0f }) };
-        this->body->ApplyForce(force, point, true);
+        this->move = Move::STOP;
     }
-    else if (this->move == Move::MOVE_BACKWARD)
-    {
-        const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, -2.0f }) };
-        const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, 0.0f }) };
-        this->body->ApplyForce(force, point, true);
-    }
-    this->move = Move::STOP;
 }
 
 auto Car::stepSensor(float* distance, float angle) -> void
@@ -257,11 +315,13 @@ auto Car::stepSensor(float* distance, float angle) -> void
     this->world->RayCast(&callback, start, end);
     if (callback.valid)
     {
-        auto dist{ std::uniform_real_distribution{ -0.05f, +0.05f } };
-        const auto noise{ dist(mt) };
-
         const auto measuredDistance{ b2Distance(start, callback.point) };
-        *distance = std::clamp(measuredDistance + noise, 0.0f, 2.0f);
+
+        //auto dist{ std::uniform_real_distribution{ -0.005f, +0.005f } };
+        //const auto noise{ dist(mt) };
+        //*distance = std::clamp(measuredDistance + noise, 0.0f, 2.0f);
+
+        *distance = measuredDistance;
     }
 }
 

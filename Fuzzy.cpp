@@ -25,30 +25,28 @@ Fuzzy::~Fuzzy()
 
 auto Fuzzy::inference(const std::vector<float>& inputData) const->std::vector<float>
 {
-    auto sensorFrente{ engine->getInputVariable("Sfrente") };
-    auto sensorEsquerdo{ engine->getInputVariable("Sesquerdo") };
-    auto sensorDireito{ engine->getInputVariable("Sdireito") };
+    auto entradaFrente{ engine->getInputVariable("Sfrente") };
+    auto entradaEsquerda{ engine->getInputVariable("Sesquerdo") };
+    auto entradaDireita{ engine->getInputVariable("Sdireito") };
 
-    sensorFrente->setValue(inputData[2]);
-    sensorEsquerdo->setValue(inputData[0]);
-    sensorDireito->setValue(inputData[4]);
+    entradaFrente->setValue(inputData[2]);
+    entradaEsquerda->setValue(inputData[0]);
+    entradaDireita->setValue(inputData[4]);
 
     engine->process();
 
-    auto moveFrente{ engine->getOutputVariable("Frente") };
-    auto moveEsquerda{ engine->getOutputVariable("Esquerda") };
-    auto moveDireita{ engine->getOutputVariable("Direita") };
+    auto saidaCarro{ engine->getOutputVariable("Carro")->getValue() };
 
-    std::cout << sensorFrente->getValue() << ", " << sensorEsquerdo->getValue() << ", " << sensorDireito->getValue() << '\n';
-    std::cout << moveFrente->getValue() << ", " << moveEsquerda->getValue() << ", " << moveDireita->getValue() << '\n';
+    std::cout << entradaFrente->getValue() << ", " << entradaEsquerda->getValue() << ", " << entradaDireita->getValue() << '\n';
+    std::cout << saidaCarro << '\n';
     std::cout << std::endl;
 
     auto outputs{ std::vector<float>{
         0.0f,
-        static_cast<float>(moveFrente->getValue()),
+        static_cast<float>(saidaCarro > 1.0 and saidaCarro < 2.0),
         0.0f,
-        static_cast<float>(moveEsquerda->getValue()),
-        static_cast<float>(moveDireita->getValue())
+        static_cast<float>(saidaCarro > 0.0 and saidaCarro < 1.0),
+        static_cast<float>(saidaCarro > 2.0 and saidaCarro < 3.0)
     }};
 
     return outputs;

@@ -40,14 +40,16 @@ public:
     auto position() const->b2Vec2;
     auto angle() const->float;
 
+    auto isReady() const -> bool;
+    auto isStuck() const -> bool;
     auto doMove(Move move) -> void;
+
     auto distances() const->std::map<int, float>;
     auto color() const ->Color;
     auto giroscope() const -> std::vector<float>;
     auto acelerometer() const ->std::vector<float>;
     auto linearVelocity() const -> float;
     auto angularVelocity() const -> float;
-    //auto collided() const -> bool;
 
 private:
     auto createBody(const b2Vec2& position) -> void;
@@ -69,9 +71,10 @@ private:
         {180, 0.0f}
     };
 
-    Move move{ Move::STOP };
-    //bool collision{ false };
+    bool ready{ true };
     bool stuck{ false };
+    Move move{ Move::STOP };
+    std::map<int, float> requested{};
 
     static constexpr float width{ 0.2f };
     static constexpr float height{ 0.2f };
