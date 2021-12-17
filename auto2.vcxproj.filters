@@ -59,9 +59,6 @@
     <CopyFileToFolders Include="lib\tensorflow-cpu-2.3.0\lib\x64\tensorflow.dll">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="lib\fuzzylite-6.0\lib\x64\fuzzylite.dll">
-      <Filter>Resource Files</Filter>
-    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Simulation\Simulation.hpp">

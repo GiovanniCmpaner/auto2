@@ -17,9 +17,9 @@ auto Simulation::reset() -> void
 	this->cars.clear();
 	this->followers.clear();
 
-	constexpr auto quantity{ 1 };
-	constexpr auto rows{ 5 };
-	constexpr auto columns{ 5 };
+	constexpr auto quantity{ 100 };
+	constexpr auto rows{ 3 };
+	constexpr auto columns{ 3 };
 	constexpr auto width{ 3.0f };
 	constexpr auto height{ 3.0f };
 	if (quantity > 0)

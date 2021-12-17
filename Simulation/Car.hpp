@@ -34,7 +34,7 @@ public:
     Car(const Car& other);
     ~Car();
     auto step() -> void;
-    auto render(GPU_Target* target) const -> void;
+    auto render(GPU_Target* target) -> void;
     auto reset() -> void;
 
     auto position() const->b2Vec2;
@@ -56,20 +56,13 @@ private:
     auto stepBody() -> void;
     auto stepSensor(float* distance, float angle) -> void;
     auto renderBody(GPU_Target* target) const -> void;
-    auto renderSensor(GPU_Target* target, float distance, float angle) const -> void;
+    auto renderSensor(GPU_Target* target, float* distance, float angle) -> void;
 
     b2World* world{ nullptr };
     b2Body* ground{ nullptr };
     b2Body* body{ nullptr };
 
-    std::map<int, float> sensors{
-        {0, 0.0f},
-        {+30, 0.0f},
-        {-30, 0.0f},
-        {+90, 0.0f},
-        {-90, 0.0f},
-        {180, 0.0f}
-    };
+    std::map<int, float> sensors{};
 
     bool ready{ true };
     bool stuck{ false };

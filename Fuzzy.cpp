@@ -36,11 +36,11 @@ auto Fuzzy::inference(const std::vector<float>& inputData) const->std::vector<fl
     engine->process();
 
     auto saidaCarro{ engine->getOutputVariable("Carro")->getValue() };
-
+    /*
     std::cout << entradaFrente->getValue() << ", " << entradaEsquerda->getValue() << ", " << entradaDireita->getValue() << '\n';
     std::cout << saidaCarro << '\n';
     std::cout << std::endl;
-
+    */
     auto outputs{ std::vector<float>{
         0.0f,
         static_cast<float>(saidaCarro > 1.0 and saidaCarro < 2.0),

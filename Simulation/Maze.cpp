@@ -451,6 +451,16 @@ auto Maze::createBody() -> void
 
     this->body = this->world->CreateBody(&bd);
 
+    this->height = height;
+    this->width = width;
+    this->tileHeight = height / 3;
+    this->tileWidth = width / 3;
+    this->matrix = { 
+        {{{true,false,true,true},{true,false,true,false},{true,false,false,true}}},
+        {{{false,false,true,true},{false,false,true,true},{false,false,true,true}}},
+        {{{false,true,true,false },{false,true,false,true },{false,true,true,true }}}
+    };
+
     const auto polygons{ Maze::polygons(this->matrix, 0, 0, this->width, this->height, 0.05f) };
     for (const auto& poly : polygons)
     {
@@ -550,7 +560,7 @@ auto Maze::start() const->b2Vec2
 
 auto Maze::end() const->b2Vec2
 {
-    return this->toRealPoint({ 0,0 });
+    return this->toRealPoint({ 0, 0 });
 }
 
 auto Maze::solve(const b2Vec2& point, bool bestSolution) const->std::vector<b2Vec2>

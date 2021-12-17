@@ -1,8 +1,10 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <box2d/box2d.h>
 #include <SDL_gpu.h>
+
 
 namespace Draw
 {

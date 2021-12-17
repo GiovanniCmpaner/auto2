@@ -40,6 +40,21 @@ public:
 
 Car::Car(b2World* world, b2Body* ground, const b2Vec2& position)
 {
+    this->sensors.clear();
+
+    // this->sensors.emplace(0, 0.0f);
+    this->sensors.emplace(180, 0.0f);
+
+   //for (auto n{ -8 }; n <= 8; ++n)
+   //{
+   //    this->sensors.emplace(180.0f / 16.0f * n, 0.0f);
+   //}
+
+    for (auto n{ -2 }; n <= 2; ++n)
+    {
+        this->sensors.emplace(180.0f / 4.0f * n, 0.0f);
+    }
+
     this->world = world;
     this->ground = ground;
     this->createBody(position);
@@ -48,7 +63,6 @@ Car::Car(b2World* world, b2Body* ground, const b2Vec2& position)
 
 Car::Car(const Car& other) : Car{ other.world, other.ground, other.body->GetPosition() }
 {
-
 }
 
 Car::~Car()
@@ -126,20 +140,19 @@ auto Car::createBody(const b2Vec2& position) -> void
 
 auto Car::step() -> void
 {
+    /*
     for (auto&& [angle, distance] : this->sensors)
     {
         const auto radians{ (angle / 180.0f) * b2_pi };
         stepSensor(&distance, radians);
     }
+    */
 
     stepBody();
 
-    //sensors[-90] = std::min({ sensors[-90], sensors[-30] * std::sinf(0.523599) });
-    //sensors[+90] = std::min({ sensors[+90], sensors[+30] * std::sinf(0.523599) });
-    //sensors[0] = std::min({ sensors[0], sensors[-30] * std::cosf(0.523599), sensors[+30] * std::cosf(0.523599) });
-}
+ }
 
-auto Car::render(GPU_Target* target) const -> void
+auto Car::render(GPU_Target* target) -> void
 {
     GPU_SetLineThickness(0.02f);
 
@@ -147,7 +160,7 @@ auto Car::render(GPU_Target* target) const -> void
     for (auto&& [angle, distance] : sensors)
     {
         const auto radians{ (angle / 180.0f) * b2_pi };
-        renderSensor(target, distance, radians);
+        renderSensor(target, &distance, radians);
     }
 }
 
@@ -212,24 +225,24 @@ auto Car::acelerometer() const->std::vector<float>
 
 auto Car::stepBody() -> void
 {
-    //if (collision)
-    //{
-    //    return;
-    //}
-    //
-    //for (auto c{ this->body->GetContactList() }; c != nullptr; c = c->next)
-    //{
-    //    if (c->contact->IsTouching() 
-    //        and not c->contact->GetFixtureA()->IsSensor() 
-    //        and not c->contact->GetFixtureB()->IsSensor())
-    //    {
-    //        collision = true;
-    //        return;
-    //    }
-    //}
+    /*
+    if(this->stuck)
+    {
+        return;
+    }
 
-
-
+    for (auto c{ this->body->GetContactList() }; c != nullptr; c = c->next)
+    {
+        if (c->contact->IsTouching() 
+            and not c->contact->GetFixtureA()->IsSensor() 
+            and not c->contact->GetFixtureB()->IsSensor())
+        {
+            this->stuck = true;
+            return;
+        }
+    }
+    */
+    /*
     if (this->ready)
     {
         if (this->move == Move::ROTATE_LEFT)
@@ -296,6 +309,29 @@ auto Car::stepBody() -> void
     {
         this->move = Move::STOP;
     }
+    */
+
+    if (this->move == Move::ROTATE_LEFT)
+    {
+        this->body->ApplyTorque(-2.0f, true);
+    }
+    else if (this->move == Move::ROTATE_RIGHT)
+    {
+        this->body->ApplyTorque(+2.0f, true);
+    }
+    else if (this->move == Move::MOVE_FORWARD)
+    {
+        const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, +2.0f }) };
+        const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, 0.0f }) };
+        this->body->ApplyForce(force, point, true);
+    }
+    else if (this->move == Move::MOVE_BACKWARD)
+    {
+        const auto force{ this->body->GetWorldVector(b2Vec2{ 0.0f, -2.0f }) };
+        const auto point{ this->body->GetWorldPoint(b2Vec2{ 0.0f, 0.0f }) };
+        this->body->ApplyForce(force, point, true);
+    }
+    this->move = Move::STOP;
 }
 
 auto Car::stepSensor(float* distance, float angle) -> void
@@ -315,13 +351,11 @@ auto Car::stepSensor(float* distance, float angle) -> void
     this->world->RayCast(&callback, start, end);
     if (callback.valid)
     {
+        auto dist{ std::uniform_real_distribution{ -0.03f, +0.03f } };
+        const auto noise{ dist(mt) };
+
         const auto measuredDistance{ b2Distance(start, callback.point) };
-
-        //auto dist{ std::uniform_real_distribution{ -0.005f, +0.005f } };
-        //const auto noise{ dist(mt) };
-        //*distance = std::clamp(measuredDistance + noise, 0.0f, 2.0f);
-
-        *distance = measuredDistance;
+        *distance = std::clamp(measuredDistance + noise, 0.0f, 2.0f);
     }
 }
 
@@ -344,15 +378,17 @@ auto Car::renderBody(GPU_Target* target) const -> void
     }
 }
 
-auto Car::renderSensor(GPU_Target* target, float distance, float angle) const -> void
+auto Car::renderSensor(GPU_Target* target, float* distance, float angle) -> void
 {
-    if (std::isnan(distance) or std::isinf(distance))
+    this->stepSensor(distance, angle);
+
+    if (std::isnan(*distance) or std::isinf(*distance))
     {
         return;
     }
 
     const auto start{ this->body->GetWorldPoint(b2Mul(b2Rot{ angle }, b2Vec2{ 0.0f, 0.1f })) };
-    const auto end{ this->body->GetWorldPoint(b2Mul(b2Rot{ angle }, b2Vec2{ 0.0f, 0.1f + distance })) };
+    const auto end{ this->body->GetWorldPoint(b2Mul(b2Rot{ angle }, b2Vec2{ 0.0f, 0.1f + *distance })) };
 
     // Crosshair
     GPU_Line(target, end.x - 0.075f, end.y, end.x + 0.075f, end.y, sensorColor);

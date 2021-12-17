@@ -95,10 +95,10 @@ assert (len(x_train) + len(x_test) + len(x_validate)) ==  SAMPLES
 
 # We'll use Keras to create a simple model architecture
 model = tf.keras.Sequential([
-    keras.layers.Dense(8, activation='relu'),
-    keras.layers.Dense(16, activation='relu'),
-    keras.layers.Dense(32, activation='relu'),
-    keras.layers.Dense(16, activation='relu'),
+    keras.layers.Dense(18, activation='relu'),
+    keras.layers.Dense(256, activation='relu'),
+    keras.layers.Dense(512, activation='relu'),
+    keras.layers.Dense(256, activation='relu'),
     keras.layers.Dense(5),
 ])
 
@@ -116,7 +116,7 @@ options = tf.saved_model.SaveOptions(save_debug_info=True, experimental_variable
 
 
 # Train the model on our training data while validating on our validation set
-history = model.fit(x_train, y_train, epochs=20, batch_size=1024, shuffle=True, validation_data=(x_validate, y_validate))
+history = model.fit(x_train, y_train, epochs=50, batch_size=1024, shuffle=True, validation_data=(x_validate, y_validate))
 
 # Save the model to disk
 model.save(MODEL_TF, save_format='tf')
