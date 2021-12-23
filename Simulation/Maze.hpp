@@ -46,9 +46,12 @@ public:
     auto step() -> void;
     auto render(GPU_Target* target) const -> void;
 
-    auto start() const->b2Vec2;
-    auto end() const->b2Vec2;
     auto solve(const b2Vec2& point, bool bestSolution = true) const->std::vector<b2Vec2>;
+
+    auto startPoint() const -> b2Vec2;
+    auto endPoint() const -> b2Vec2;
+    auto isOnStart(const b2Vec2& point) const -> bool;
+    auto isOnEnd(const b2Vec2& point) const -> bool;
 
     auto randomize() -> void;
 
@@ -68,6 +71,8 @@ private:
     b2World* world{ nullptr };
     b2Body* ground{ nullptr };
     b2Body* body{ nullptr };
+    b2Fixture* start{ nullptr };
+    b2Fixture* end{ nullptr };
    
     float x{ 0.0f };
     float y{ 0.0f };

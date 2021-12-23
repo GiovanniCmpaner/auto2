@@ -39,6 +39,9 @@
     <ClCompile Include="Fuzzy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Replay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="lib\SDL2-2.0.12\lib\x64\SDL2.dll">
@@ -83,6 +86,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Fuzzy.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Replay.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

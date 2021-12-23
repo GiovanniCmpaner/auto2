@@ -13,7 +13,7 @@ public:
 
     auto step() -> void;
     auto render(GPU_Target* target) const -> void;
-    auto finished() const -> bool;
+    auto isDone() const -> bool;
     auto movement() const->Move;
 private:
     static auto normalizeAngle(float angle) -> float;

@@ -96,6 +96,7 @@
     <ClCompile Include="Fuzzy.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Neural.cpp" />
+    <ClCompile Include="Replay.cpp" />
     <ClCompile Include="Simulation\Car.cpp" />
     <ClCompile Include="Simulation\Follower.cpp" />
     <ClCompile Include="Simulation\Maze.cpp" />
@@ -126,6 +127,7 @@
     <ClInclude Include="Draw.hpp" />
     <ClInclude Include="Fuzzy.hpp" />
     <ClInclude Include="Neural.hpp" />
+    <ClInclude Include="Replay.hpp" />
     <ClInclude Include="Simulation\Car.hpp" />
     <ClInclude Include="Simulation\Follower.hpp" />
     <ClInclude Include="Simulation\Maze.hpp" />

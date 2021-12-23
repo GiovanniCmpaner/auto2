@@ -13,15 +13,20 @@
 
 auto Simulation::reset() -> void
 {
+	this->neural = std::make_unique<Neural>(R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)");
+	this->fuzzy = std::make_unique<Fuzzy>(R"(C:\Users\Giovanni\Desktop\auto2\fuzzy.fll)");
+	this->replay = std::make_unique<Replay>(&world, ground, b2Vec2{ 3,2 }, R"(C:\Users\Giovanni\Desktop\auto2\replay.csv)");
+
 	this->mazes.clear();
 	this->cars.clear();
 	this->followers.clear();
 
-	constexpr auto quantity{ 100 };
+	this->done = 0;
+
 	constexpr auto rows{ 3 };
 	constexpr auto columns{ 3 };
-	constexpr auto width{ 3.0f };
-	constexpr auto height{ 3.0f };
+	constexpr auto width{ 1.5f };
+	constexpr auto height{ 1.5f };
 	if (quantity > 0)
 	{
 		this->mazes.reserve(quantity);
@@ -40,13 +45,13 @@ auto Simulation::reset() -> void
 		{
 			for (auto i{ 0 }; i < squareWidth; ++i)
 			{
-				auto& maze{ this->mazes.emplace_back(&world, ground, columns, rows, i * (width + 0.2f), 2 + j * (height + 0.2f), width, height) };
+				auto& maze{ this->mazes.emplace_back(&world, ground, columns, rows, i * (width + 0.2f), 3 + j * (height + 0.2f), width, height) };
 
 				maze.randomize();
 
-				auto& car{ this->cars.emplace_back(&world, ground, maze.start()) };
+				auto& car{ this->cars.emplace_back(&world, ground, maze.startPoint()) };
 
-				const auto solution{ maze.solve(car.position(), false) };
+				const auto solution{ maze.solve(car.position(), true) };
 
 				auto& follower{ this->followers.emplace_back(&car, solution) };
 			}
@@ -60,8 +65,7 @@ auto Simulation::init() -> void
 {
 	this->window.init(Simulation::realWidth, Simulation::realHeight);
 	this->ground = this->createGround(&world);
-	this->neural = std::make_unique<Neural>(R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)");
-	this->fuzzy = std::make_unique<Fuzzy>(R"(C:\Users\Giovanni\Desktop\auto2\fuzzy.fll)");
+	
 	this->reset();
 
 	window.onKeyboard([&](const uint8_t* state) -> void
@@ -94,7 +98,7 @@ auto Simulation::init() -> void
 					this->mode = Mode::STOPPED;
 					this->control = Control::MANUAL;
 					this->data = Data::IDLE;
-					this->generation = 0;
+					this->current = 0;
 
 					this->reset();
 				}
@@ -129,6 +133,10 @@ auto Simulation::init() -> void
 						this->control = Control::FUZZY;
 					}
 					else if (this->control == Control::FUZZY)
+					{
+						this->control = Control::REPLAY;
+					}
+					else if (this->control == Control::REPLAY)
 					{
 						this->control = Control::MANUAL;
 					}
@@ -218,36 +226,14 @@ auto Simulation::init() -> void
 						label[static_cast<int>(this->move)] = 1;
 
 						this->labels.emplace_back(label);
-
-						const auto currentDistance{ b2Distance(this->cars[0].position(), this->mazes[0].end()) };
-						if (currentDistance < 0.05f)
-						{
-							if (generation < 2)
-							{
-								generation++;
-								this->reset();
-							}
-							//else
-							//{
-							//	this->generation = 0;
-							//	this->generationTask = this->generateCSV();
-							//	this->data = Data::SAVING;
-							//}
-						}
 					}
 				}
 				else if (control == Control::AUTO)
 				{
-					auto finished{ 0 };
 #pragma omp parallel for
 					for (auto n{ 0 }; n < this->followers.size(); ++n)
 					{
 						this->followers[n].step();
-						if (this->followers[n].finished())
-						{
-#pragma omp atomic
-							++finished;
-						}
 					}
 
 					if (data == Data::GENERATING)
@@ -255,7 +241,7 @@ auto Simulation::init() -> void
 
 						for (auto n{ 0 }; n < this->followers.size(); ++n)
 						{
-							if (not this->followers[n].finished())
+							if (not this->followers[n].isDone())
 							{
 								auto inputs{ Simulation::inputs(this->cars[n]) };
 								this->features.emplace_back(inputs);
@@ -267,25 +253,11 @@ auto Simulation::init() -> void
 								this->labels.emplace_back(label);
 							}
 						}
-
-						if (finished == this->followers.size())
-						{
-							if (generation < 0)
-							{
-								generation++;
-								this->reset();
-							}
-							else 
-							{
-								this->generation = 0;
-								this->generationTask = this->generateCSV();
-								this->data = Data::SAVING;
-							}
-						}
 					}
 				}
 				else if (control == Control::NEURAL)
 				{
+
 #pragma omp parallel for
 					for (auto n{ 0 }; n < this->cars.size(); ++n)
 					{
@@ -324,6 +296,10 @@ auto Simulation::init() -> void
 						this->cars[n].doMove(static_cast<Move>(max));
 					}
 				}
+				else if (control == Control::REPLAY)
+				{
+
+				}
 
 				if (data == Data::SAVING)
 				{
@@ -335,10 +311,20 @@ auto Simulation::init() -> void
 					}
 				}
 
+				this->done = 0;
+
 #pragma omp parallel for
 				for (auto n{ 0 }; n < this->cars.size(); n++)
 				{
-					this->cars[n].step();
+					if (this->mazes[n].isOnEnd(this->cars[n].position()))
+					{
+#pragma omp atomic
+						++this->done;
+					}
+					else
+					{
+						this->cars[n].step();
+					}
 				}
 
 #pragma omp parallel for
@@ -347,7 +333,28 @@ auto Simulation::init() -> void
 					this->mazes[n].step();
 				}
 
+				this->replay->step();
+
 				world.Step(Window::timeStep, 4, 4);
+
+				if (this->done == this->cars.size())
+				{
+					if (this->current < this->generations)
+					{
+						++this->current;
+						this->reset();
+					}
+					else
+					{
+						this->control = Control::MANUAL;
+
+						if (this->data == Data::GENERATING)
+						{
+							this->generationTask = this->generateCSV();
+							this->data = Data::SAVING;
+						}
+					}
+				}
 			}
 
 			if (control == Control::AUTO)
@@ -368,6 +375,7 @@ auto Simulation::init() -> void
 				this->mazes[n].render(target);
 			}
 
+			this->replay->render(target);
 		});
 
 	window.onInfos([&](std::ostringstream& oss)
@@ -398,6 +406,10 @@ auto Simulation::init() -> void
 			else if (this->control == Control::FUZZY)
 			{
 				oss << "FUZZY";
+			}
+			else if (this->control == Control::REPLAY)
+			{
+				oss << "REPLAY";
 			}
 			oss << '\n';
 
@@ -446,6 +458,8 @@ auto Simulation::init() -> void
 			}
 			count++;
 
+			oss << "generation = " << this->current << " / " << this->generations << '\n';
+			oss << "done = " << this->done << " / " << this->quantity << '\n';
 			oss << "linear velocity = " << linearVelocity << '\n';
 			oss << "angular velocity = " << angularVelocity << '\n';
 		});
@@ -488,18 +502,6 @@ auto Simulation::createGround(b2World* world) -> b2Body*
 	ground->CreateFixture(&fd);
 
 	return ground;
-}
-
-auto Simulation::distance(const std::vector<b2Vec2>& path) -> float
-{
-	auto distance{ 0.0f };
-
-	for (auto n{ 1 }; n < path.size(); ++n)
-	{
-		distance += b2Distance(path[n - 1], path[n]);
-	}
-
-	return distance;
 }
 
 auto Simulation::inputs(const Car& car) -> std::vector<float>

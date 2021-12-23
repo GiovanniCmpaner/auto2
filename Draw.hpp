@@ -14,7 +14,7 @@ namespace Draw
     static constexpr SDL_Color solidBorderColor{ 255, 0, 255, 255 };
     static constexpr SDL_Color solidFillColor{ 255, 0, 255, 64 };
 
-    auto draw(GPU_Target* target, const b2Body* body) -> void
+    static auto draw(GPU_Target* target, const b2Body* body) -> void
     {
         for (auto fixture{ body->GetFixtureList() }; fixture != nullptr; fixture = fixture->GetNext())
         {

@@ -186,6 +186,26 @@ auto Maze::solve(const Matrix& matrix, int y, int x, bool bestSolution)->Path
     return solution;
 }
 
+auto Maze::startPoint() const -> b2Vec2
+{
+    return this->toRealPoint({ static_cast<int>(this->columns() - 1), static_cast<int>(this->rows() - 1) });
+}
+
+auto Maze::endPoint() const -> b2Vec2
+{
+    return this->toRealPoint({ 0, 0 });
+}
+
+auto Maze::isOnStart(const b2Vec2& point) const -> bool
+{
+    return this->start->TestPoint(point);
+}
+
+auto Maze::isOnEnd(const b2Vec2& point) const -> bool
+{
+    return this->end->TestPoint(point);
+}
+
 auto Maze::print(const Matrix& matrix, const Path& path) -> void
 {
     static constexpr auto square{ '\xDB' };
@@ -455,13 +475,22 @@ auto Maze::createBody() -> void
     this->width = width;
     this->tileHeight = height / 3;
     this->tileWidth = width / 3;
+    //this->matrix = Maze::make(this->rows(), this->columns());
+
     this->matrix = { 
-        {{{true,false,true,true},{true,false,true,false},{true,false,false,true}}},
-        {{{false,false,true,true},{false,false,true,true},{false,false,true,true}}},
-        {{{false,true,true,false },{false,true,false,true },{false,true,true,true }}}
+        {{{1,0,1,1},{1,0,1,0},{1,0,0,1}}},
+        {{{0,0,1,1},{0,0,1,1},{0,0,1,1}}},
+        {{{0,1,1,0 },{0,1,0,1 },{0,1,1,1 }}}
     };
 
-    const auto polygons{ Maze::polygons(this->matrix, 0, 0, this->width, this->height, 0.05f) };
+    //this->matrix = {
+    //    {{{1,0,1,1}, {1,0,1,1}, {1,0,1,1}}},
+    //    {{{0,0,1,1}, {0,0,1,1}, {0,0,1,1}}},
+    //    {{{0,1,1,0}, {0,1,0,0}, {0,1,0,1}}}
+    //};
+
+
+    const auto polygons{ Maze::polygons(this->matrix, 0, 0, this->width, this->height, 0.03f) };
     for (const auto& poly : polygons)
     {
         b2PolygonShape shape{};
@@ -529,15 +558,15 @@ auto Maze::createBody() -> void
 
         shape.m_radius = std::min(this->tileHeight, this->tileWidth) / 4;
 
-        shape.m_p = this->start();
+        shape.m_p = this->startPoint();
         shape.m_p -= { this->x, this->y };
         fd.userData = const_cast<char*>("start");
-        this->body->CreateFixture(&fd);
+        this->start = this->body->CreateFixture(&fd);
 
-        shape.m_p = this->end();
+        shape.m_p = this->endPoint();
         shape.m_p -= { this->x, this->y };
         fd.userData = const_cast<char*>("end");
-        this->body->CreateFixture(&fd);
+        this->end = this->body->CreateFixture(&fd);
     }
 }
 
@@ -551,16 +580,6 @@ auto Maze::render(GPU_Target* target) const -> void
     GPU_SetLineThickness(0.02f);
     
     Draw::draw(target, this->body);
-}
-
-auto Maze::start() const->b2Vec2
-{
-    return this->toRealPoint({ static_cast<int>(this->columns() - 1), static_cast<int>(this->rows() - 1) });
-}
-
-auto Maze::end() const->b2Vec2
-{
-    return this->toRealPoint({ 0, 0 });
 }
 
 auto Maze::solve(const b2Vec2& point, bool bestSolution) const->std::vector<b2Vec2>

@@ -69,7 +69,7 @@ auto Follower::render(GPU_Target* target) const -> void
 	this->renderPath(target);
 }
 
-auto Follower::finished() const -> bool
+auto Follower::isDone() const -> bool
 {
 	return (this->targetPoint == this->path.size());
 }

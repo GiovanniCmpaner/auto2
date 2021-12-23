@@ -9,6 +9,7 @@
 
 #include "..\Neural.hpp"
 #include "..\Fuzzy.hpp"
+#include "..\Replay.hpp"
 #include "Window.hpp"
 #include "Maze.hpp"
 #include "Car.hpp"
@@ -25,7 +26,8 @@ enum class Control
     MANUAL = 0,
     AUTO,
     NEURAL,
-    FUZZY
+    FUZZY,
+    REPLAY
 };
 
 enum class Data 
@@ -41,9 +43,8 @@ class Simulation
 public:
     auto init() -> void;
 
-    static constexpr float realWidth{ 10 };
-    static constexpr float realHeight{ 10 };
-    static constexpr size_t quantity{ 500 };
+    static constexpr float realWidth{ 6 };
+    static constexpr float realHeight{ 6 };
 
 private:
     auto reset() -> void;
@@ -51,7 +52,6 @@ private:
 
     static auto createGround(b2World* world)->b2Body*;
     static auto inputs(const Car& car) ->std::vector<float>;
-    static auto distance(const std::vector<b2Vec2>& path) -> float;
 
     Window window{ };
 
@@ -61,11 +61,16 @@ private:
 
     std::unique_ptr<Neural> neural{};
     std::unique_ptr<Fuzzy> fuzzy{};
+    std::unique_ptr<Replay> replay{};
     std::vector<Car> cars{ };
     std::vector<Maze> mazes{ };
     std::vector<Follower> followers{ };
     
-    int generation{ 0 };
+    const int generations{ 20 };
+    int current{ 0 };
+
+    const int quantity{ 200 };
+    int done{ 0 };
     std::future<void> generationTask{};
     std::vector<std::vector<float>> features{};
     std::vector<std::vector<int>> labels{};

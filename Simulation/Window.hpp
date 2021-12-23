@@ -23,9 +23,12 @@ public:
     static constexpr int screenWidth{ 1000 };
     static constexpr int screenHeight{ 1000 };
 
-    static constexpr int fps{ 30 };
-    static constexpr float timeStep{ 1.0f / fps };
-    static constexpr float tickStep{ 1000 / fps };
+    //static constexpr int fps{ 30 };
+    //static constexpr float timeStep{ 1.0f / fps };
+    //static constexpr float tickStep{ 1000 / fps };
+
+    static constexpr float timeStep{ 0.030f };
+    static constexpr float tickStep{ 30 };
 
     static constexpr SDL_Color backgroundColor{ 0, 0, 0, 255 };
     static constexpr SDL_Color fontColor{ 0, 255, 0, 255 };

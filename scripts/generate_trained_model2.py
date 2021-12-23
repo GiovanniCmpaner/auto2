@@ -51,8 +51,12 @@ fig.subplots_adjust(left=0.06, bottom=0.03, right=0.97, top=0.97, wspace=0.25, h
 # -------------------------------------------------------------------------------
 
 # Get file data
-df_features = pd.read_csv("features.csv", sep=";")
-df_labels = pd.read_csv("labels.csv", sep=";")
+df_capture = pd.read_csv("capture.csv", sep=";")
+df_features, df_labels = df_capture.iloc[:,0:6], df_capture.iloc[:,6:11]
+
+print(df_capture)
+print(df_features)
+print(df_labels)
 
 dataset = tf.data.Dataset.from_tensor_slices((df_features.values, df_labels.values))
 
@@ -116,7 +120,7 @@ options = tf.saved_model.SaveOptions(save_debug_info=True, experimental_variable
 
 
 # Train the model on our training data while validating on our validation set
-history = model.fit(x_train, y_train, epochs=30, batch_size=1024, shuffle=True, validation_data=(x_validate, y_validate))
+history = model.fit(x_train, y_train, epochs=50, batch_size=64, shuffle=True, validation_data=(x_validate, y_validate))
 
 # Save the model to disk
 model.save(MODEL_TF, save_format='tf')

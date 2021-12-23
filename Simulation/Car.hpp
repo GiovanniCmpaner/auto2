@@ -5,6 +5,7 @@
 
 #include <map>
 #include <deque>
+#include <array>
 
 enum class Move
 {
@@ -35,7 +36,6 @@ public:
     ~Car();
     auto step() -> void;
     auto render(GPU_Target* target) -> void;
-    auto reset() -> void;
 
     auto position() const->b2Vec2;
     auto angle() const->float;
@@ -44,7 +44,7 @@ public:
     auto isStuck() const -> bool;
     auto doMove(Move move) -> void;
 
-    auto distances() const->std::map<int, float>;
+    auto distances() const->std::array<std::pair<int, float>, 6>;
     auto color() const ->Color;
     auto giroscope() const -> std::vector<float>;
     auto acelerometer() const ->std::vector<float>;
@@ -62,7 +62,14 @@ private:
     b2Body* ground{ nullptr };
     b2Body* body{ nullptr };
 
-    std::map<int, float> sensors{};
+    std::array<std::pair<int, float>, 6> sensors{{
+        {+33, 0.0f},
+        {+90, 0.0f},
+        {0, 0.0f},
+        {-33, 0.0f},
+        {-90, 0.0f},
+        {180, 0.0f}
+    }};
 
     bool ready{ true };
     bool stuck{ false };
