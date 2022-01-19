@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sstream>
 #include <functional>
+#include <cstdint>
+#include <chrono>
 
 #include <box2d/box2d.h>
 #include <SDL_gpu.h>
@@ -40,10 +42,14 @@ private:
     GPU_Target* target{ nullptr };
     FC_Font* font{ nullptr };
     bool quit{ false };
-    
+
+    bool dragging{ false };
+    int xPos{ 0 }, yPos{ 0 };
+    float xOffset{ 0.0f }, yOffset{ 0.0f };
+
     float realWidth{ NAN };
     float realHeight{ NAN };
-    unsigned long long time{ 0 };
+    uint64_t time{ 0 };
 
     std::function<void(const uint8_t*)> onKeyboardCallback;
     std::function<void(GPU_Target*)> onRenderCallback;

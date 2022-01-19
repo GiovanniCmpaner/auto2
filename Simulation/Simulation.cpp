@@ -15,7 +15,7 @@ auto Simulation::reset() -> void
 {
 	this->neural = std::make_unique<Neural>(R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)");
 	this->fuzzy = std::make_unique<Fuzzy>(R"(C:\Users\Giovanni\Desktop\auto2\fuzzy.fll)");
-	this->replay = std::make_unique<Replay>(&world, ground, b2Vec2{ 3,2 }, R"(C:\Users\Giovanni\Desktop\auto2\replay.csv)");
+	this->replay = std::make_unique<Replay>(&world, ground, b2Vec2{ 3, 1 }, R"(C:\Users\Giovanni\Desktop\auto2\replay.csv)");
 
 	this->mazes.clear();
 	this->cars.clear();
@@ -96,7 +96,7 @@ auto Simulation::init() -> void
 					this->resetChanged = true;
 
 					this->mode = Mode::STOPPED;
-					this->control = Control::MANUAL;
+					this->control = Control::REPLAY;
 					this->data = Data::IDLE;
 					this->current = 0;
 
@@ -298,7 +298,7 @@ auto Simulation::init() -> void
 				}
 				else if (control == Control::REPLAY)
 				{
-
+					this->replay->step();
 				}
 
 				if (data == Data::SAVING)
@@ -311,29 +311,30 @@ auto Simulation::init() -> void
 					}
 				}
 
-				this->done = 0;
+				if (control == Control::MANUAL or control == Control::AUTO or control == Control::NEURAL or control == Control::FUZZY)
+				{
+					this->done = 0;
 
 #pragma omp parallel for
-				for (auto n{ 0 }; n < this->cars.size(); n++)
-				{
-					if (this->mazes[n].isOnEnd(this->cars[n].position()))
+					for (auto n{ 0 }; n < this->cars.size(); n++)
 					{
+						if (this->mazes[n].isOnEnd(this->cars[n].position()))
+						{
 #pragma omp atomic
-						++this->done;
+							++this->done;
+						}
+						else
+						{
+							this->cars[n].step();
+						}
 					}
-					else
-					{
-						this->cars[n].step();
-					}
-				}
 
 #pragma omp parallel for
-				for (auto n{ 0 }; n < this->mazes.size(); n++)
-				{
-					this->mazes[n].step();
+					for (auto n{ 0 }; n < this->mazes.size(); n++)
+					{
+						this->mazes[n].step();
+					}
 				}
-
-				this->replay->step();
 
 				world.Step(Window::timeStep, 4, 4);
 
@@ -364,18 +365,22 @@ auto Simulation::init() -> void
 					this->followers[n].render(target);
 				}
 			}
-			
-			for (auto n{ 0 }; n < this->cars.size(); n++)
+			else if (control == Control::MANUAL or control == Control::NEURAL or control == Control::FUZZY)
 			{
-				this->cars[n].render(target);
-			}
-			
-			for (auto n{ 0 }; n < this->mazes.size(); n++)
-			{
-				this->mazes[n].render(target);
-			}
+				for (auto n{ 0 }; n < this->cars.size(); n++)
+				{
+					this->cars[n].render(target);
+				}
 
-			this->replay->render(target);
+				for (auto n{ 0 }; n < this->mazes.size(); n++)
+				{
+					this->mazes[n].render(target);
+				}
+			}
+			else if (control == Control::REPLAY)
+			{
+				this->replay->render(target);
+			}
 		});
 
 	window.onInfos([&](std::ostringstream& oss)

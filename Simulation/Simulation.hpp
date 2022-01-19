@@ -43,8 +43,8 @@ class Simulation
 public:
     auto init() -> void;
 
-    static constexpr float realWidth{ 6 };
-    static constexpr float realHeight{ 6 };
+    static constexpr float realWidth{ 5 };
+    static constexpr float realHeight{ 5 };
 
 private:
     auto reset() -> void;
@@ -84,7 +84,7 @@ private:
     bool dataChanged{ false };
 
     Mode mode{ Mode::STOPPED };
-    Control control{ Control::MANUAL };
+    Control control{ Control::REPLAY };
     Data data{ Data::IDLE };
 
     Move move{ Move::STOP };

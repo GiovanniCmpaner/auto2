@@ -43,6 +43,8 @@ auto Replay::step() -> void
 
 auto Replay::render(GPU_Target* target) -> void
 {
+    GPU_SetLineThickness(0.01f);
+
     this->renderPath(target);
     this->renderCar(target);
     this->renderSensor(target);
@@ -55,14 +57,11 @@ auto Replay::openFile() -> void
     this->file.open(this->filePath);
     if (file.is_open())
     {
-        this->file.clear();
-        this->file.seekg(0);
-
         ++this->current.line;
         std::getline(this->file, header);
     }
 
-    assert(header == "33;90;0;-33;-90;180;stop;forward;backward;left;right");
+    assert(header == "+33;+90;0;-33;-90;180;stop;forward;backward;left;right");
 
     this->stepFile();
 }
@@ -79,7 +78,7 @@ auto Replay::createPath() -> void
     }
 
     { // Wall
-        const auto thickness{ 0.02f };
+        const auto thickness{ 0.015f };
         const auto height{ 0.8f };
         const auto width{ 1.0f };
         const auto segment{ 0.5f };
@@ -96,24 +95,24 @@ auto Replay::createPath() -> void
         { // External
             
 
-            shape.SetAsBox(thickness / 2, (height + thickness) / 2, { -width / 2, 0 }, 0);
+            shape.SetAsBox(thickness / 2, height / 2, { -width / 2, 0 }, 0);
             this->pathBody->CreateFixture(&fd);
 
-            shape.SetAsBox(thickness / 2, (height + thickness) / 2, { width / 2, 0 }, 0);
+            shape.SetAsBox(thickness / 2, height / 2, { width / 2, 0 }, 0);
             this->pathBody->CreateFixture(&fd);
 
-            shape.SetAsBox((width + thickness) / 2, thickness / 2, { 0, -height / 2 }, 0);
+            shape.SetAsBox(width / 2, thickness / 2, { 0, -height / 2 }, 0);
             this->pathBody->CreateFixture(&fd);
 
-            shape.SetAsBox((width + thickness) / 2, thickness / 2, { 0, height / 2 }, 0);
+            shape.SetAsBox(width / 2, thickness / 2, { 0, height / 2 }, 0);
             this->pathBody->CreateFixture(&fd);
         }
 
         { // Segment
-            shape.SetAsBox(thickness / 2, (segment + thickness) / 2, { ( width / 3 ) / 2, ( height - segment ) / 2 }, 0);
+            shape.SetAsBox(thickness / 2, segment / 2, { ( width / 3 ) / 2, (height - segment) / 2 }, 0);
             this->pathBody->CreateFixture(&fd);
 
-            shape.SetAsBox(thickness / 2, (segment + thickness) / 2, { -(width / 3) / 2, -(height - segment) / 2 }, 0);
+            shape.SetAsBox(thickness / 2, segment / 2, { -(width / 3) / 2, -(height - segment) / 2 }, 0);
             this->pathBody->CreateFixture(&fd);
         }
     }
@@ -124,7 +123,8 @@ auto Replay::createCar() -> void
     { // Body
         b2BodyDef bd{};
         bd.type = b2_dynamicBody;
-        bd.position = this->position + b2Vec2{ 0.33f, 0.2f };
+        //bd.position = this->position + b2Vec2{ 0.167f + 0.015f + 0.075f + this->current.distances[1], -0.400f + 0.015f + 0.128f + this->current.distances[2] };
+        bd.position = this->position + b2Vec2{ 0.5f - 0.015f - 0.075f - this->current.distances[4], -0.400f + 0.015f + 0.128f + this->current.distances[2] };
         bd.angle = b2_pi;
         bd.linearDamping = 0.1f;
         bd.angularDamping = 0.1f;
@@ -140,7 +140,7 @@ auto Replay::createCar() -> void
         b2FixtureDef fd{};
         fd.shape = &polygon;
         fd.density = 10.0f;
-        fd.friction = 0.5f;
+        fd.friction = 0.01f;
         fd.filter.categoryBits = 0x0002;
         fd.filter.maskBits = 0x0001;
         fd.userData = const_cast<char*>("chassis");
@@ -175,8 +175,8 @@ auto Replay::createCar() -> void
         jd.localAnchorA = b2Vec2{ 0.0f, 0.0f };
         jd.localAnchorB = this->carBody->GetLocalCenter();
         jd.collideConnected = true;
-        jd.maxForce = 0.1f * mass * gravity;
-        jd.maxTorque = 0.1f * mass* radius* gravity;
+        jd.maxForce = 0.05f * mass * gravity;
+        jd.maxTorque = 0.05f * mass* radius* gravity;
         jd.userData = const_cast<char*>("friction");
 
         this->world->CreateJoint(&jd);
@@ -274,20 +274,20 @@ auto Replay::stepCar() -> void
 
     if (this->current.move == Move::ROTATE_LEFT)
     {
-        this->carBody->SetAngularVelocity(-1.617987633f);
+        this->carBody->SetAngularVelocity(-3.0f);
     }
     else if (this->current.move == Move::ROTATE_RIGHT)
     {
-        this->carBody->SetAngularVelocity(+1.617987633f);
+        this->carBody->SetAngularVelocity(+3.0f);
     }
     else if (this->current.move == Move::MOVE_FORWARD)
     {
-        const auto point{ this->carBody->GetWorldVector(b2Vec2{ 0.0f, +0.294117647f }) };
+        const auto point{ this->carBody->GetWorldVector(b2Vec2{ 0.0f, +0.5f }) };
         this->carBody->SetLinearVelocity(point);
     }
     else if (this->current.move == Move::MOVE_BACKWARD)
     {
-        const auto point{ this->carBody->GetWorldVector(b2Vec2{ 0.0f, -0.294117647f }) };
+        const auto point{ this->carBody->GetWorldVector(b2Vec2{ 0.0f, -0.5f }) };
         this->carBody->SetLinearVelocity(point);
     }
 

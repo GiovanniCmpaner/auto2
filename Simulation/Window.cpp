@@ -25,14 +25,48 @@ auto Window::process() -> void
         {
             if (e.type == SDL_QUIT)
             {
-                quit = true;
+                this->quit = true;
             }
         }
 
         {
             SDL_PumpEvents();
-            const auto state{ SDL_GetKeyboardState(nullptr) };
-            onKeyboardCallback(state);
+            auto numKeys{ 0 };
+            const auto keyboardState{ SDL_GetKeyboardState(&numKeys) };
+            this->onKeyboardCallback(keyboardState);
+            if (keyboardState[SDL_SCANCODE_RETURN])
+            {
+                this->xOffset = 0;
+                this->yOffset = 0;
+            }
+
+            auto x{ -1 }, y{ -1 };
+            const auto mouseState{ SDL_GetMouseState(&x, &y) };
+
+            { // drag
+                if (not this->dragging)
+                {
+                    if (mouseState & SDL_BUTTON_LMASK)
+                    {
+                        this->dragging = true;
+                        this->xPos = x;
+                        this->yPos = y;
+                    }
+                }
+                else if (x > -1 and y > -1)
+                {
+                    if (not (mouseState & SDL_BUTTON_LMASK))
+                    {
+                        this->dragging = false;
+                    }
+
+                    this->xOffset += (this->xPos - x) / 200.0f;
+                    this->yOffset += (this->yPos - y) / 200.0f;
+
+                    this->xPos = x;
+                    this->yPos = y;
+                }
+            }
         }
 
         {
@@ -41,24 +75,24 @@ auto Window::process() -> void
             GPU_MatrixMode(target, GPU_PROJECTION);
             GPU_LoadIdentity();
             //GPU_Ortho(-this->realHeight, +this->realHeight, +this->realWidth, -this->realWidth, 0, 1); // CENTERED
-            GPU_Ortho(0, this->realHeight, this->realWidth, 0, 0, 1); // CORNER
+            GPU_Ortho(this->xOffset, this->xOffset + this->realHeight, this->yOffset + this->realWidth, this->yOffset, 0, 1); // CORNER
 
             GPU_MatrixMode(target, GPU_MODEL);
             GPU_LoadIdentity();
 
-            onRenderCallback(target);
+            this->onRenderCallback(target);
         }
         
         {
             GPU_MatrixMode(target, GPU_PROJECTION);
             GPU_LoadIdentity();
-            GPU_Ortho(0, Window::screenHeight, Window::screenWidth, 0, 0, 1);
+            GPU_Ortho(this->xOffset, this->xOffset + Window::screenHeight, Window::screenWidth, 0, 0, 1);
 
             GPU_MatrixMode(target, GPU_MODEL);
             GPU_LoadIdentity();
 
             auto oss{ std::ostringstream{} };
-            onInfosCallback(oss);
+            this->onInfosCallback(oss);
             
             FC_Draw(font, target, 5, 5, oss.str().data());
         }
