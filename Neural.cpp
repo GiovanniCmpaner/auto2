@@ -31,8 +31,16 @@ Neural::Neural(const std::string& folderPath)
     );
     assert(TF_GetCode(this->status) == TF_OK);
 
+    //std::cout << "--- operations ---" << std::endl;
+    //size_t pos{ 0 };
+    //TF_Operation* oper{ nullptr };
+    //while ((oper = TF_GraphNextOperation(this->graph, &pos)) != nullptr)
+    //{
+    //    std::cout << TF_OperationName(oper) << std::endl;
+    //}
+
     // input
-    static constexpr auto inputOperationName{ "serving_default_dense_input" };
+    static constexpr auto inputOperationName{ "serving_default_dense_64_input" };
     this->inputOperation = TF_GraphOperationByName(this->graph, inputOperationName);
     this->input = TF_Output{ this->inputOperation, 0 };
     assert(this->inputOperation != nullptr);
@@ -42,14 +50,6 @@ Neural::Neural(const std::string& folderPath)
     this->outputOperation = TF_GraphOperationByName(this->graph, outputOperationName);
     this->output = TF_Output{ this->outputOperation, 0 };
     assert(this->outputOperation != nullptr);
-
-    //std::cout << "--- operations ---" << std::endl;
-    //size_t pos{ 0 };
-    //TF_Operation* oper{ nullptr };
-    //while ((oper = TF_GraphNextOperation(this->graph, &pos)) != nullptr)
-    //{
-    //    std::cout << TF_OperationName(oper) << std::endl;
-    //}
 
     // Clean Up all temporary objects
     TF_DeleteImportGraphDefOptions(opts);

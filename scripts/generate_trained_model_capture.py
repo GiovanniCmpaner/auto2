@@ -44,8 +44,12 @@ physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 # Subplotting options and layout
-fig = plt.figure()
-fig.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.9, wspace=0.25, hspace=0.4)
+fig = plt.figure(figsize=(20,5), dpi=96)
+#fig.subplots_adjust(left=0.05, bottom=0.2, right=0.95, top=0.9, wspace=0.25, hspace=0.4)
+
+# Show charts as full window
+#mng = plt.get_current_fig_manager()
+#mng.window.state('zoomed')
 
 def train_model(input_file, combination):
     # -------------------------------------------------------------------------------
@@ -57,6 +61,26 @@ def train_model(input_file, combination):
     df_features, df_labels = df_capture.iloc[:,0:6], df_capture.iloc[:,6:11]
 
     dataset = tf.data.Dataset.from_tensor_slices((df_features.values, df_labels.values))
+    
+    labels = []
+    for row in df_labels.values:
+        for i in range(0,5):
+            if(row[i] == 1):
+                labels.append(i)
+    
+    plt.subplot(1,1,1)
+    plt.title('Graphic')
+    plt.scatter(labels, df_features.values[:,0], label='1')
+    plt.scatter(labels, df_features.values[:,1], label='2')
+    plt.scatter(labels, df_features.values[:,2], label='3')
+    plt.scatter(labels, df_features.values[:,3], label='4')
+    plt.scatter(labels, df_features.values[:,4], label='5')
+    plt.scatter(labels, df_features.values[:,5], label='6')
+    plt.xlabel('Epochs')
+    plt.ylabel('MAE')
+    plt.legend()
+    plt.show()
+    quit()
 
     # -------------------------------------------------------------------------------
     # Split the Data
@@ -91,8 +115,7 @@ def train_model(input_file, combination):
     model.add(keras.layers.Dense(5, activation='softmax'))
 
     # Compile the model using the standard 'adam' optimizer and the mean squared error or 'mse' loss function for regression.
-    #model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.1), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
-    model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.06, momentum=0.8), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
+    model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.05, momentum=0.8), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
 
     # -------------------------------------------------------------------------------
     # Train the Model
@@ -103,7 +126,7 @@ def train_model(input_file, combination):
     start = timer()
 
     # Train the model on our training data while validating on our validation set
-    history = model.fit(x_train, y_train, epochs=30, batch_size=64, shuffle=True, validation_data=(x_validate, y_validate))
+    history = model.fit(x_train, y_train, epochs=50, batch_size=64, shuffle=True, validation_data=(x_validate, y_validate))
     loss = history.history['loss']
     accuracy = history.history['categorical_accuracy']
     
@@ -132,7 +155,7 @@ def train_model(input_file, combination):
     file_path = MODELS_DIR + Path(input_file).stem + '_' + 'x'.join(map(str,combination)) + '_model_no_quant.tflite'
     file_size = open(file_path, "wb").write(tflite_model)
     
-    return file_size, interval, [loss[0],loss[4],loss[9],loss[14],loss[19],loss[24],loss[29]], [accuracy[0],accuracy[4],accuracy[9],accuracy[14],accuracy[19],accuracy[24],accuracy[29]]
+    return file_size, interval, loss, accuracy
     
     # -------------------------------------------------------------------------------
     # Plot Metrics - Loss (or Mean Squared Error)
@@ -180,9 +203,9 @@ def train_by_combination():
     #combinations = [[8],[16],[32],[16,16],[32,32],[48,48],[32,16,32],[48,32,48],[64,48,64]]
     #courses = [5, 10, 15, 20, 25, 30, 35, 40]
 
-    combinations = [[32,32]]
+    combinations = [[16,16]]
     courses = [5, 10, 15, 20, 25, 30, 35, 40]
-    epochs = [1, 5, 10, 15, 20, 25, 30]
+    epochs = [1, 10, 20, 30, 40, 50]
 
     for i, combination in enumerate(combinations):
 
@@ -192,7 +215,7 @@ def train_by_combination():
         accuracies = []
 
         for j, course in enumerate(courses):
-            size, interval, loss, accuracy = train_model("D:\Google Drive\TCC SENAI\Capturas\capture_" + str(course) + "x_1,5x1m.csv", combination)
+            size, interval, loss, accuracy = train_model(r"D:\Google Drive\TCC SENAI\Capturas\capture_" + str(course) + "x_1,5x1m.csv", combination)
             sizes.append(size)
             intervals.append(interval)
             losses.append(loss)
@@ -200,37 +223,41 @@ def train_by_combination():
         
         plt.subplot(len(combinations), 4, 4 * i + 1)
         plt.title('Tamanhos')
-        plt.plot(courses, sizes, linestyle='solid', marker='.', label="30")
+        plt.plot(courses, sizes, linestyle='solid', marker='.', label=str(epochs[-1]))
         plt.xlabel('Percursos')
         plt.ylabel('Bytes')
         plt.legend(title="Épocas")
         
         plt.subplot(len(combinations), 4, 4 * i + 2)
         plt.title('Durações')
-        plt.plot(courses, intervals, linestyle='solid', marker='.', label="30")
+        plt.plot(courses, intervals, linestyle='solid', marker='.', label=str(epochs[-1]))
         plt.xlabel('Percursos')
         plt.ylabel('Segundos')
         plt.legend(title="Épocas")
 
         plt.subplot(len(combinations), 4, 4 * i + 3)
         plt.title('Perdas')
-        for j, course in enumerate(epochs):
-            plt.plot(courses, np.array(losses)[:,j].tolist(), linestyle='solid', marker='.', label=str(course))
+        for j, epoch in enumerate(epochs):
+            plt.plot(courses, np.array(losses)[:,epoch - 1].tolist(), linestyle='solid', marker='.', label=str(epoch))
         plt.xlabel('Percursos')
         plt.ylabel('Perda')
         plt.legend(title="Épocas")
 
         plt.subplot(len(combinations), 4, 4 * i + 4)
         plt.title('Precisões')
-        for j, course in enumerate(epochs):
-            plt.plot(courses, np.array(accuracies)[:,j].tolist(), linestyle='solid', marker='.', label=str(course))
+        for j, epoch in enumerate(epochs):
+            plt.plot(courses, np.array(accuracies)[:,epoch - 1].tolist(), linestyle='solid', marker='.', label=str(epoch))
         plt.xlabel('Percursos')
         plt.ylabel('Precisão')
         plt.legend(title="Épocas")
+        
+        plt.tight_layout()
+        plt.savefig(r"C:\Users\Giovanni\Desktop\auto2\scripts\models\graficos_percursos_16x16combinacao.png")
+        plt.clf()
     
 def train_by_best():
     
-    combinations = [[8],[16],[32],[16,16],[32,32],[48,48],[32,16,32],[48,32,48],[64,48,64]]
+    combinations = [[16],[32],[48],[16,16],[32,32],[48,48],[16,16,16],[32,32,32],[48,48,48]]
     
     sizes = []
     intervals = []
@@ -238,7 +265,7 @@ def train_by_best():
     accuracies = []
     
     for i, combination in enumerate(combinations):
-        size, interval, loss, accuracy = train_model("D:\Google Drive\TCC SENAI\Capturas\capture_40x_1,5x1m.csv", combination)
+        size, interval, loss, accuracy = train_model(r"D:\Google Drive\TCC SENAI\Capturas\capture_40x_1,5x1m.csv", combination)
         sizes.append(size)
         intervals.append(interval)
         losses.append(loss[-1])
@@ -256,7 +283,7 @@ def train_by_best():
     plt.plot(list(map(lambda x: 'x'.join(map(str,x)), combinations)), intervals, linestyle='solid', marker='.')
     plt.xticks(rotation=45, ha='right')
     plt.xlabel('Combinação')
-    plt.ylabel('Perda')
+    plt.ylabel('Segundos')
      
     plt.subplot(1, 4, 3)
     plt.title('Perdas')
@@ -271,12 +298,13 @@ def train_by_best():
     plt.xticks(rotation=45, ha='right')
     plt.xlabel('Combinação')
     plt.ylabel('Precisão')
+    
+    plt.tight_layout()
+    plt.savefig(r"C:\Users\Giovanni\Desktop\auto2\scripts\models\graficos_combinacoes_40percursos_50epocas.png")
+    plt.clf()
      
+train_by_best()
 train_by_combination()
-mng = plt.get_current_fig_manager()
-mng.window.state('zoomed')
-plt.show()
-
 
 # -------------------------------------------------------------------------------
 # End

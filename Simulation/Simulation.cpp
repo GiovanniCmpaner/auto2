@@ -15,7 +15,7 @@ auto Simulation::reset() -> void
 {
 	this->neural = std::make_unique<Neural>(R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)");
 	this->fuzzy = std::make_unique<Fuzzy>(R"(C:\Users\Giovanni\Desktop\auto2\fuzzy.fll)");
-	this->replay = std::make_unique<Replay>(&world, ground, b2Vec2{ 3, 1 }, R"(C:\Users\Giovanni\Desktop\auto2\replay.csv)");
+	this->replay = std::make_unique<Replay>(&world, ground, b2Vec2{ 3, 1 }, R"(D:\Google Drive\TCC SENAI\Capturas\capture_1x_1,5x1m.csv)");
 
 	this->mazes.clear();
 	this->cars.clear();
