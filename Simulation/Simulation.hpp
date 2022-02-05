@@ -66,7 +66,7 @@ private:
     std::vector<Maze> mazes{ };
     std::vector<Follower> followers{ };
     
-    const int generations{ 20 };
+    const int generations{ 0 };
     int current{ 0 };
 
     const int quantity{ 1 };
@@ -84,7 +84,7 @@ private:
     bool dataChanged{ false };
 
     Mode mode{ Mode::STOPPED };
-    Control control{ Control::MANUAL };
+    Control control{ Control::NEURAL };
     Data data{ Data::IDLE };
 
     Move move{ Move::STOP };

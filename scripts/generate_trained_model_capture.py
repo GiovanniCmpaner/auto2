@@ -58,7 +58,7 @@ def train_model(input_file, combination):
 
     # Get file data
     df_capture = pd.read_csv(input_file, sep=";")
-    df_features, df_labels = df_capture.iloc[:,0:6], df_capture.iloc[:,6:11]
+    df_features, df_labels = df_capture.iloc[:,0:18], df_capture.iloc[:,18:23]
 
     dataset = tf.data.Dataset.from_tensor_slices((df_features.values, df_labels.values))
     
@@ -67,20 +67,6 @@ def train_model(input_file, combination):
         for i in range(0,5):
             if(row[i] == 1):
                 labels.append(i)
-    
-    plt.subplot(1,1,1)
-    plt.title('Graphic')
-    plt.scatter(labels, df_features.values[:,0], label='1')
-    plt.scatter(labels, df_features.values[:,1], label='2')
-    plt.scatter(labels, df_features.values[:,2], label='3')
-    plt.scatter(labels, df_features.values[:,3], label='4')
-    plt.scatter(labels, df_features.values[:,4], label='5')
-    plt.scatter(labels, df_features.values[:,5], label='6')
-    plt.xlabel('Epochs')
-    plt.ylabel('MAE')
-    plt.legend()
-    plt.show()
-    quit()
 
     # -------------------------------------------------------------------------------
     # Split the Data
@@ -109,7 +95,7 @@ def train_model(input_file, combination):
 
     # We'll use Keras to create a simple model architecture
     model = tf.keras.Sequential()
-    model.add(keras.layers.Dense(6))
+    model.add(keras.layers.Dense(18))
     for layer in combination:
         model.add(keras.layers.Dense(layer, activation='relu'))
     model.add(keras.layers.Dense(5, activation='softmax'))
@@ -136,23 +122,14 @@ def train_model(input_file, combination):
     interval = end - start
 
     # Save the model to disk
-    model.save(MODEL_TF, save_format='tf')
-
-    # Test some data
-    x_test1 = [[0.378, 0.154, 0.283, 0.184, 0.162, 0.123]]
-    y_pred1 = model.predict(x_test1)
-    print('x_test1 = ' + str(x_test1) + ' y_pred1 = ' + str(y_pred1))
-
-    x_test2 = [[0.363, 0.773, 0.245, 0.150, 0.208, 0.170]]
-    y_pred2 = model.predict(x_test2)
-    print('x_test2 = ' + str(x_test2) + ' y_pred2 = ' + str(y_pred2))
+    model.save(MODELS_DIR + 'model_simulation_18s_20x_' + 'x'.join(map(str,combination)) , save_format='tf')
 
     # Converting a SavedModel to a TensorFlow Lite model.
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     tflite_model = converter.convert()
 
     # Save the model to disk
-    file_path = MODELS_DIR + Path(input_file).stem + '_' + 'x'.join(map(str,combination)) + '_model_no_quant.tflite'
+    file_path = MODELS_DIR + Path(input_file).stem + '_simulation_18s_' + 'x'.join(map(str,combination)) + '_model_no_quant.tflite'
     file_size = open(file_path, "wb").write(tflite_model)
     
     return file_size, interval, loss, accuracy
@@ -203,8 +180,8 @@ def train_by_combination():
     #combinations = [[8],[16],[32],[16,16],[32,32],[48,48],[32,16,32],[48,32,48],[64,48,64]]
     #courses = [5, 10, 15, 20, 25, 30, 35, 40]
 
-    combinations = [[16,16]]
-    courses = [5, 10, 15, 20, 25, 30, 35, 40]
+    combinations = [[8],[16],[32],[16,16],[32,32],[48,48],[32,16,32],[48,32,48],[64,48,64]]
+    courses = [20]
     epochs = [1, 10, 20, 30, 40, 50]
 
     for i, combination in enumerate(combinations):
@@ -215,7 +192,7 @@ def train_by_combination():
         accuracies = []
 
         for j, course in enumerate(courses):
-            size, interval, loss, accuracy = train_model(r"D:\Google Drive\TCC SENAI\Capturas\capture_" + str(course) + "x_1,5x1m.csv", combination)
+            size, interval, loss, accuracy = train_model(r"D:\Google Drive\TCC SENAI\Capturas\simulation_capture_18s_" + str(course) + "x_1,5x1m.csv", combination)
             sizes.append(size)
             intervals.append(interval)
             losses.append(loss)
@@ -252,7 +229,7 @@ def train_by_combination():
         plt.legend(title="Épocas")
         
         plt.tight_layout()
-        plt.savefig(r"C:\Users\Giovanni\Desktop\auto2\scripts\models\graficos_percursos_16x16combinacao.png")
+        plt.savefig(r"C:\Users\Giovanni\Desktop\auto2\scripts\models\graficos_percursos_16x16combinacao_simulation_18s_20x.png")
         plt.clf()
     
 def train_by_best():
@@ -265,7 +242,7 @@ def train_by_best():
     accuracies = []
     
     for i, combination in enumerate(combinations):
-        size, interval, loss, accuracy = train_model(r"D:\Google Drive\TCC SENAI\Capturas\capture_40x_1,5x1m.csv", combination)
+        size, interval, loss, accuracy = train_model(r"D:\Google Drive\TCC SENAI\Capturas\simulation_capture_18s_20x_1,5x1m.csv", combination)
         sizes.append(size)
         intervals.append(interval)
         losses.append(loss[-1])
@@ -300,11 +277,11 @@ def train_by_best():
     plt.ylabel('Precisão')
     
     plt.tight_layout()
-    plt.savefig(r"C:\Users\Giovanni\Desktop\auto2\scripts\models\graficos_combinacoes_40percursos_50epocas.png")
+    plt.savefig(r"C:\Users\Giovanni\Desktop\auto2\scripts\models\graficos_combinacoes_20percursos_50epocas_simulation_capture_18s_20x.png")
     plt.clf()
      
 train_by_best()
-train_by_combination()
+#train_by_combination()
 
 # -------------------------------------------------------------------------------
 # End

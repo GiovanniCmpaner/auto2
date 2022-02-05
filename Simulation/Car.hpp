@@ -44,7 +44,7 @@ public:
     auto isStuck() const -> bool;
     auto doMove(Move move) -> void;
 
-    auto distances() const->std::array<std::pair<int, float>, 6>;
+    auto distances() const->std::array<std::pair<int, float>, 18>;
     auto color() const ->Color;
     auto giroscope() const -> std::vector<float>;
     auto acelerometer() const ->std::vector<float>;
@@ -62,13 +62,30 @@ private:
     b2Body* ground{ nullptr };
     b2Body* body{ nullptr };
 
-    std::array<std::tuple<int, b2Vec2, float>, 6> sensors{ {
+    std::array<std::tuple<int, b2Vec2, float>, 18> sensors{ {
         {+33, {0.056f, 0.114f}, 0.0f},
         {+90, {0.075f, 0.000f}, 0.0f},
         {0,   {0.000f, 0.128f}, 0.0f},
         {-33, {-0.056f, 0.114f}, 0.0f},
         {-90, {-0.075f, 0.000f}, 0.0f},
-        {180, {0.000f, -0.128f}, 0.0f}
+        {180, {0.000f, -0.128f}, 0.0f},
+
+        {+60, {0.075f, 0.064f}, 0.0f},
+        {-60, {-0.075f, 0.064f}, 0.0f},
+        {+16, {0.028f, 0.124f}, 0.0f},
+        {-16, {-0.028f, 0.124f}, 0.0f},
+
+        {+75, {0.075f, 0.032f}, 0.0f},
+        {-75, {-0.075f, 0.032f}, 0.0f},
+
+        {+45, {0.075f, 0.096f}, 0.0f},
+        {-45, {-0.075f, 0.096f}, 0.0f},
+        
+        {+24, {0.042f, 0.122f}, 0.0f},
+        {-24, {-0.042f, 0.122f}, 0.0f},
+        {+8, {0.014f, 0.126f}, 0.0f},
+        {-8, {-0.014f, 0.126f}, 0.0f},
+
     }};
 
     bool ready{ true };

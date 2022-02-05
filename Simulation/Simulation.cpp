@@ -13,9 +13,9 @@
 
 auto Simulation::reset() -> void
 {
-	this->neural = std::make_unique<Neural>(R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model)");
+	this->neural = std::make_unique<Neural>(R"(C:\Users\Giovanni\Desktop\auto2\scripts\models\model_simulation_18s_20x_48x48x48)");
 	this->fuzzy = std::make_unique<Fuzzy>(R"(C:\Users\Giovanni\Desktop\auto2\fuzzy.fll)");
-	this->replay = std::make_unique<Replay>(&world, ground, b2Vec2{ 3, 1 }, R"(D:\Google Drive\TCC SENAI\Capturas\capture_1x_1,5x1m.csv)");
+	this->replay = std::make_unique<Replay>(&world, ground, b2Vec2{ 3, 1 }, R"(D:\Google Drive\TCC SENAI\Capturas\simulation_capture_6s_20x_1,5x1m.csv)");
 
 	this->mazes.clear();
 	this->cars.clear();
@@ -45,7 +45,7 @@ auto Simulation::reset() -> void
 		{
 			for (auto i{ 0 }; i < squareWidth; ++i)
 			{
-				auto& maze{ this->mazes.emplace_back(&world, ground, columns, rows, i * (width + 0.2f), 3 + j * (height + 0.2f), width, height) };
+				auto& maze{ this->mazes.emplace_back(&world, ground, columns, rows, 1 + i * (width + 0.2f), 3 + j * (height + 0.2f), width, height) };
 
 				maze.randomize();
 
@@ -96,7 +96,7 @@ auto Simulation::init() -> void
 					this->resetChanged = true;
 
 					this->mode = Mode::STOPPED;
-					this->control = Control::REPLAY;
+					this->control = Control::MANUAL;
 					this->data = Data::IDLE;
 					this->current = 0;
 
@@ -216,7 +216,7 @@ auto Simulation::init() -> void
 				{
 					this->cars[0].doMove(this->move);
 
-					if (data == Data::GENERATING)
+					if (data == Data::GENERATING and this->move != Move::STOP)
 					{
 						auto inputs{ Simulation::inputs(this->cars[0]) };
 						this->features.emplace_back(inputs);
@@ -348,7 +348,7 @@ auto Simulation::init() -> void
 					else
 					{
 						this->control = Control::MANUAL;
-
+						
 						if (this->data == Data::GENERATING)
 						{
 							this->generationTask = this->generateCSV();
@@ -544,60 +544,19 @@ auto Simulation::generateCSV() -> std::future<void>
 	return std::async(std::launch::async, [this]
 		{
 			{
-				auto ofs{ std::ofstream{R"(scripts\features.csv)"} };
+				auto ofs{ std::ofstream{R"(scripts\simulation_capture_18s.csv)"} };
+
+				ofs << "+33;+90;0;-33;-90;180;+60;-60;+20;-20;+75;-75;+45;-45;+24;-24;+8;-8;stop;forward;backward;left;right;\n";
 
 				for (auto j{ 0 }; j < this->features.size(); ++j)
 				{
-					if (j == 0)
-					{
-						for (auto i{ 0 }; i < this->features[j].size(); ++i)
-						{
-							if (i != 0)
-							{
-								ofs << ';';
-							}
-							ofs << "f" << i;
-						}
-						ofs << '\n';
-					}
-
 					for (auto i{ 0 }; i < this->features[j].size(); ++i)
 					{
-						if (i != 0)
-						{
-							ofs << ';';
-						}
-						ofs << this->features[j][i];
+						ofs << this->features[j][i] << ';';
 					}
-					ofs << '\n';
-				}
-			}
-
-			{
-				auto ofs{ std::ofstream{R"(scripts\labels.csv)"} };
-
-				for (auto j{ 0 }; j < this->labels.size(); ++j)
-				{
-					if (j == 0)
-					{
-						for (auto i{ 0 }; i < this->labels[j].size(); ++i)
-						{
-							if (i != 0)
-							{
-								ofs << ';';
-							}
-							ofs << "l" << i;
-						}
-						ofs << '\n';
-					}
-
 					for (auto i{ 0 }; i < this->labels[j].size(); ++i)
 					{
-						if (i != 0)
-						{
-							ofs << ';';
-						}
-						ofs << this->labels[j][i];
+						ofs << this->labels[j][i] << ';';
 					}
 					ofs << '\n';
 				}

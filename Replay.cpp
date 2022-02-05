@@ -150,6 +150,25 @@ auto Replay::createCar() -> void
         this->carBody->CreateFixture(&fd);
     }
 
+    { // Direction symbol (triangle)
+        b2PolygonShape triangle{};
+        const b2Vec2 vertices[3]{
+            b2Vec2{ -0.03f, -0.03f },
+            b2Vec2{ +0.03f, -0.03f },
+            b2Vec2{ 0.0f, +0.03f },
+        };
+        triangle.Set(vertices, 3);
+
+        b2FixtureDef fd{};
+        fd.shape = &triangle;
+        fd.isSensor = true;
+        fd.filter.categoryBits = 0x0002;
+        fd.filter.maskBits = 0x0001;
+        fd.userData = const_cast<char*>("direction");
+
+        this->carBody->CreateFixture(&fd);
+    }
+
     { // Sensors
         for (const auto& [angle, position] : this->sensors)
         {

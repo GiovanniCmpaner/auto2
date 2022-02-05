@@ -2,22 +2,43 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include <box2d/box2d.h>
 #include <SDL_gpu.h>
 
-
 namespace Draw
 {
-    static constexpr SDL_Color backgroundColor{ 0, 0, 0, 255 };
-    static constexpr SDL_Color fontColor{ 0, 255, 0, 255 };
-    static constexpr SDL_Color sensorColor{ 0,0,255,255 };
-    static constexpr SDL_Color solidBorderColor{ 255, 0, 255, 255 };
-    static constexpr SDL_Color solidFillColor{ 255, 0, 255, 64 };
+    static const std::map<const char*, SDL_Color> colors{
+        {"start",{0,255,0}},
+        {"end",  {255,0,0}},
+        {"wall", {255,0,255}},
+        {"chassis",{255,127,0}},
+        {"sensor", {255,255,0}}
+    };
 
     static auto draw(GPU_Target* target, const b2Body* body) -> void
     {
         for (auto fixture{ body->GetFixtureList() }; fixture != nullptr; fixture = fixture->GetNext())
         {
+            auto solidBorderColor{ SDL_Color{ 255, 0, 255, 255} };
+            auto solidFillColor{ SDL_Color{ 255, 0, 255, 255} };
+
+            const auto name{ reinterpret_cast<const char*>(fixture->GetUserData()) };
+            const auto it{ colors.find(name) };
+            if (it != colors.end())
+            {
+                solidBorderColor = it->second;
+                solidBorderColor.a = 255;
+
+                solidFillColor = it->second;
+                solidFillColor.a = 255;
+            }
+
+            if (strcmp(name, "sensor") == 0 or strcmp(name, "start") == 0 or strcmp(name, "end") == 0) 
+            {
+                continue;
+            }
+
             const auto shape{ fixture->GetShape() };
             switch (shape->GetType())
             {

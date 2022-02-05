@@ -99,12 +99,14 @@ auto Window::process() -> void
 
         GPU_Flip(target);
 
-        const auto currentTicks{ SDL_GetTicks() };
-        targetTicks += Window::tickStep;
-        if (targetTicks > currentTicks)
-        {
-            SDL_Delay(targetTicks - currentTicks);
-        }
+        //const auto currentTicks{ SDL_GetTicks() };
+        //targetTicks += Window::tickStep;
+        //if (targetTicks > currentTicks)
+        //{
+        //    SDL_Delay(targetTicks - currentTicks);
+        //}
+
+        SDL_Delay(Window::tickStep);
         this->time += Window::tickStep;
     }
 

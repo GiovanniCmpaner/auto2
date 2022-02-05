@@ -553,7 +553,7 @@ auto Maze::createBody() -> void
     }
     */
 
-    {
+    { // Start & End
         b2CircleShape shape{};
 
         b2FixtureDef fd{};
@@ -562,7 +562,8 @@ auto Maze::createBody() -> void
         fd.filter.categoryBits = 0x0002;
         fd.filter.maskBits = 0x0001;
 
-        shape.m_radius = std::min(this->tileHeight, this->tileWidth) / 4;
+        //shape.m_radius = std::min(this->tileHeight, this->tileWidth) / 4;
+        shape.m_radius = 0.1f;
 
         shape.m_p = this->startPoint();
         shape.m_p -= { this->x, this->y };
@@ -583,7 +584,7 @@ auto Maze::step() -> void
 
 auto Maze::render(GPU_Target* target) const -> void
 {
-    GPU_SetLineThickness(0.02f);
+    GPU_SetLineThickness(0.01f);
     
     Draw::draw(target, this->body);
 }

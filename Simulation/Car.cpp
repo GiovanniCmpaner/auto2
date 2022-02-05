@@ -11,6 +11,7 @@
 #include <SDL_FontCache.h>
 
 #include "car.hpp"
+#include "..\Draw.hpp"
 
 class RayCastCallback : public b2RayCastCallback
 {
@@ -98,17 +99,38 @@ auto Car::createBody(const b2Vec2& position) -> void
         this->body->CreateFixture(&fd);
     }
 
+    //{ // Direction symbol (triangle)
+    //    b2PolygonShape triangle{};
+    //    const b2Vec2 vertices[3]{
+    //        b2Vec2{ -0.03f, -0.03f },
+    //        b2Vec2{ +0.03f, -0.03f },
+    //        b2Vec2{ 0.0f, +0.03f },
+    //    };
+    //    triangle.Set(vertices, 3);
+    //
+    //    b2FixtureDef fd{};
+    //    fd.shape = &triangle;
+    //    fd.isSensor = true;
+    //    fd.filter.categoryBits = 0x0002;
+    //    fd.filter.maskBits = 0x0001;
+    //    fd.userData = const_cast<char*>("chassis");
+    //
+    //    this->body->CreateFixture(&fd);
+    //}
+
     { // Sensors
         for (const auto& [angle, position, distance] : this->sensors)
         {
             b2PolygonShape polygon{};
             polygon.SetAsBox(0.0125f, 0.0125f, position, 0);
-
+    
             b2FixtureDef fd{};
             fd.shape = &polygon;
             fd.isSensor = true;
+            fd.filter.categoryBits = 0x0002;
+            fd.filter.maskBits = 0x0001;
             fd.userData = const_cast<char*>("sensor");
-
+    
             this->body->CreateFixture(&fd);
         }
     }
@@ -187,9 +209,9 @@ auto Car::isStuck() const -> bool
     return this->stuck;
 }
 
-auto Car::distances() const -> std::array<std::pair<int, float>, 6>
+auto Car::distances() const -> std::array<std::pair<int, float>, 18>
 {
-    auto distances{ std::array<std::pair<int, float>, 6>{} };
+    auto distances{ std::array<std::pair<int, float>, 18>{} };
     for (auto n{ 0 }; n < distances.size(); ++n)
     {
         distances[n].first = std::get<0>(this->sensors[n]);
@@ -267,21 +289,7 @@ auto Car::stepSensor(const b2Vec2& position, float* distance, float angle) -> vo
 
 auto Car::renderBody(GPU_Target* target) const -> void
 {
-    for (auto fixture{ body->GetFixtureList() }; fixture != nullptr; fixture = fixture->GetNext())
-    {
-        const auto polygon{ reinterpret_cast<const b2PolygonShape*>(fixture->GetShape()) };
-
-        float vertices[2 * b2_maxPolygonVertices];
-        for (auto i{ 0 }; i < polygon->m_count; ++i)
-        {
-            const auto vertice{ this->body->GetWorldPoint(polygon->m_vertices[i]) };
-            vertices[i * 2 + 0] = vertice.x;
-            vertices[i * 2 + 1] = vertice.y;
-        }
-
-        GPU_Polygon(target, polygon->m_count, vertices, solidBorderColor);
-        GPU_PolygonFilled(target, polygon->m_count, vertices, solidFillColor);
-    }
+    Draw::draw(target, this->body);
 }
 
 auto Car::renderSensor(GPU_Target* target, const b2Vec2& position, float* distance, float radians) -> void
@@ -296,9 +304,7 @@ auto Car::renderSensor(GPU_Target* target, const b2Vec2& position, float* distan
     //GPU_Line(target, end.x, end.y - 0.05f, end.x, end.y + 0.05f, sensorColor);
 
     // Line
-    GPU_Line(target, start.x, start.y, end.x, end.y, sensorColor);
-    //GPU_Line(target, end.x - 0.025f, end.y - 0.025f, end.x + 0.025f, end.y + 0.025f, sensorColor);
-    //GPU_Line(target, end.x + 0.025f, end.y - 0.025f, end.x - 0.025f, end.y + 0.025f, sensorColor);
+    //GPU_Line(target, start.x, start.y, end.x, end.y, sensorColor);
 }
 
 
