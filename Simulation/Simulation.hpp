@@ -69,7 +69,7 @@ private:
     const int generations{ 20 };
     int current{ 0 };
 
-    const int quantity{ 200 };
+    const int quantity{ 1 };
     int done{ 0 };
     std::future<void> generationTask{};
     std::vector<std::vector<float>> features{};
@@ -84,7 +84,7 @@ private:
     bool dataChanged{ false };
 
     Mode mode{ Mode::STOPPED };
-    Control control{ Control::REPLAY };
+    Control control{ Control::MANUAL };
     Data data{ Data::IDLE };
 
     Move move{ Move::STOP };

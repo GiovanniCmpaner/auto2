@@ -54,21 +54,21 @@ public:
 private:
     auto createBody(const b2Vec2& position) -> void;
     auto stepBody() -> void;
-    auto stepSensor(float* distance, float angle) -> void;
+    auto stepSensor(const b2Vec2& position, float* distance, float angle) -> void;
     auto renderBody(GPU_Target* target) const -> void;
-    auto renderSensor(GPU_Target* target, float* distance, float angle) -> void;
+    auto renderSensor(GPU_Target* target, const b2Vec2& position, float* distance, float radians) -> void;
 
     b2World* world{ nullptr };
     b2Body* ground{ nullptr };
     b2Body* body{ nullptr };
 
-    std::array<std::pair<int, float>, 6> sensors{{
-        {+33, 0.0f},
-        {+90, 0.0f},
-        {0, 0.0f},
-        {-33, 0.0f},
-        {-90, 0.0f},
-        {180, 0.0f}
+    std::array<std::tuple<int, b2Vec2, float>, 6> sensors{ {
+        {+33, {0.056f, 0.114f}, 0.0f},
+        {+90, {0.075f, 0.000f}, 0.0f},
+        {0,   {0.000f, 0.128f}, 0.0f},
+        {-33, {-0.056f, 0.114f}, 0.0f},
+        {-90, {-0.075f, 0.000f}, 0.0f},
+        {180, {0.000f, -0.128f}, 0.0f}
     }};
 
     bool ready{ true };

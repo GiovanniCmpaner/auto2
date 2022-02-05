@@ -188,12 +188,14 @@ auto Maze::solve(const Matrix& matrix, int y, int x, bool bestSolution)->Path
 
 auto Maze::startPoint() const -> b2Vec2
 {
-    return this->toRealPoint({ static_cast<int>(this->columns() - 1), static_cast<int>(this->rows() - 1) });
+    //return this->toRealPoint({ static_cast<int>(this->columns() - 1), static_cast<int>(this->rows() - 1) });
+    return this->body->GetWorldPoint(b2Vec2{ 1.335, 0.825f });
 }
 
 auto Maze::endPoint() const -> b2Vec2
 {
-    return this->toRealPoint({ 0, 0 });
+    //return this->toRealPoint({ 0, 0 });
+    return this->body->GetWorldPoint(b2Vec2{ 0.65f, 0.25f });
 }
 
 auto Maze::isOnStart(const b2Vec2& point) const -> bool
@@ -477,6 +479,49 @@ auto Maze::createBody() -> void
     this->tileWidth = width / 3;
     //this->matrix = Maze::make(this->rows(), this->columns());
 
+    { // Fixed Path
+        const auto thickness{ 0.015f };
+        const auto height{ 1.0f };
+        const auto width{ 1.5f };
+        const auto segment{ 0.5f };
+
+        b2PolygonShape shape{};
+
+        b2FixtureDef fd{};
+        fd.shape = &shape;
+        fd.density = 0.0f;
+        fd.filter.categoryBits = 0x0001;
+        fd.filter.maskBits = 0x0003;
+        fd.userData = const_cast<char*>("wall");
+
+        { // External
+
+            shape.SetAsBox(thickness / 2, height / 2, { 0, height / 2 }, 0);
+            this->body->CreateFixture(&fd);
+
+            shape.SetAsBox(thickness / 2, height / 2, { width, height / 2 }, 0);
+            this->body->CreateFixture(&fd);
+
+            shape.SetAsBox(width / 2, thickness / 2, { width / 2, 0 }, 0);
+            this->body->CreateFixture(&fd);
+
+            shape.SetAsBox(width / 2, thickness / 2, { width / 2, height }, 0);
+            this->body->CreateFixture(&fd);
+        }
+
+        { // Segment
+            shape.SetAsBox(thickness / 2, segment / 2, { 1.17f, height - segment / 2 }, 0);
+            this->body->CreateFixture(&fd);
+
+            shape.SetAsBox(thickness / 2, segment / 2, { 0.84f, segment / 2 }, 0);
+            this->body->CreateFixture(&fd);
+
+            shape.SetAsBox(segment / 2, thickness / 2, { 0.84f - segment / 2, segment }, 0);
+            this->body->CreateFixture(&fd);
+        }
+    }
+
+    /*
     this->matrix = { 
         {{{1,0,1,1},{1,0,1,0},{1,0,0,1}}},
         {{{0,0,1,1},{0,0,1,1},{0,0,1,1}}},
@@ -506,46 +551,7 @@ auto Maze::createBody() -> void
         shape.Set(reinterpret_cast<const b2Vec2*>(poly.vertices.data()), poly.vertices.size());
         this->body->CreateFixture(&fd);
     }
-
-    //{
-    //    b2PolygonShape shape{};
-    //
-    //    b2FixtureDef fd{};
-    //    fd.shape = &shape;
-    //    fd.density = 0.0f;
-    //    fd.restitution = 0.4f;
-    //    fd.filter.categoryBits = 0x0001;
-    //    fd.filter.maskBits = 0x0003;
-    //    fd.userData = const_cast<char*>("wall");
-    //    
-    //    shape.SetAsBox(0.05f / 2.0f, this->height / 2.0f, { -this->width, this->height / 2.0f }, 0.0f);
-    //    this->body->CreateFixture(&fd);
-    //
-    //    shape.SetAsBox(0.05f / 2.0f, this->height / 2.0f, { +this->width, this->height / 2.0f }, 0.0f);
-    //    this->body->CreateFixture(&fd);
-    //
-    //    shape.SetAsBox(this->width / 2.0f, 0.05f / 2.0f, { this->width / 2.0f, -this->height }, 0.0f);
-    //    this->body->CreateFixture(&fd);
-    //    
-    //    shape.SetAsBox(this->width / 2.0f, 0.05f / 2.0f, { this->width / 2.0f, +this->height }, 0.0f);
-    //    this->body->CreateFixture(&fd);
-    //}
-
-    //{
-    //    b2CircleShape shape{};
-    //    
-    //    b2FixtureDef fd{};
-    //    fd.shape = &shape;
-    //    fd.density = 0.0f;
-    //    fd.restitution = 0.1f;
-    //    fd.filter.categoryBits = 0x0001;
-    //    fd.filter.maskBits = 0x0003;
-    //    fd.userData = const_cast<char*>("circle");
-    //    
-    //    shape.m_radius = 0.1f;
-    //    shape.m_p = { this->width / 2.0f, this->height / 2.0f };
-    //    this->body->CreateFixture(&fd);
-    //}
+    */
 
     {
         b2CircleShape shape{};

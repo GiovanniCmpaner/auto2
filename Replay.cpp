@@ -123,19 +123,13 @@ auto Replay::createPath() -> void
 
 auto Replay::createCar() -> void
 {
-    const auto thickness{ 0.015f };
-    const auto height{ 1.0f };
-    const auto width{ 1.5f };
-    const auto segment{ 0.5f };
-
     { // Body
         b2BodyDef bd{};
         bd.type = b2_dynamicBody;
-        //bd.position = this->position + b2Vec2{ 0.167f + 0.015f + 0.075f + this->current.distances[1], -0.400f + 0.015f + 0.128f + this->current.distances[2] };
         bd.position = this->position + b2Vec2{ 1.335, 0.015f + 0.128f + this->current.distances[2] };
         bd.angle = b2_pi;
-        bd.linearDamping = 0.0f;
-        bd.angularDamping = 0.0f;
+        bd.linearDamping = 0.1f;
+        bd.angularDamping = 0.1f;
         bd.userData = const_cast<char*>("car");
 
         this->carBody = this->world->CreateBody(&bd);
@@ -147,10 +141,10 @@ auto Replay::createCar() -> void
 
         b2FixtureDef fd{};
         fd.shape = &polygon;
-        fd.density = 10.0f;
-        fd.friction = 0.0f;
         fd.filter.categoryBits = 0x0002;
         fd.filter.maskBits = 0x0001;
+        fd.density = 10.0f;
+        fd.friction = 0.1f;
         fd.userData = const_cast<char*>("chassis");
 
         this->carBody->CreateFixture(&fd);
@@ -171,24 +165,24 @@ auto Replay::createCar() -> void
         }
     }
 
-    //{ // Top-down friction
-    //    const auto gravity{ 10.0f };
-    //    const auto inertia{ this->carBody->GetInertia() };
-    //    const auto mass{ this->carBody->GetMass() };
-    //    const auto radius{ b2Sqrt(2.0f * inertia / mass) };
-    //
-    //    b2FrictionJointDef jd{};
-    //    jd.bodyA = this->ground;
-    //    jd.bodyB = this->carBody;
-    //    jd.localAnchorA = b2Vec2{ 0.0f, 0.0f };
-    //    jd.localAnchorB = this->carBody->GetLocalCenter();
-    //    jd.collideConnected = true;
-    //    jd.maxForce = 0.01f * mass * gravity;
-    //    jd.maxTorque = 0.01f * mass* radius* gravity;
-    //    jd.userData = const_cast<char*>("friction");
-    //
-    //    this->world->CreateJoint(&jd);
-    //}
+    { // Top-down friction
+        const auto gravity{ 10.0f };
+        const auto inertia{ this->carBody->GetInertia() };
+        const auto mass{ this->carBody->GetMass() };
+        const auto radius{ b2Sqrt(2.0f * inertia / mass) };
+
+        b2FrictionJointDef jd{};
+        jd.bodyA = this->ground;
+        jd.bodyB = this->carBody;
+        jd.localAnchorA = b2Vec2{ 0.0f, 0.0f };
+        jd.localAnchorB = this->carBody->GetLocalCenter();
+        jd.collideConnected = true;
+        jd.maxForce = 0.1f * mass * gravity;
+        jd.maxTorque = 0.1f * mass * radius * gravity;
+        jd.userData = const_cast<char*>("friction");
+
+        this->world->CreateJoint(&jd);
+    }
 }
 
 auto Replay::createSensor() -> void
@@ -282,11 +276,11 @@ auto Replay::stepCar() -> void
 
     if (this->current.move == Move::ROTATE_LEFT)
     {
-        this->carBody->SetAngularVelocity(-3.5f);
+        this->carBody->SetAngularVelocity(-4.0f);
     }
     else if (this->current.move == Move::ROTATE_RIGHT)
     {
-        this->carBody->SetAngularVelocity(+3.5f);
+        this->carBody->SetAngularVelocity(+4.0f);
     }
     else if (this->current.move == Move::MOVE_FORWARD)
     {
