@@ -21,7 +21,7 @@ namespace Draw
         for (auto fixture{ body->GetFixtureList() }; fixture != nullptr; fixture = fixture->GetNext())
         {
             auto solidBorderColor{ SDL_Color{ 255, 0, 255, 255} };
-            auto solidFillColor{ SDL_Color{ 255, 0, 255, 255} };
+            auto solidFillColor{ SDL_Color{ 255, 0, 255, 64} };
 
             const auto name{ reinterpret_cast<const char*>(fixture->GetUserData()) };
             const auto it{ colors.find(name) };
@@ -31,13 +31,13 @@ namespace Draw
                 solidBorderColor.a = 255;
 
                 solidFillColor = it->second;
-                solidFillColor.a = 255;
+                solidFillColor.a = 64;
             }
 
-            if (strcmp(name, "sensor") == 0 or strcmp(name, "start") == 0 or strcmp(name, "end") == 0) 
-            {
-                continue;
-            }
+            //if (strcmp(name, "sensor") == 0 or strcmp(name, "start") == 0 or strcmp(name, "end") == 0) 
+            //{
+            //    continue;
+            //}
 
             const auto shape{ fixture->GetShape() };
             switch (shape->GetType())

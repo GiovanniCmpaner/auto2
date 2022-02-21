@@ -451,6 +451,12 @@ typedef struct GPU_Context
 	int stored_window_w;
 	int stored_window_h;
 	
+	/*! Shader handles used in the default shader programs */
+	Uint32 default_textured_vertex_shader_id;
+	Uint32 default_textured_fragment_shader_id;
+	Uint32 default_untextured_vertex_shader_id;
+	Uint32 default_untextured_fragment_shader_id;
+	
 	
 	
 	/*! Internal state */
@@ -1366,6 +1372,9 @@ DECLSPEC GPU_TextureHandle SDLCALL GPU_GetTextureHandle(GPU_Image* image);
 
 /*! Copy SDL_Surface data into a new GPU_Image.  Don't forget to SDL_FreeSurface() the surface and GPU_FreeImage() the image.*/
 DECLSPEC GPU_Image* SDLCALL GPU_CopyImageFromSurface(SDL_Surface* surface);
+
+/*! Like GPU_CopyImageFromSurface but enable to copy only part of the surface.*/
+DECLSPEC GPU_Image* SDLCALL GPU_CopyImageFromSurfaceRect(SDL_Surface* surface, GPU_Rect* surface_rect);
 
 /*! Copy GPU_Target data into a new GPU_Image.  Don't forget to GPU_FreeImage() the image.*/
 DECLSPEC GPU_Image* SDLCALL GPU_CopyImageFromTarget(GPU_Target* target);

@@ -99,24 +99,24 @@ auto Car::createBody(const b2Vec2& position) -> void
         this->body->CreateFixture(&fd);
     }
 
-    //{ // Direction symbol (triangle)
-    //    b2PolygonShape triangle{};
-    //    const b2Vec2 vertices[3]{
-    //        b2Vec2{ -0.03f, -0.03f },
-    //        b2Vec2{ +0.03f, -0.03f },
-    //        b2Vec2{ 0.0f, +0.03f },
-    //    };
-    //    triangle.Set(vertices, 3);
-    //
-    //    b2FixtureDef fd{};
-    //    fd.shape = &triangle;
-    //    fd.isSensor = true;
-    //    fd.filter.categoryBits = 0x0002;
-    //    fd.filter.maskBits = 0x0001;
-    //    fd.userData = const_cast<char*>("chassis");
-    //
-    //    this->body->CreateFixture(&fd);
-    //}
+    { // Direction symbol (triangle)
+        b2PolygonShape triangle{};
+        const b2Vec2 vertices[3]{
+            b2Vec2{ -0.03f, -0.03f },
+            b2Vec2{ +0.03f, -0.03f },
+            b2Vec2{ 0.0f, +0.03f },
+        };
+        triangle.Set(vertices, 3);
+    
+        b2FixtureDef fd{};
+        fd.shape = &triangle;
+        fd.isSensor = true;
+        fd.filter.categoryBits = 0x0002;
+        fd.filter.maskBits = 0x0001;
+        fd.userData = const_cast<char*>("chassis");
+    
+        this->body->CreateFixture(&fd);
+    }
 
     { // Sensors
         for (const auto& [angle, position, distance] : this->sensors)
@@ -304,7 +304,7 @@ auto Car::renderSensor(GPU_Target* target, const b2Vec2& position, float* distan
     //GPU_Line(target, end.x, end.y - 0.05f, end.x, end.y + 0.05f, sensorColor);
 
     // Line
-    //GPU_Line(target, start.x, start.y, end.x, end.y, sensorColor);
+    GPU_Line(target, start.x, start.y, end.x, end.y, sensorColor);
 }
 
 
